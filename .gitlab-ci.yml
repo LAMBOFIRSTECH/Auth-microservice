@@ -67,7 +67,7 @@ test:
         /p:CollectCoverage=true \
         /p:CoverletOutputFormat=opencover \
         /p:CoverletOutput=${COVERAGE_REPORT_PATH}
-        echo ${COVERAGE_REPORT_PATH} >> build.env
+        
   dependencies:
     - build # Dépend de la compilation
   artifacts:
@@ -76,7 +76,7 @@ test:
       - ${COVERAGE_REPORT_PATH}
     reports:
       junit: ${COVERAGE_REPORT_PATH}
-      dotenv: build.env
+      
 
 ######## SONARQUBE ########
 sonarqube-check_analysis_report:
