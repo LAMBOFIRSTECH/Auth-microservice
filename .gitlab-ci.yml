@@ -22,8 +22,8 @@ stages:
 cache:
   paths:
     - ~/.nuget/packages/ # Cache des dépendances NuGet
-    - **/bin/
-    - **/obj/
+    - ./**/bin/
+    - ./**/obj/
 
 ######### RESTORE STAGE
 restore:
@@ -40,8 +40,8 @@ build:
     - dotnet build Authentifications.sln --configuration $BUILD_CONFIGURATION --no-restore
   artifacts:
     paths:
-      - **/bin/
-      - **/obj/
+      - ./**/bin/
+      - ./**/obj/
     expire_in: 1 day
 
 ######### TEST STAGE
