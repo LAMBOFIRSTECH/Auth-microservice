@@ -14,18 +14,11 @@ if [ ! -f .env ]; then
 fi
 source .env
 
-if [ ! -f pom.xml ]; then
-    colors "RED" "Erreur : Veillez ajouté le fichier pom.xml"
-    exit 1
-fi
-SONAR_PROJECT_KEY=$(cat pom.xml | grep '<sonar.projectKey>' | sed 's/.*<sonar.projectKey>\(.*\)<\/sonar.projectKey>.*/\1/')
+SONAR_PROJECT_KEY=$(ls *.sln | sed -E 's/\.sln$//')
 if [ -z "$SONAR_PROJECT_KEY" ]; then
     colors "RED" "Erreur : la clé de projet Sonar n'a pas été trouvée."
     exit 1
 fi
-
-# Les options que l'on passe à l'api de sonar dépend déjà de ce qui existe sur le serveur en lui memme
-# Regarder d'abord sonar et voir les components qu'il propose avant d'adapter le curl
 curl --request GET \
     --url "${SONAR_HOST_URL}/api/measures/component?metricKeys=ncloc%2Ccode_smells%2Ccomplexity%2Ccoverage&component=${SONAR_PROJECT_KEY}" \
     -u "${SONAR_USER_TOKEN}:" \
@@ -36,7 +29,7 @@ curl --request GET \
 
 coverage=$(echo "${SONAR_PROJECT_KEY}-sonar-report.json" | jq -r '.component.measures[] | select(.metric == "coverage") | .value')
 coverage_value=$(echo "$coverage" | awk '{print $1 + 0}')
-if (($(echo "$coverage_value > 20.0" | bc -l))); then # Inverser la logique voir avec devalère pour la couverture de code
+if (($(echo "$coverage_value > 20.0" | bc -l))); then 
     colors "RED" "Ce code doit être optimisé"
     echo ""
     colors "YELLOW" "L'image docker ne sera pas construite"

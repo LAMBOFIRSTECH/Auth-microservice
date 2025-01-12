@@ -12,8 +12,7 @@ variables:
 
 default:
   tags:
-  - gitlab-lamboft-docker-runner
-
+    - gitlab-lamboft-docker-runner
 
 ######## CACHE ########
 cache:
@@ -87,13 +86,8 @@ sonarqube-check_analysis_report:
   stage: sonarqube-check_analysis_report
   script:
     - echo "Lancement de l'analyse SonarQube"
-    - dotnet sonarscanner begin \
-        /k:"${CI_PROJECT_NAME}" \
-        /d:sonar.host.url="${SONAR_HOST_URL}" \
-        /d:sonar.login="${SONAR_USER_TOKEN}" \
-        /d:sonar.cs.opencover.reportsPaths=${COVERAGE_REPORT_PATH}
-    - dotnet build Authentifications.sln --configuration $BUILD_CONFIGURATION
-    - dotnet sonarscanner end /d:sonar.login="${SONAR_USER_TOKEN}"
+    - chmod +x sonar_check.sh; ./sonar_check.sh
+    - chmod +x sonar_report.sh; ./sonar_report.sh
   dependencies:
     - test # Dépend des tests et de la couverture
 
@@ -102,6 +96,9 @@ Env_dev:
   stage: deploy
   tags:
     - development
+  variables:
+    RUNNER_TAG: "development"
+    allow_failure: false
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
   script:
@@ -143,8 +140,6 @@ Env_staging:
     paths:
       - .docker_tag
     expire_in: 1 day
-
-
 # ######### DEPLOY TO DEV ENVIRONMENT
 # Env_dev:
 #   stage: deploy
@@ -212,5 +207,5 @@ Env_staging:
 #       - .docker_tag
 #     expire_in: 15 min
 
-  #   - ./clean_old_container.sh meloaude-$CI_PROJECT_NAME # C'est dans ce scripte qu'on fait échouer le pipeline si jamais le containeur ne se lance pas
-  
+#   - ./clean_old_container.sh meloaude-$CI_PROJECT_NAME # C'est dans ce scripte qu'on fait échouer le pipeline si jamais le containeur ne se lance pas
+

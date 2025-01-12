@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Fichier pour stocker la valeur actuelle de `i`
-SONAR_PROJECT_KEY="Authentifications"
+SONAR_PROJECT_KEY=$(ls *.sln | sed -E 's/\.sln$//')
 INDEX_FILE="../../../../../${SONAR_PROJECT_KEY}_index.txt"
  
 if [ ! -f "$INDEX_FILE" ]; then
