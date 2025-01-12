@@ -9,6 +9,8 @@ variables:
   SONAR_HOST_URL: "https://your-sonarqube-url" # URL de SonarQube
   SONAR_USER_TOKEN: "${SONAR_USER_TOKEN}" # Jeton pour SonarQube
   DOCKER_IMAGE_TAG: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}" # Tag de l'image Docker
+  #toto: $(ls *.sln | sed -E 's/\.sln$//') 
+
 
 default:
   tags:
@@ -37,7 +39,8 @@ restore:
     - echo "Nettoyage des caches locaux NuGet"
     - dotnet nuget locals all --clear
     - echo "Restauration des dépendances .NET"
-    - dotnet restore Authentifications/Authentifications.csproj
+    - src=$(ls *.sln | sed -E 's/\.sln$//')
+    - dotnet restore $src/$src.csproj
     - dotnet restore TestAuthentications/TestAuthentications.csproj
   artifacts:
     paths:
@@ -84,6 +87,11 @@ test:
 ######## SONARQUBE ########
 sonarqube-check_analysis_report:
   stage: sonarqube-check_analysis_report
+  tags:
+    - development
+  variables:
+    RUNNER_TAG: "development"
+    allow_failure: false
   script:
     - echo "Lancement de l'analyse SonarQube"
     - chmod +x sonar_check.sh; ./sonar_check.sh
@@ -96,21 +104,30 @@ Env_dev:
   stage: deploy
   tags:
     - development
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
   variables:
     RUNNER_TAG: "development"
     allow_failure: false
-  rules:
-    - if: '$CI_COMMIT_BRANCH == "develop"'
   script:
-    - echo "Déploiement en environnement de développement"
-    - echo "Construction de l'image Docker"
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-    - docker build -t $DOCKER_IMAGE_TAG .
-    - docker push $DOCKER_IMAGE_TAG
-    - echo "Déploiement de l'image Docker"
-    - PORT_NUMBER=$(grep -oP 'EXPOSE\s+\K\d+' Dockerfile)
-    - docker rm -f dev-$CI_PROJECT_NAME || true
-    - docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name dev-$CI_PROJECT_NAME $DOCKER_IMAGE_TAG
+    - echo "DEVELOPMENT_TAG=$DEVELOPMENT_TAG" >> build.env
+    - |
+      if [[ "$DEVELOPMENT_TAG" == "true" ]]; then
+        echo "Déploiement en environnement de développement"
+        echo "Construction de l'image Docker"
+        tag=$(./image_tag.sh | tr -cd '0-9.')
+        docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+        docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag .
+        docker push  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
+        echo "Déploiement de l'image Docker"
+        PORT_NUMBER=$(grep -oP 'EXPOSE\s+\K\d+' Dockerfile)
+        docker rm -f dev-$CI_PROJECT_NAME || true
+        docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name dev-$CI_PROJECT_NAME $DOCKER_IMAGE_TAG
+      else
+        echo "No environment tag set for this runner development"
+        exit 1
+      fi
+
   artifacts:
     reports:
       dotenv: build.env
