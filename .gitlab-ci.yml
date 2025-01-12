@@ -1,0 +1,141 @@
+#########   VARIABLES
+variables:
+  GIT_DEPTH: "0" # Pour récupérer toutes les branches
+  MAVEN_OPTS: "-Dmaven.repo.local=${CI_PROJECT_DIR}/.m2/repository"
+  GITLAB_REPOSITORY_URL: https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/registry/repositories
+  PROJECT_ACCESS_TOKEN: "${PROJECT_ACCESS_TOKEN}" # Le meme token qui a permit de cloner le dépot gitlab sur la machine définit dans une variable d'environnement du projet
+default:
+  tags:
+  - gitlab-lamboft-docker-runner
+#########   STAGES
+stages:
+- build
+- test
+- sonarqube-check_analysis_report
+- deploy
+
+cache:
+  paths:
+  - .m2/repository/
+  - target/
+build:
+  stage: build
+  script:
+  - mvn clean install
+  artifacts:
+    expire_in: 1 day
+    paths:
+    - target/*
+
+test:
+  stage: test
+  script:
+  - mvn verify
+  artifacts:
+    paths:
+    - target/surefire-reports/*.xml
+    - target/site/jacoco/**
+    when: always
+    reports:
+      junit: target/surefire-reports/*.xml
+  dependencies:
+  - build
+
+sonarqube-check_analysis_report:
+  stage: sonarqube-check_analysis_report
+  tags:
+  - staging
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "develop"'
+  - if: '$CI_COMMIT_BRANCH == "main"'
+  script:
+  - chmod +x sonar_check.sh;./sonar_check.sh
+  - chmod +x sonar_report.sh; ./sonar_report.sh
+  - echo "Génération du rapport de vulnérabilité dans les artéfacts de GitLab"
+  artifacts:
+    paths:
+    - sonar-report.json
+    expire_in: 1 day
+  dependencies:
+  - test
+
+Env_dev:
+  stage: deploy
+  tags:
+  - development
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "develop"'
+    variables:
+      RUNNER_TAG: "development"
+    allow_failure: false
+  script:
+  - echo "DEVELOPMENT_TAG=$DEVELOPMENT_TAG" >> build.env
+  - |
+    if [[ "$DEVELOPMENT_TAG" == "true" ]]; then
+      echo "Building Docker image..."
+      tag=$(./image_tag.sh | tr -cd '0-9.')
+      docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+      docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest .
+      docker push $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest
+      REPOSITORY_ID=$(curl -s --header  "PRIVATE-TOKEN:glpat-zjLudcxHubQxtN1Dn5Ax"  "${GITLAB_REPOSITORY_URL}" | jq -r '.[0].id')
+      TAG_NAME=$(curl -s --header "PRIVATE-TOKEN:glpat-zjLudcxHubQxtN1Dn5Ax"  "${GITLAB_REPOSITORY_URL}/$REPOSITORY_ID/tags" | jq -r '.[-1].name')
+      echo "DOCKER_IMAGE_TAG=${TAG_NAME}" >> build.env
+      echo ${TAG_NAME} > .docker_tag
+
+      echo "Deploying to development..."
+      docker pull $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest
+      PORT_NUMBER=$(grep -oP 'EXPOSE\s+\K\d+' Dockerfile)
+      docker rm -f meloaude-$CI_PROJECT_NAME || true
+      docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name meloaude-$CI_PROJECT_NAME $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest
+      sleep 10
+    else
+        echo "No environment tag set for this runner development"
+        exit 1
+    fi
+  #   ./docker_cleanup.sh meloaude-$CI_PROJECT_NAME
+  artifacts:
+    reports:
+      dotenv: build.env
+    paths:
+    - .docker_tag
+    expire_in: 15 min
+Env_staging:
+  stage: deploy
+  tags:
+  - staging
+  rules:
+  - if: '$CI_COMMIT_BRANCH == "main"'
+    variables:
+      RUNNER_TAG: "staging"
+  script:
+  - echo "STAGING_TAG=$STAGING_TAG" >> build.env
+  - |
+    if [[ "$STAGING_TAG" == "true" ]]; then
+      echo "Building Docker image..."
+      tag=$(./image_tag.sh | tr -cd '0-9.')
+      docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+      docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest .
+      docker push $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest
+      CI_REPOSITORY_ID=$(curl --silent --header "PRIVATE-TOKEN:glpat-zjLudcxHubQxtN1Dn5Ax" "${GITLAB_REPOSITORY_URL}" | jq -r '.[0].id')
+      TAG_NAME=$(curl --silent --header "PRIVATE-TOKEN:glpat-zjLudcxHubQxtN1Dn5Ax" "${GITLAB_REPOSITORY_URL}/$CI_REPOSITORY_ID/tags" | jq -r '.[-1].name')
+      TAG="${TAG_NAME%-*}"
+      echo "DOCKER_IMAGE_TAG=${TAG}" >> build.env
+      echo ${TAG} > .docker_tag
+
+      echo "Deploying to staging..."
+      docker pull $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest
+      PORT_NUMBER=$(grep -oP 'EXPOSE\s+\K\d+' Dockerfile)
+      docker rm -f meloaude-$CI_PROJECT_NAME || true
+      docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name meloaude-$CI_PROJECT_NAME $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest
+    else
+        echo "No environment tag set for this runner staging"
+        exit 1
+    fi
+  artifacts:
+    reports:
+      dotenv: build.env
+    paths:
+    - .docker_tag
+    expire_in: 15 min
+  #   - ./clean_old_container.sh meloaude-$CI_PROJECT_NAME # C'est dans ce scripte qu'on fait échouer le pipeline si jamais le containeur ne se lance pas
+  
