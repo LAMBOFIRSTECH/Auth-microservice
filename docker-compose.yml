@@ -1,0 +1,5 @@
+#services
+  ## le Dockerfile de l'application 
+  ## Redis 
+  ## hashicorp/consul 
+  ## hashicorp/vault 

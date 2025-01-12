@@ -1,0 +1,233 @@
+{
+  "format": 1,
+  "restore": {
+    "/home/lambo-ubuntu/Authentication/TestAuthentications/TestAuthentications.csproj": {}
+  },
+  "projects": {
+    "/home/lambo-ubuntu/Authentication/Authentifications/Authentifications.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/lambo-ubuntu/Authentication/Authentifications/Authentifications.csproj",
+        "projectName": "Authentifications",
+        "projectPath": "/home/lambo-ubuntu/Authentication/Authentifications/Authentifications.csproj",
+        "packagesPath": "/home/lambo-ubuntu/.nuget/packages/",
+        "outputPath": "/home/lambo-ubuntu/Authentication/Authentifications/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/lambo-ubuntu/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net6.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "dependencies": {
+            "AutoRefreshTokenHttpMessageHandler": {
+              "target": "Package",
+              "version": "[1.1.3, )"
+            },
+            "BCrypt.Net-Next": {
+              "target": "Package",
+              "version": "[4.0.3, )"
+            },
+            "Hangfire": {
+              "target": "Package",
+              "version": "[1.8.17, )"
+            },
+            "Hangfire.AspNetCore": {
+              "target": "Package",
+              "version": "[1.8.17, )"
+            },
+            "Hangfire.Console": {
+              "target": "Package",
+              "version": "[1.4.3, )"
+            },
+            "Hangfire.Dashboard.BasicAuthorization": {
+              "target": "Package",
+              "version": "[1.0.2, )"
+            },
+            "Hangfire.Redis.StackExchange": {
+              "target": "Package",
+              "version": "[1.9.4, )"
+            },
+            "Microsoft.AspNetCore.Authentication.JwtBearer": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "Microsoft.EntityFrameworkCore": {
+              "target": "Package",
+              "version": "[6.0.20, )"
+            },
+            "Microsoft.EntityFrameworkCore.Analyzers": {
+              "target": "Package",
+              "version": "[6.0.20, )"
+            },
+            "Microsoft.Extensions.Caching.StackExchangeRedis": {
+              "target": "Package",
+              "version": "[9.0.0, )"
+            },
+            "Microsoft.Extensions.Configuration.UserSecrets": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "Newtonsoft.Json": {
+              "target": "Package",
+              "version": "[13.0.3, )"
+            },
+            "StackExchange.Redis": {
+              "target": "Package",
+              "version": "[2.8.22, )"
+            },
+            "Swashbuckle.AspNetCore": {
+              "target": "Package",
+              "version": "[6.5.0, )"
+            },
+            "VaultSharp": {
+              "target": "Package",
+              "version": "[1.17.5, )"
+            },
+            "coverlet.collector": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[6.0.2, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.AspNetCore.App": {
+              "privateAssets": "none"
+            },
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/6.0.421/RuntimeIdentifierGraph.json"
+        }
+      }
+    },
+    "/home/lambo-ubuntu/Authentication/TestAuthentications/TestAuthentications.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "/home/lambo-ubuntu/Authentication/TestAuthentications/TestAuthentications.csproj",
+        "projectName": "TestAuthentications",
+        "projectPath": "/home/lambo-ubuntu/Authentication/TestAuthentications/TestAuthentications.csproj",
+        "packagesPath": "/home/lambo-ubuntu/.nuget/packages/",
+        "outputPath": "/home/lambo-ubuntu/Authentication/TestAuthentications/obj/",
+        "projectStyle": "PackageReference",
+        "configFilePaths": [
+          "/home/lambo-ubuntu/.nuget/NuGet/NuGet.Config"
+        ],
+        "originalTargetFrameworks": [
+          "net6.0"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {}
+        },
+        "frameworks": {
+          "net6.0": {
+            "targetAlias": "net6.0",
+            "projectReferences": {
+              "/home/lambo-ubuntu/Authentication/Authentifications/Authentifications.csproj": {
+                "projectPath": "/home/lambo-ubuntu/Authentication/Authentifications/Authentifications.csproj"
+              }
+            }
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "net6.0": {
+          "targetAlias": "net6.0",
+          "dependencies": {
+            "Microsoft.EntityFrameworkCore.InMemory": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "Microsoft.Extensions.Configuration": {
+              "target": "Package",
+              "version": "[6.0.0, )"
+            },
+            "Microsoft.NET.Test.Sdk": {
+              "target": "Package",
+              "version": "[17.1.0, )"
+            },
+            "Moq": {
+              "target": "Package",
+              "version": "[4.16.1, )"
+            },
+            "RestSharp": {
+              "target": "Package",
+              "version": "[112.0.0, )"
+            },
+            "Testcontainers": {
+              "target": "Package",
+              "version": "[4.1.0, )"
+            },
+            "coverlet.collector": {
+              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[3.1.2, )"
+            },
+            "xunit": {
+              "target": "Package",
+              "version": "[2.4.1, )"
+            },
+            "xunit.runner.visualstudio": {
+              "target": "Package",
+              "version": "[2.4.3, )"
+            }
+          },
+          "imports": [
+            "net461",
+            "net462",
+            "net47",
+            "net471",
+            "net472",
+            "net48",
+            "net481"
+          ],
+          "assetTargetFallback": true,
+          "warn": true,
+          "frameworkReferences": {
+            "Microsoft.NETCore.App": {
+              "privateAssets": "all"
+            }
+          },
+          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/6.0.421/RuntimeIdentifierGraph.json"
+        }
+      }
+    }
+  }
+}

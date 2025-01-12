@@ -12,12 +12,24 @@ using StackExchange.Redis;
 using Hangfire;
 using Hangfire.Redis.StackExchange;
 using Hangfire.Dashboard.BasicAuthorization;
+using Microsoft.AspNetCore.Server.Kestrel.Core;
+using Microsoft.AspNetCore.Server.Kestrel.Https;
+using Authentifications.Services;
+
 
 var builder = WebApplication.CreateBuilder(args);
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
+builder.Services.AddDistributedMemoryCache();
 
-// Conteneur d'enregistrement de dépendances -------------------------------- 
-
+// Configuration de la session
+builder.Services.AddSession(options =>
+{
+	options.IdleTimeout = TimeSpan.FromMinutes(30); // Durée de vie de la session
+	options.Cookie.HttpOnly = true; // Protéger contre les scripts malveillants (XSS)
+	options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // HTTPS obligatoire
+	options.Cookie.SameSite = SameSiteMode.Strict; // CSRF protection
+	options.Cookie.IsEssential = true; // Nécessaire pour activer les sessions
+});
 builder.Services.AddControllers();
 
 
@@ -29,11 +41,11 @@ builder.Services.Configure<ApiBehaviorOptions>(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
 {
-	opt.SwaggerDoc("1", new OpenApiInfo
+	opt.SwaggerDoc("v1.0", new OpenApiInfo
 	{
 		Title = "Authentification service | Api",
 		Description = "An ASP.NET Core Web API for managing Users authentification",
-		Version = "1",
+		Version = "v1.0",
 		Contact = new OpenApiContact
 		{
 			Name = "Artur Lambo",
@@ -67,15 +79,33 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddDataProtection();
 builder.Services.AddHealthChecks();
 builder.Logging.AddConsole();
-//builder.Logging.SetMinimumLevel(LogLevel.Debug);
 
+var kestrelSectionCertificate = builder.Configuration.GetSection("Kestrel:EndPoints:Https:Certificate");
+var certificateFile = kestrelSectionCertificate["File"];
+var certificatePassword = kestrelSectionCertificate["Password"];
+
+builder.Services.Configure<KestrelServerOptions>(options =>
+{
+	if (string.IsNullOrEmpty(certificateFile) || string.IsNullOrEmpty(certificatePassword))
+	{
+		throw new InvalidOperationException("Certificate path or password not configured");
+	}
+	options.Limits.MaxConcurrentConnections = 100;
+	options.Limits.MaxRequestBodySize = 10 * 1024;
+	options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(2);
+	options.ConfigureHttpsDefaults(opt =>
+	{
+		opt.ClientCertificateMode = ClientCertificateMode.NoCertificate; // Required Certificate dans les autres services c'est du allowCertificate
+
+	});
+});
 
 /*
 	+----------------------------------------------------------------------+
 	|Enregistrement de services Injectées lorsqu'une interface est démandée|
 	+----------------------------------------------------------------------+
 */
-builder.Services.AddScoped<IJwtToken, JwtBearerAuthenticationMiddleware>();
+builder.Services.AddScoped<IJwtAccessAndRefreshTokenService, JwtAccessAndRefreshTokenService>();
 builder.Services.AddScoped<IRedisCacheService, RedisCacheService>();
 builder.Services.AddScoped<IRedisCacheTokenService, RedisCacheTokenService>();
 
@@ -85,16 +115,17 @@ builder.Services.AddScoped<IRedisCacheTokenService, RedisCacheTokenService>();
 	+----------------------------------------------------+
 */
 
-builder.Services.AddScoped<JwtBearerAuthenticationMiddleware>();
+builder.Services.AddScoped<JwtAccessAndRefreshTokenService>();
 builder.Services.AddTransient<AuthentificationBasicMiddleware>();
 
 
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 builder.Services.AddLogging();
-builder.Services.AddAuthorization();
 
+builder.Services.AddAuthorization();
 builder.Services.AddAuthentication("BasicAuthentication")
 	.AddScheme<AuthenticationSchemeOptions, AuthentificationBasicMiddleware>("BasicAuthentication", options => { });
+
 var Config = builder.Configuration.GetSection("Redis");
 var clientCertificate = new X509Certificate2(
 	Config["Certificate:Redis-pfx"],
@@ -172,14 +203,12 @@ builder.Services.AddHangfireServer(options =>
 
 });
 
-
-
 var app = builder.Build();
 // Ajouter le tableau de bord et le serveur Hangfire
 var HangFireConfig = builder.Configuration.GetSection("HangfireCredentials");
-app.UseHangfireDashboard("/lambo-authentication-manage/hangfire", new DashboardOptions()
+app.UseHangfireDashboard("/lambo-authentication-manager/hangfire", new DashboardOptions()
 {
-	DashboardTitle = "Hangfire Dashboard",
+	DashboardTitle = "Hangfire Dashboard for Lamboft Inc ",
 	Authorization = new[]
 	{
 		new BasicAuthAuthorizationFilter(
@@ -196,7 +225,6 @@ app.UseHangfireDashboard("/lambo-authentication-manage/hangfire", new DashboardO
 			})
 	}
 });
-
 
 app.Lifetime.ApplicationStarted.Register(() =>
 {
@@ -218,14 +246,14 @@ app.Lifetime.ApplicationStarted.Register(() =>
 */
 
 app.UseMiddleware<ContextPathMiddleware>("/lambo-authentication-manager");
-app.UseMiddleware<ValidationHandlingMiddleware>();
+//app.UseMiddleware<ValidationHandlingMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
 	app.UseSwagger();
 	app.UseSwaggerUI(con =>
 	 {
-		 con.SwaggerEndpoint("/lambo-authentication-manager/swagger/1/swagger.json", "Gestion des authentification");
+		 con.SwaggerEndpoint("/lambo-authentication-manager/swagger/v1.0/swagger.yml", "Gestion des authentification"); // dépend de la version définie dans le swaggerDoc
 
 		 con.RoutePrefix = string.Empty;
 
@@ -234,17 +262,19 @@ if (app.Environment.IsDevelopment())
 
 app.UseCors(MyAllowSpecificOrigins);
 app.UseHttpsRedirection();
-app.UseRouting();
-app.UseAuthentication();
-app.UseAuthorization();
+app.UseRouting();  
+app.UseSession(); 
+app.UseAuthentication();  
+app.UseAuthorization();  
+
 app.UseEndpoints(endpoints =>
- {
-	 endpoints.MapControllers();
-	 endpoints.MapHealthChecks("/health");
-	 endpoints.MapGet("/version", async context =>
-		{
-			await context.Response.WriteAsync("Version de l'API : 1");
-		});
- });
+{
+	endpoints.MapControllers();
+	endpoints.MapHealthChecks("/health");
+	endpoints.MapGet("/version", async context =>
+	{
+		await context.Response.WriteAsync("Version de l'API : v1.0");
+	});
+});
 
 app.Run();

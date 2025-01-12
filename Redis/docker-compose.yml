@@ -9,10 +9,10 @@ services:
     networks:
       - redis
     volumes:
-      - ./redis-data:/data  # Volume pour persistance des données
-      - ./redis.conf:/usr/local/etc/redis/redis.conf  # Fichier de configuration Redis personnalisé
-      - ./certs:/certs  # Dossier des certificats TLS
-      - /etc/localtime:/etc/localtime:ro  # Synchronisation de l'heure du conteneur avec l'hôte
+      - ./redis-data:/data  
+      - ./redis.conf:/usr/local/etc/redis/redis.conf  
+      - ./certs:/certs  
+      - /etc/localtime:/etc/localtime:ro 
       - ./redis-log:/var/log/redis
     environment:
       - REDIS_PASSWORD=${REDIS_PASSWORD} 
@@ -26,8 +26,8 @@ services:
     logging:
       driver: "json-file"
       options:
-        max-size: "15m"   # Limite la taille totale des logs
-        max-file: "1"     # Conserve seulement un fichier de log (utile pour limiter la rotation)
+        max-size: "15m"  
+        max-file: "1"     
     tty: true
 
 networks:

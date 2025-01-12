@@ -1,3 +1,21 @@
+FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
+WORKDIR /source
+EXPOSE 8081
+
+# Phase de construction
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
+ARG BUILD_CONFIGURATION=Release
+WORKDIR /src
+
+# Copie des fichiers du projet et restauration des dépendances
+COPY Authentifications/*.csproj Authentifications/
+RUN dotnet restore "Authentifications/Authentifications.csproj" --disable-parallel
+
+# Copie du reste du code source et des fichiers de configuration
+COPY Authentifications/ Authentifications/
+
+# Construction du projet
+RUN dotnet build "Authentifications/Authentifications.csproj" -c $BUILD_CONFIGURATION -o /app/build
 
 # Phase de publication
 FROM build AS publish
@@ -20,9 +38,9 @@ COPY TasksApi.pfx /etc/ssl/certs/TasksApi.pfx
 
 # Configuration des variables d'environnement
 ENV ASPNETCORE_Kestrel__Certificates__Default__Path=/etc/ssl/certs/TasksApi.pfx
-# Check plustaard
+# Check plustard
 ENV ASPNETCORE_ENVIRONMENT=Development 
-ENV ASPNETCORE_URLS=https://+:7103
+ENV ASPNETCORE_URLS=https://+:8081
 
 # Point d'entrée
 ENTRYPOINT ["dotnet", "Authentifications.dll"]

@@ -1,7 +1,6 @@
 using System.ComponentModel;
 using System.ComponentModel.DataAnnotations;
 using System.ComponentModel.DataAnnotations.Schema;
-using System.Text.RegularExpressions;
 
 namespace Authentifications.Models;
 public class UtilisateurDto
@@ -28,15 +27,5 @@ public class UtilisateurDto
 	public bool CheckHashPassword(string password)
 	{
 		return BCrypt.Net.BCrypt.Verify(password, Pass);
-	}
-	public bool CheckEmailAdress(string email)
-	{
-		string regexMatch = "(?<alpha>\\w+)@(?<mailing>[aA-zZ]+)\\.(?<domaine>[aA-zZ]+$)";
-		if (string.IsNullOrEmpty(email))
-		{
-			return false;
-		}
-		Match check = Regex.Match(email, regexMatch);
-		return check.Success;
 	}
 }
