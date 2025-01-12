@@ -4,8 +4,12 @@ variables:
   DOTNET_CLI_TELEMETRY_OPTOUT: "1" # Désactiver la télémétrie .NET
   DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true" # Réduire les étapes initiales
   DOTNET_NOLOGO: "true" # Supprimer le logo CLI .NET des logs
+  BUILD_CONFIGURATION: "Release"
   GITLAB_REPOSITORY_URL: https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/registry/repositories
   PROJECT_ACCESS_TOKEN: "${PROJECT_ACCESS_TOKEN}" # Token d'accès GitLab pour Docker Registry
+  COVERAGE_REPORT_PATH: "TestAuthentications/coverage.opencover.xml"
+  SONAR_HOST_URL: "https://your-sonarqube-url"
+  SONAR_USER_TOKEN: "${SONAR_USER_TOKEN}"
 
 default:
   tags:
@@ -50,13 +54,21 @@ test:
   stage: test
   script:
     - echo "Exécution des tests unitaires"
-    - dotnet test TestAuthentications/TestAuthentications.csproj --configuration $BUILD_CONFIGURATION --no-restore --logger "trx;LogFileName=test-results.trx"
+     - |
+      dotnet test TestAuthentications/TestAuthentications.csproj \
+        --configuration $BUILD_CONFIGURATION \
+        --no-restore \
+        --collect:"XPlat Code Coverage" \
+        /p:CollectCoverage=true \
+        /p:CoverletOutputFormat=opencover \
+        /p:CoverletOutput=${COVERAGE_REPORT_PATH}
+  
   artifacts:
     when: always
     paths:
-      - TestAuthentications/TestResults/*.trx
+      - ${COVERAGE_REPORT_PATH}
     reports:
-      junit: TestAuthentications/TestResults/*.trx
+      junit: ${COVERAGE_REPORT_PATH}
   dependencies:
     - build
 
@@ -69,16 +81,22 @@ sonarqube-check_analysis_report:
     - if: '$CI_COMMIT_BRANCH == "develop"'
     - if: '$CI_COMMIT_BRANCH == "main"'
   script:
-    - echo "Analyse SonarQube pour la branche $CI_COMMIT_BRANCH"
-    - dotnet sonarscanner begin /k:"$CI_PROJECT_PATH" /d:sonar.login="$SONARQUBE_TOKEN"
-    - dotnet build
-    - dotnet sonarscanner end /d:sonar.login="$SONARQUBE_TOKEN"
+    - echo "Analyse SonarQube en cours..."
+    - |
+       dotnet sonarscanner begin \
+        /k:"your_project_key" \
+        /d:sonar.host.url=${SONAR_HOST_URL} \
+        /d:sonar.login=${SONAR_USER_TOKEN} \
+        /d:sonar.cs.opencover.reportsPaths=${COVERAGE_REPORT_PATH}
+    - dotnet build Authentifications.sln --configuration $BUILD_CONFIGURATION
+    - dotnet sonarscanner end /d:sonar.login=${SONAR_USER_TOKEN}
+  dependencies:
+    - test
   artifacts:
     paths:
       - sonar-report.json
     expire_in: 1 day
-  dependencies:
-    - test
+
 
 ######### DEPLOY TO DEV ENVIRONMENT
 Env_dev:
