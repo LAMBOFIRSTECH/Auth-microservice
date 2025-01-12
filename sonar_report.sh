@@ -25,21 +25,21 @@ if [ -z "$SONAR_PROJECT_KEY" ]; then
 fi
 
 # Les options que l'on passe à l'api de sonar dépend déjà de ce qui existe sur le serveur en lui memme
-# Regarder d'abord sonar et voir les components qu'il propose avant d'adapter le curl 
+# Regarder d'abord sonar et voir les components qu'il propose avant d'adapter le curl
 curl --request GET \
     --url "${SONAR_HOST_URL}/api/measures/component?metricKeys=ncloc%2Ccode_smells%2Ccomplexity%2Ccoverage&component=${SONAR_PROJECT_KEY}" \
     -u "${SONAR_USER_TOKEN}:" \
     -H "Accept: application/json" \
     -o "${SONAR_PROJECT_KEY}-sonar-report.json"
 
-# On va récupérer la valeur du coverage dans le fichier json (NB: apt ou yum(si c'est une rhel) install jq package doit etre installé sur le serveur de déploy) 
+# On va récupérer la valeur du coverage dans le fichier json (NB: apt ou yum(si c'est une rhel) install jq package doit etre installé sur le serveur de déploy)
 
 coverage=$(echo "${SONAR_PROJECT_KEY}-sonar-report.json" | jq -r '.component.measures[] | select(.metric == "coverage") | .value')
 coverage_value=$(echo "$coverage" | awk '{print $1 + 0}')
-if (( $(echo "$coverage_value > 20.0" | bc -l) )); then # Inverser la logique voir avec devalère pour la couverture de code
+if (($(echo "$coverage_value > 20.0" | bc -l))); then # Inverser la logique voir avec devalère pour la couverture de code
     colors "RED" "Ce code doit être optimisé"
     echo ""
     colors "YELLOW" "L'image docker ne sera pas construite"
     exit 1
 fi
-exit 0 # Code de retour pour ce script on va le récupérer dans le script docker_image.sh 
+exit 0 # Code de retour pour ce script on va le récupérer dans le script docker_image.sh
