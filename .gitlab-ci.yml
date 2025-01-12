@@ -29,7 +29,7 @@ cache:
     - ~/.nuget/packages/ # Cache des dépendances NuGet
     - ./**/bin/
     - ./**/obj/
-  expire_in: 1 day
+
 
 ######### RESTORE STAGE
 restore:
@@ -38,6 +38,10 @@ restore:
     - echo "Restauration des dépendances .NET"
     - dotnet nuget locals all --clear
     - dotnet restore Authentifications.sln
+  artifacts:
+    paths:
+      - ~/.nuget/packages/
+    expire_in: 1 day
 
 ######### BUILD STAGE
 build:
