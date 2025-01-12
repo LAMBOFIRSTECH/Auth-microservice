@@ -29,12 +29,14 @@ cache:
     - ~/.nuget/packages/ # Cache des dépendances NuGet
     - ./**/bin/
     - ./**/obj/
+  expire_in: 1 day
 
 ######### RESTORE STAGE
 restore:
   stage: restore
   script:
     - echo "Restauration des dépendances .NET"
+    - dotnet nuget locals all --clear
     - dotnet restore Authentifications.sln
 
 ######### BUILD STAGE
@@ -43,6 +45,7 @@ build:
   script:
     - echo "Compilation du projet principal"
     - dotnet build Authentifications.sln --configuration $BUILD_CONFIGURATION --no-restore
+    - dotnet build TestAuthentications/TestAuthentications.csproj --no-restore -c Release
   artifacts:
     paths:
       - ./**/bin/
