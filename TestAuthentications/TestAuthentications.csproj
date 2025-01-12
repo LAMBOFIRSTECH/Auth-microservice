@@ -22,5 +22,6 @@
   <ItemGroup>
     <PackageReference Include="Testcontainers" Version="4.1.0" />
     <ProjectReference Include="..\Authentifications\Authentifications.csproj" />
+    <PackageReference Include="Microsoft.EntityFrameworkCore.Analyzers" Version="6.0.20" />
   </ItemGroup>
 </Project>
