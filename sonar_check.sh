@@ -14,15 +14,15 @@ if [ ! -f .env ]; then
 fi
 source .env
 
-if [ ! -f pom.xml ]; then
-  colors "RED" "Erreur : Veillez ajouté le fichier pom.xml"
-  exit 1
-fi
-SONAR_PROJECT_KEY=$(cat pom.xml | grep '<sonar.projectKey>' | sed 's/.*<sonar.projectKey>\(.*\)<\/sonar.projectKey>.*/\1/')
-if [ -z "$SONAR_PROJECT_KEY" ]; then
-  echo "Erreur : la clé de projet Sonar n'a pas été trouvée."
-  exit 1
-fi
+# if [ ! -f pom.xml ]; then
+#   colors "RED" "Erreur : Veillez ajouté le fichier pom.xml"
+#   exit 1
+# fi
+# SONAR_PROJECT_KEY=$(cat pom.xml | grep '<sonar.projectKey>' | sed 's/.*<sonar.projectKey>\(.*\)<\/sonar.projectKey>.*/\1/')
+# if [ -z "$SONAR_PROJECT_KEY" ]; then
+#   echo "Erreur : la clé de projet Sonar n'a pas été trouvée."
+#   exit 1
+# fi
 
 mkdir -p ~/.ssh
 echo "$SSH_PRIVATE_KEY" >~/.ssh/id_rsa # On va copier la clé privée du serveur vers mgs de clés du runner
@@ -35,7 +35,7 @@ if [ "$check_server" != "200" ] && [ "$check_server" != "302" ]; then
   exit 1
 fi
 
-mvn verify sonar:sonar \
+dotnet test sonar:sonar \
   -Dsonar.host.url="${SONAR_HOST_URL}" \
   -Dsonar.login="${SONAR_USER_TOKEN}" \
   -Dsonar.coverage.jacoco.xmlReportPaths=target/site/jacoco/jacoco.xml

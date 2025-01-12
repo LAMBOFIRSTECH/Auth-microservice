@@ -21,7 +21,8 @@ cache:
 build:
   stage: build
   script:
-  - mvn clean install
+  - dotnet clean
+  - dotnet build
   artifacts:
     expire_in: 1 day
     paths:
@@ -30,7 +31,7 @@ build:
 test:
   stage: test
   script:
-  - mvn verify
+  - dotnet test
   artifacts:
     paths:
     - target/surefire-reports/*.xml
