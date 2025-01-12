@@ -16,7 +16,7 @@ stages:
   - restore
   - build
   - test
-  - check_analysis_report
+  - sonarqube-check_analysis_report
   - deploy
 
 ######### CACHE
