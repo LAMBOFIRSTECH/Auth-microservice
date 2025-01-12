@@ -21,8 +21,6 @@ cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
     - ~/.nuget/packages/ # Cache des dépendances NuGet
-    - ./**/bin/ # Cache des fichiers compilés
-    - ./**/obj/ # Cache des fichiers temporaires
 
 ######## STAGES ########
 stages:
@@ -56,11 +54,7 @@ build:
     - dotnet restore TestAuthentications/TestAuthentications.csproj
   dependencies:
     - restore # Dépend de la restauration
-  artifacts:
-    paths:
-      - ./**/bin/
-      - ./**/obj/
-    expire_in: 1 day
+
 
 ######## TEST ########
 test:
