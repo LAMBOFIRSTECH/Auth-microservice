@@ -16,3 +16,6 @@ Permissions dans Vault :
 Configurez les autorisations Vault pour que seul le serveur d’autorisation puisse lire le secret contenant la clé publique :
 
 Rajouter un container docker pour les tests unitaires avec testContainers
+
+Installation du scanner dotnet sur le dev dotnet tool install --global dotnet-sonarscanner
+

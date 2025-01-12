@@ -9,8 +9,7 @@ variables:
   SONAR_HOST_URL: "https://your-sonarqube-url" # URL de SonarQube
   SONAR_USER_TOKEN: "${SONAR_USER_TOKEN}" # Jeton pour SonarQube
   DOCKER_IMAGE_TAG: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}" # Tag de l'image Docker
-  #toto: $(ls *.sln | sed -E 's/\.sln$//') 
-
+  #toto: $(ls *.sln | sed -E 's/\.sln$//')
 
 default:
   tags:
@@ -55,7 +54,6 @@ build:
   dependencies:
     - restore # Dépend de la restauration
 
-
 ######## TEST ########
 test:
   stage: test
@@ -69,6 +67,7 @@ test:
         /p:CollectCoverage=true \
         /p:CoverletOutputFormat=opencover \
         /p:CoverletOutput=${COVERAGE_REPORT_PATH}
+        echo ${COVERAGE_REPORT_PATH} >> build.env
   dependencies:
     - build # Dépend de la compilation
   artifacts:
@@ -77,6 +76,7 @@ test:
       - ${COVERAGE_REPORT_PATH}
     reports:
       junit: ${COVERAGE_REPORT_PATH}
+      dotenv: build.env
 
 ######## SONARQUBE ########
 sonarqube-check_analysis_report:
@@ -133,7 +133,7 @@ Env_dev:
 Env_staging:
   stage: deploy
   tags:
-    - staging
+    - gitlab-lamboft-shell-runner
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   script:

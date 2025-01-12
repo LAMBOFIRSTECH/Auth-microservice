@@ -19,12 +19,12 @@ if [ ! -f $FILE ]; then
     colors "RED" "Erreur : Veillez ajouté le fichier Authentifications.sln"
     exit 1
 fi
-SONAR_PROJECT_KEY="Authentifications"
+
 if [ -z "$SONAR_PROJECT_KEY" ]; then
     echo "Erreur : la clé de projet Sonar n'a pas été trouvée."
     exit 1
 fi
-COVERAGE_REPORT_PATH= "TestAuthentications/coverage.opencover.xml"
+COVERAGE_REPORT_PATH="TestAuthentications/coverage.opencover.xml"
 
 mkdir -p ~/.ssh
 echo "$SSH_PRIVATE_KEY" >~/.ssh/id_rsa # On va copier la clé privée du serveur vers mgs de clés du runner
@@ -41,18 +41,22 @@ dotnet sonarscanner begin \
     /d:sonar.host.url=${SONAR_HOST_URL} \
     /d:sonar.login=${SONAR_USER_TOKEN} \
     /d:sonar.cs.opencover.reportsPaths=${COVERAGE_REPORT_PATH}
-- dotnet build Authentifications.sln --configuration ${BUILD_CONFIGURATION}
-- dotnet sonarscanner end /d:sonar.login=${SONAR_USER_TOKEN}
+
+colors "YELLOW" "Construction du projet"
+dotnet  build Authentifications.sln --configuration "${BUILD_CONFIGURATION}"
+
+colors  "YELLOW"  "Fin de l'analyse SonarQube"
+dotnet sonarscanner end /d:sonar.login="${SONAR_USER_TOKEN}"
 
 # Vérifie le code de sortie de la commande Maven
 if [[ $? -ne 0 ]]; then
     colors "RED" "Échec de l'analyse SonarQube."
     exit 1
 fi
-colors "YELLOW" "#######################Analyse SonarQube#########################################################"
-colors "CYAN" "|  1- Récupération du dossier target du repertoire créé par le compte de service gitlab-runner  |"
-colors "CYAN" "|  2- Test de connexion sur l'instance docker sonarqube                                         |"
-colors "CYAN" "|  3- Analyse sonarqube rapport                                                           |"
+colors "YELLOW" "#######################Analyse SonarQube########################################################"
+colors "CYAN" "|  1- Récupération du dossier target du repertoire créé par le compte de service gitlab-runner   |"
+colors "CYAN" "|  2- Test de connexion sur l'instance docker sonarqube                                          |"
+colors "CYAN" "|  3- Analyse sonarqube rapport                                                                  |"
 colors "GREEN" "######################Analyse SonarQube terminée avec succès#####################################"
 echo ""
 exit 0
