@@ -92,7 +92,7 @@ Env_dev:
         echo "No environment tag set for this runner development"
         exit 1
     fi
-  #   ./docker_cleanup.sh meloaude-$CI_PROJECT_NAME
+    ./docker_cleanup.sh meloaude-$CI_PROJECT_NAME
   artifacts:
     reports:
       dotenv: build.env
