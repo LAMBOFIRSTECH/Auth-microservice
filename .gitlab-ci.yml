@@ -38,7 +38,8 @@ restore:
     - echo "Nettoyage des caches locaux NuGet"
     - dotnet nuget locals all --clear
     - echo "Restauration des dépendances .NET"
-    - dotnet restore Authentifications.sln
+    - dotnet restore Authentifications/Authentifications.csproj
+    - dotnet restore TestAuthentications/TestAuthentications.csproj
   artifacts:
     paths:
       - ~/.nuget/packages/ # Sauvegarde le cache des dépendances
@@ -49,7 +50,8 @@ build:
   stage: build
   script:
     - echo "Compilation du projet principal"
-    - dotnet build Authentifications.sln --configuration $BUILD_CONFIGURATION --no-restore
+    - dotnet restore Authentifications/Authentifications.csproj
+    - dotnet restore TestAuthentications/TestAuthentications.csproj
   dependencies:
     - restore # Dépend de la restauration
   artifacts:
