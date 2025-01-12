@@ -1,102 +1,69 @@
-using System.IdentityModel.Tokens.Jwt;
 using System.Security.Cryptography;
 using System.Text;
 using Authentifications.Interfaces;
-using Authentifications.Models;
-using Authentifications.Middlewares;
 using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json;
+using System.Text.RegularExpressions;
 namespace Authentifications.RedisContext;
 public class RedisCacheTokenService : IRedisCacheTokenService
 {
 	private readonly IDistributedCache _cache;
 	private readonly ILogger<RedisCacheService> logger;
 	private readonly IConfiguration configuration;
-	private readonly JwtBearerAuthenticationMiddleware JwtBearerAuthenticationMiddleware;
-	private readonly string cacheKey = string.Empty;
-	private readonly string email = string.Empty;
-	private readonly string password = string.Empty;
-	public RedisCacheTokenService(IConfiguration configuration, IDistributedCache cache, ILogger<RedisCacheService> logger, JwtBearerAuthenticationMiddleware JwtBearerAuthenticationMiddleware)
+	public RedisCacheTokenService(IConfiguration configuration, IDistributedCache cache, ILogger<RedisCacheService> logger)
 	{
 		_cache = cache;
 		this.configuration = configuration;
 		this.logger = logger;
-		this.JwtBearerAuthenticationMiddleware = JwtBearerAuthenticationMiddleware;
-		cacheKey = GenerateRedisKeyForTokenSession(email, password);
 	}
-	public bool IsTokenExpired(string token) //hangfire on check si le token est expiré dans redis
-	{
-		var tokenHandler = new JwtSecurityTokenHandler();
-        if (tokenHandler.ReadToken(token) is not JwtSecurityToken jwtToken)
-            return true;
-
-        var expirationDate = jwtToken.ValidTo;
-		return expirationDate < DateTime.UtcNow;
-	}
-	// public string RefreshToken(string token, string email)
-	// {
-	// 	if (IsTokenExpired(token))
-	// 	{
-	// 		return JwtBearerAuthenticationMiddleware.GenerateJwtToken(email);
-	// 	}
-	// 	return token;
-	// }
-	public string GenerateRedisKeyForTokenSession(string email, string password)
+	public byte[] ComputeHashUsingByte(string email, string password)
 	{
 		string salt = "RandomUniqueSalt";
-        using SHA256 sha256 = SHA256.Create();
-        string combined = $"{email}:{password}:{salt}";
-        byte[] bytes = Encoding.UTF8.GetBytes(combined);
-        byte[] hashBytes = sha256.ComputeHash(bytes);
-        return Convert.ToHexString(hashBytes);
-    }
-	// public async Task<bool> GetTokenSessionFromRedisByFilterAsync(string email, string password)
-	// {
-	// 	bool find = false;
-	// 	var utilisateurs = await RetrieveDataSession_OnRedisUsingKeyAsync();
-	// 	foreach (var user in utilisateurs)
-	// 	{
-	// 		var result = user.CheckHashPassword(password);
-	// 		if (result.Equals(true) && user.Email!.Equals(email))
-	// 		{
-	// 			find = true;
-	// 			break;
-	// 		}
-	// 	}
-	// 	return find;
-	// }
-	private async Task<ICollection<Object>> RetrieveDataSession_OnRedisUsingKeyAsync()
+		using SHA256 sha256 = SHA256.Create();
+		string combined = $"{email}:{password}:{salt}";
+		byte[] bytes = Encoding.UTF8.GetBytes(combined);
+		return sha256.ComputeHash(bytes);
+	}
+	
+	public async Task<string> RetrieveTokenBasingOnRedisUserSessionAsync(string email,string password)
 	{
+		if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+			return string.Empty;
+		var name = Regex.Match(email, "^[^@]+");
+		var cacheKey = $"Token-{name}_{BitConverter.ToString(ComputeHashUsingByte(email, password)).Replace("-", "")}";
 		var cachedData = await _cache.GetStringAsync(cacheKey);
-		//_cache.keys("*");
 		if (cachedData is null)
 		{
-			logger.LogError("Aucune donnée trouvée dans Redis pour la clé : {CacheKey}", cacheKey);
-			throw new Exception("Aucune donnée trouvée dans Redis");
+			logger.LogWarning("No session's token existing in Redis for key: {CacheKey}", cacheKey);
+			return string.Empty;
 		}
-		return JsonConvert.DeserializeObject<ICollection<Object>>(cachedData)!;
+		var obj = JsonConvert.DeserializeObject<Dictionary<string, object>>(cachedData)!;
+		string token = "";
+		if (obj.ContainsKey("refreshToken"))
+			token = obj["refreshToken"]?.ToString() ?? string.Empty;
+		return token;
 	}
-	public void StoreTokenSessionInRedis(string token, string email)
+	public void StoreRefreshTokenSessionInRedis(string email, string refreshToken, string password)
 	{
 		Dictionary<string, object> jsonObject = new()
-        {
-			{ "RedisTokenId", new Guid() },
+		{
+			{ "RedisRefreshTokenId", Guid.NewGuid() },
 			{ "Email", email },
-			{ "Token", token }
+			{ "Pass", password },
+			{ "refreshToken", refreshToken }
 		};
+		var tampon = Convert.ToHexString(ComputeHashUsingByte(email, password));
+		var name = Regex.Match(email, "^[^@]+");
+		var cacheKey = $"Token-{name}_{tampon}";
 		var cachedData = _cache.GetStringAsync(cacheKey);
 		if (cachedData is not null)
 		{
 			var serializedData = JsonConvert.SerializeObject(jsonObject, Formatting.Indented);
 			_cache.SetStringAsync(cacheKey, serializedData, new DistributedCacheEntryOptions
 			{
-				AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(24) // Modifier pour test
+				AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
 			});
-			logger.LogInformation("Redis a mise à jour avec les données du token de connexion pour la clé: {CacheKey}", cacheKey);
+			logger.LogInformation("Successfull storage refresh token connection for key: {CacheKey}", cacheKey);
 		}
-	}
-	public string RefreshToken(string token, string email)
-	{
-		throw new NotImplementedException();
 	}
 }

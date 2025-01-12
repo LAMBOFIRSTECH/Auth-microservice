@@ -6,20 +6,12 @@ using System.Text.RegularExpressions;
 using Authentifications.Interfaces;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.Extensions.Options;
-
 namespace Authentifications.Middlewares;
 public class AuthentificationBasicMiddleware : AuthenticationHandler<AuthenticationSchemeOptions>
 {
-
     private readonly ILogger<AuthentificationBasicMiddleware> log;
     private readonly IRedisCacheService redisCache;
-    public AuthentificationBasicMiddleware(
-    IRedisCacheService redisCache,
-    IOptionsMonitor<AuthenticationSchemeOptions> options,
-    ILoggerFactory logger,
-    UrlEncoder encoder,
-    ISystemClock clock, ILogger<AuthentificationBasicMiddleware> log)
-
+    public AuthentificationBasicMiddleware(IRedisCacheService redisCache, IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder, ISystemClock clock, ILogger<AuthentificationBasicMiddleware> log)
     : base(options, logger, encoder, clock)
     {
         this.log = log;
@@ -44,6 +36,10 @@ public class AuthentificationBasicMiddleware : AuthenticationHandler<Authenticat
 
             var email = credentials[0];
             var password = credentials[1];
+            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
+            {
+                throw new Exception("No credentials provided.");
+            }
             Context.Items["password"] = password;
             Context.Items["email"] = email;
             string regexMatch = "(?<alpha>\\w+)@(?<mailing>[aA-zZ]+)\\.(?<domaine>[aA-zZ]+$)";
@@ -57,7 +53,7 @@ public class AuthentificationBasicMiddleware : AuthenticationHandler<Authenticat
                 Context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 return AuthenticateResult.NoResult();
             }
-            var claims = new List<Claim> { new Claim(ClaimTypes.Email, email) };
+            var claims = new List<Claim> { new(ClaimTypes.Email, email) };
 
             var identity = new ClaimsIdentity(claims, Scheme.Name);
             var principal = new ClaimsPrincipal(identity);
@@ -73,7 +69,7 @@ public class AuthentificationBasicMiddleware : AuthenticationHandler<Authenticat
             return AuthenticateResult.Fail($"Authentication failed: {ex.Message}");
         }
     }
-    private async Task<bool> ValidateCredentials(string email, string password)
+    public async Task<bool> ValidateCredentials(string email, string password)
     {
         var tupleResult = await redisCache.GetBooleanAndUserDataFromRedisUsingParamsAsync(true, email, password);
         if (tupleResult.Item1 is false)

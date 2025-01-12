@@ -40,13 +40,6 @@
 /home/lambo-ubuntu/Authentifications/obj/Debug/net6.0/Authentifications.pdb
 /home/lambo-ubuntu/Authentifications/obj/Debug/net6.0/Authentifications.genruntimeconfig.cache
 /home/lambo-ubuntu/Authentifications/obj/Debug/net6.0/ref/Authentifications.dll
-/home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/Authentifications.csproj.AssemblyReference.cache
-/home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/Authentifications.GeneratedMSBuildEditorConfig.editorconfig
-/home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/Authentifications.AssemblyInfoInputs.cache
-/home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/Authentifications.AssemblyInfo.cs
-/home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/Authentifications.csproj.CoreCompileInputs.cache
-/home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/Authentifications.MvcApplicationPartsAssemblyInfo.cs
-/home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/Authentifications.MvcApplicationPartsAssemblyInfo.cache
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/appsettings.Development.json
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/Authentifications
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/Authentifications.deps.json
@@ -54,6 +47,7 @@
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/Authentifications.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/Authentifications.pdb
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/Authentifications.xml
+/home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/AutoRefreshTokenHttpMessageHandler.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/BCrypt.Net-Next.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/Hangfire.AspNetCore.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/Hangfire.Console.dll
@@ -63,6 +57,8 @@
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/Hangfire.Redis.StackExchange.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/Hangfire.SqlServer.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/Microsoft.AspNetCore.Authentication.JwtBearer.dll
+/home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/Microsoft.Bcl.AsyncInterfaces.dll
+/home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/Microsoft.Bcl.TimeProvider.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/Microsoft.EntityFrameworkCore.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/Microsoft.EntityFrameworkCore.Abstractions.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/Microsoft.Extensions.Caching.Abstractions.dll
@@ -87,9 +83,11 @@
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/Swashbuckle.AspNetCore.SwaggerUI.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/System.Diagnostics.DiagnosticSource.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/System.IdentityModel.Tokens.Jwt.dll
+/home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/System.Net.Http.Json.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/System.Text.Encodings.Web.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/System.Text.Json.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/VaultSharp.dll
+/home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/nl/AutoRefreshTokenHttpMessageHandler.resources.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/ca/Hangfire.Core.resources.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/de/Hangfire.Core.resources.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/es/Hangfire.Core.resources.dll
@@ -105,6 +103,13 @@
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/zh-TW/Hangfire.Core.resources.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/zh/Hangfire.Core.resources.dll
 /home/lambo-ubuntu/Authentication/Authentifications/bin/Debug/net6.0/runtimes/browser/lib/net6.0/System.Text.Encodings.Web.dll
+/home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/Authentifications.csproj.AssemblyReference.cache
+/home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/Authentifications.GeneratedMSBuildEditorConfig.editorconfig
+/home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/Authentifications.AssemblyInfoInputs.cache
+/home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/Authentifications.AssemblyInfo.cs
+/home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/Authentifications.csproj.CoreCompileInputs.cache
+/home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/Authentifications.MvcApplicationPartsAssemblyInfo.cs
+/home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/Authentifications.MvcApplicationPartsAssemblyInfo.cache
 /home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/staticwebassets.build.json
 /home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/staticwebassets.development.json
 /home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/scopedcss/bundle/Authentifications.styles.css

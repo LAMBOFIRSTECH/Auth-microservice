@@ -1,0 +1,151 @@
+#########   VARIABLES
+variables:
+  GIT_DEPTH: "0" # Pour récupérer toutes les branches
+  DOTNET_CLI_TELEMETRY_OPTOUT: "1" # Désactiver la télémétrie .NET
+  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true" # Réduire les étapes initiales
+  DOTNET_NOLOGO: "true" # Supprimer le logo CLI .NET des logs
+  GITLAB_REPOSITORY_URL: https://gitlab.com/api/v4/projects/$CI_PROJECT_ID/registry/repositories
+  PROJECT_ACCESS_TOKEN: "${PROJECT_ACCESS_TOKEN}" # Token d'accès GitLab pour Docker Registry
+
+default:
+  tags:
+  - gitlab-lamboft-docker-runner
+
+######### STAGES
+stages:
+  - restore
+  - build
+  - test
+  - sonarqube-check_analysis_report
+  - deploy
+
+######### CACHE
+cache:
+  paths:
+    - ~/.nuget/packages/ # Cache des dépendances NuGet
+    - ./**/bin/
+    - ./**/obj/
+
+######### RESTORE STAGE
+restore:
+  stage: restore
+  script:
+    - echo "Restauration des dépendances .NET"
+    - dotnet restore Authentifications.sln
+
+######### BUILD STAGE
+build:
+  stage: build
+  script:
+    - echo "Compilation du projet principal"
+    - dotnet build Authentifications.sln --configuration $BUILD_CONFIGURATION --no-restore
+  artifacts:
+    paths:
+      - ./**/bin/
+      - ./**/obj/
+    expire_in: 1 day
+
+######### TEST STAGE
+test:
+  stage: test
+  script:
+    - echo "Exécution des tests unitaires"
+    - dotnet test TestAuthentications/TestAuthentications.csproj --configuration $BUILD_CONFIGURATION --no-restore --logger "trx;LogFileName=test-results.trx"
+  artifacts:
+    when: always
+    paths:
+      - TestAuthentications/TestResults/*.trx
+    reports:
+      junit: TestAuthentications/TestResults/*.trx
+  dependencies:
+    - build
+
+######### SONARQUBE ANALYSIS
+sonarqube-check_analysis_report:
+  stage: sonarqube-check_analysis_report
+  tags:
+    - staging
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  script:
+    - echo "Analyse SonarQube pour la branche $CI_COMMIT_BRANCH"
+    - dotnet sonarscanner begin /k:"$CI_PROJECT_PATH" /d:sonar.login="$SONARQUBE_TOKEN"
+    - dotnet build
+    - dotnet sonarscanner end /d:sonar.login="$SONARQUBE_TOKEN"
+  artifacts:
+    paths:
+      - sonar-report.json
+    expire_in: 1 day
+  dependencies:
+    - test
+
+######### DEPLOY TO DEV ENVIRONMENT
+Env_dev:
+  stage: deploy
+  tags:
+    - development
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+      variables:
+        RUNNER_TAG: "development"
+      allow_failure: false
+  script:
+    - echo "Déploiement en environnement de développement"
+    - echo "DEVELOPMENT_TAG=$DEVELOPMENT_TAG" >> build.env
+    - |
+      if [[ "$DEVELOPMENT_TAG" == "true" ]]; then
+        echo "Construction et push de l'image Docker"
+        docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+        docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest .
+        docker push $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest
+        echo "Déploiement en cours..."
+        PORT_NUMBER=$(grep -oP 'EXPOSE\s+\K\d+' Dockerfile)
+        docker rm -f dev-$CI_PROJECT_NAME || true
+        docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name dev-$CI_PROJECT_NAME $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest
+      else
+        echo "Pas de tag environnement pour ce runner"
+        exit 1
+      fi
+  artifacts:
+    reports:
+      dotenv: build.env
+    paths:
+      - .docker_tag
+    expire_in: 15 min
+
+######### DEPLOY TO STAGING ENVIRONMENT
+Env_staging:
+  stage: deploy
+  tags:
+    - staging
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+      variables:
+        RUNNER_TAG: "staging"
+  script:
+    - echo "Déploiement en environnement de staging"
+    - echo "STAGING_TAG=$STAGING_TAG" >> build.env
+    - |
+      if [[ "$STAGING_TAG" == "true" ]]; then
+        echo "Construction et push de l'image Docker"
+        docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+        docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest .
+        docker push $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest
+        echo "Déploiement en cours..."
+        PORT_NUMBER=$(grep -oP 'EXPOSE\s+\K\d+' Dockerfile)
+        docker rm -f staging-$CI_PROJECT_NAME || true
+        docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name staging-$CI_PROJECT_NAME $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest
+      else
+        echo "Pas de tag environnement pour ce runner"
+        exit 1
+      fi
+  artifacts:
+    reports:
+      dotenv: build.env
+    paths:
+      - .docker_tag
+    expire_in: 15 min
+
+  #   - ./clean_old_container.sh meloaude-$CI_PROJECT_NAME # C'est dans ce scripte qu'on fait échouer le pipeline si jamais le containeur ne se lance pas
+  
