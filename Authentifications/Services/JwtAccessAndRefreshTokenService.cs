@@ -135,7 +135,6 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         };
         var tokenCreation = tokenHandler.CreateToken(tokenDescriptor);
         var token = tokenHandler.WriteToken(tokenCreation);
-        // Revocation d'un token dans quelle mesure A revoir maybe dans l'autre microservice pour les utilisateurs avec Policy=UserPolicy
         TokenResult result = new()
         {
             Token = token,

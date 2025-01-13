@@ -9,11 +9,10 @@ public class RedisCacheTokenService : IRedisCacheTokenService
 {
 	private readonly IDistributedCache _cache;
 	private readonly ILogger<RedisCacheService> logger;
-	private readonly IConfiguration configuration;
-	public RedisCacheTokenService(IConfiguration configuration, IDistributedCache cache, ILogger<RedisCacheService> logger)
+	public RedisCacheTokenService( IDistributedCache cache, ILogger<RedisCacheService> logger)
 	{
 		_cache = cache;
-		this.configuration = configuration;
+		
 		this.logger = logger;
 	}
 	public byte[] ComputeHashUsingByte(string email, string password)

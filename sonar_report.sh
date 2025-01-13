@@ -25,8 +25,6 @@ curl --request GET \
     -H "Accept: application/json" \
     -o "${SONAR_PROJECT_KEY}-sonar-report.json"
 
-# On va récupérer la valeur du coverage dans le fichier json (NB: apt ou yum(si c'est une rhel) install jq package doit etre installé sur le serveur de déploy)
-
 coverage=$(echo "${SONAR_PROJECT_KEY}-sonar-report.json" | jq -r '.component.measures[] | select(.metric == "coverage") | .value')
 coverage_value=$(echo "$coverage" | awk '{print $1 + 0}')
 if (($(echo "$coverage_value > 20.0" | bc -l))); then 

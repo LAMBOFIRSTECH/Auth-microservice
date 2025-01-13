@@ -26,9 +26,9 @@ builder.Services.AddSession(options =>
 {
 	options.IdleTimeout = TimeSpan.FromMinutes(30); // Durée de vie de la session
 	options.Cookie.HttpOnly = true; // Protéger contre les scripts malveillants (XSS)
-	options.Cookie.SecurePolicy = CookieSecurePolicy.Always; // HTTPS obligatoire
-	options.Cookie.SameSite = SameSiteMode.Strict; // CSRF protection
-	options.Cookie.IsEssential = true; // Nécessaire pour activer les sessions
+	options.Cookie.SecurePolicy = CookieSecurePolicy.Always; 
+	options.Cookie.SameSite = SameSiteMode.Strict; 
+	options.Cookie.IsEssential = true;
 });
 builder.Services.AddControllers();
 
@@ -229,7 +229,7 @@ app.UseHangfireDashboard("/lambo-authentication-manager/hangfire", new Dashboard
 app.Lifetime.ApplicationStarted.Register(() =>
 {
 	BackgroundJob.Schedule<RedisCacheService>( //Producer
-		"call_api", // Identifiant unique de la tâche
+		"call_api", 
 		service => service.BackGroundJob(),
 		TimeSpan.Zero  // On initie immédiatement la tâche
 	);
@@ -246,7 +246,7 @@ app.Lifetime.ApplicationStarted.Register(() =>
 */
 
 app.UseMiddleware<ContextPathMiddleware>("/lambo-authentication-manager");
-//app.UseMiddleware<ValidationHandlingMiddleware>();
+
 
 if (app.Environment.IsDevelopment())
 {

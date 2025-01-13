@@ -8,17 +8,9 @@ namespace Authentifications.Controllers;
 public class TokenController : ControllerBase
 {
     private readonly IJwtAccessAndRefreshTokenService jwtToken;
-    private readonly IRedisCacheTokenService redisTokenCache;
-    private readonly IRedisCacheService redisCache;
-    private readonly ILogger<TokenController> log;
-    private string? email;
-    private string? password;
-    public TokenController(ILogger<TokenController> log, IRedisCacheTokenService redisTokenCache, IJwtAccessAndRefreshTokenService jwtToken, IRedisCacheService redisCache)
+    public TokenController(IJwtAccessAndRefreshTokenService jwtToken)
     {
         this.jwtToken = jwtToken;
-        this.log = log;
-        this.redisTokenCache = redisTokenCache;
-        this.redisCache = redisCache;
 
     }
     /// <summary>
@@ -27,9 +19,8 @@ public class TokenController : ControllerBase
     [HttpPost("login")]
     public async Task<ActionResult> Authentificate()
     {
-        email = HttpContext.Items["email"] as string;
-        password = HttpContext.Items["password"] as string;
-        // var ticket = new AuthenticationTicket(User, "Basic");
+        var email = HttpContext.Items["email"] as string;
+       var  password = HttpContext.Items["password"] as string;
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             return BadRequest("Email or password is missing.");
         if (!User.Identity!.IsAuthenticated)
@@ -65,8 +56,8 @@ public class TokenController : ControllerBase
     {
         if (string.IsNullOrWhiteSpace(refreshToken))
             return BadRequest();
-        email = HttpContext.Session.GetString("email");
-        password = HttpContext.Session.GetString("password");
+       var email = HttpContext.Session.GetString("email");
+       var password = HttpContext.Session.GetString("password");
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             return BadRequest("Email or password is missing. Could not refresh Token");
         var result = await jwtToken.NewAccessTokenUsingRefreshTokenInRedisAsync(refreshToken, email, password);

@@ -20,20 +20,6 @@ cache:
   key: ${CI_COMMIT_REF_SLUG}
   paths:
     - ~/.nuget/packages/ # Cache des dépendances NuGet
-######## BEFORE_SCRIPT ########
-# before_script:
-#   - echo "Nettoyage global avant tous les stages"
-#   - chmod -R u+w Authentifications/bin || true
-#   - chmod -R u+w Authentifications/obj || true
-#   - chmod -R u+w TestAuthentications/bin || true
-#   - chmod -R u+w TestAuthentications/obj || true
-#   - rm -rf Authentifications/bin || true
-#   - rm -rf Authentifications/obj || true
-#   - rm -rf TestAuthentications/bin || true
-#   - rm -rf TestAuthentications/obj || true
-#   - echo "Validation :Vérification que les fichiers problématiques ont été nettoyés"
-#   - ls -la Authentifications/bin || true
-#   - ls -la TestAuthentications/bin || true
 ######## STAGES ########
 stages:
   - restore
@@ -99,17 +85,17 @@ sonarqube-check_analysis_report:
     RUNNER_TAG: "development"
     allow_failure: false
   script:
-    - chmod -R u+w Authentifications/bin || true
-    - chmod -R u+w Authentifications/obj || true
-    - chmod -R u+w TestAuthentications/bin || true
-    - chmod -R u+w TestAuthentications/obj || true
-    - rm -rf Authentifications/bin || true
-    - rm -rf Authentifications/obj || true
-    - rm -rf TestAuthentications/bin || true
-    - rm -rf TestAuthentications/obj || true
+    # - chmod -R u+w Authentifications/bin || true
+    # - chmod -R u+w Authentifications/obj || true
+    # - chmod -R u+w TestAuthentications/bin || true
+    # - chmod -R u+w TestAuthentications/obj || true
+    # - rm -rf Authentifications/bin || true
+    # - rm -rf Authentifications/obj || true
+    # - rm -rf TestAuthentications/bin || true
+    # - rm -rf TestAuthentications/obj || true
     - echo "Lancement de l'analyse SonarQube."
-    - dotnet tool install --global dotnet-sonarscanner --version 5.11.0
-    - export PATH="$PATH:/root/.dotnet/tools"
+    # - dotnet tool install --global dotnet-sonarscanner --version 5.11.0
+    # - export PATH="$PATH:/root/.dotnet/tools"
     - chmod +x sonar_check.sh; ./sonar_check.sh
     - chmod +x sonar_report.sh; ./sonar_report.sh
   dependencies:
