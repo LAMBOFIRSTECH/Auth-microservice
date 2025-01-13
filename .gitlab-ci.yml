@@ -39,7 +39,7 @@ restore:
     - dotnet restore $src/$src.sln
   artifacts:
     paths:
-      - ~/.nuget/packages/ # Sauvegarde le cache des dépendances
+      - ~/.nuget/packages/ # Sauvegarde le cache 
     expire_in: 1 day
 
 ######## BUILD ########
