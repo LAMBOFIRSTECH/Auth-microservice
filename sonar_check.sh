@@ -33,8 +33,6 @@ if [ -z "$SONAR_PROJECT_KEY" ]; then
     exit 1
 fi
 
-COVERAGE_REPORT_PATH="coverage/coverage.opencover.xml"
-mkdir -p coverage # Création du répertoire de couverture si nécessaire
 
 # Configuration SSH pour utiliser les clés privées
 mkdir -p ~/.ssh
@@ -47,11 +45,14 @@ if [ "$check_server" != "200" ] && [ "$check_server" != "302" ]; then
     colors "RED" "Le serveur SonarQube est inaccessible. Code HTTP: $check_server"
     exit 1
 fi
-
+if [ ! -f "$COVERAGE_REPORT_PATH" ]; then
+  echo "Erreur : Le fichier de couverture '$COVERAGE_REPORT_PATH' est introuvable."
+  exit 1
+fi
 # Initialisation de l'analyse SonarQube
 colors "YELLOW" "Démarrage de l'analyse SonarQube"
 # dotnet tool install --global dotnet-sonarscanner --version 5.11.0
-# export PATH="$PATH:/root/.dotnet/tools"
+export PATH="$PATH:$HOME/.dotnet/tools"
 
 dotnet sonarscanner begin \
     /k:"$SONAR_PROJECT_KEY" \
@@ -61,7 +62,7 @@ dotnet sonarscanner begin \
 
 # Compilation du projet
 colors "YELLOW" "Construction du projet ${SONAR_PROJECT_KEY}"
-dotnet build Authentifications.sln --configuration "${BUILD_CONFIGURATION}"
+dotnet build Authentifications.sln --configuration "${BUILD_CONFIGURATION}" --no-restore
 
 # Vérification de la réussite de la compilation
 if [[ $? -ne 0 ]]; then

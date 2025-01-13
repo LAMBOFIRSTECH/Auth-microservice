@@ -17,9 +17,9 @@ default:
 
 ######## CACHE ########
 cache:
-  key: ${CI_COMMIT_REF_SLUG}
   paths:
-    - ~/.nuget/packages/ # Cache des dépendances NuGet
+    - .nuget/packages/
+    - .gitlab-ci-tools/ # Cache des dépendances NuGet
 ######## STAGES ########
 stages:
   - restore
@@ -36,8 +36,7 @@ restore:
     - dotnet nuget locals all --clear
     - echo "Restauration des dépendances .NET"
     - src=$(ls *.sln | sed -E 's/\.sln$//')
-    - dotnet restore $src/$src.csproj
-    - dotnet restore TestAuthentications/TestAuthentications.csproj
+    - dotnet restore $src/$src.sln
   artifacts:
     paths:
       - ~/.nuget/packages/ # Sauvegarde le cache des dépendances
@@ -48,8 +47,7 @@ build:
   stage: build
   script:
     - echo "Compilation du projet principal"
-    - dotnet restore Authentifications/Authentifications.csproj
-    - dotnet restore TestAuthentications/TestAuthentications.csproj
+    - dotnet build Authentifications.sln --configuration $BUILD_CONFIGURATION --no-restore
   dependencies:
     - restore # Dépend de la restauration
 
@@ -57,6 +55,8 @@ build:
 test:
   stage: test
   script:
+    - echo "Création du répertoire pour le rapport de couverture si nécessaire"
+    - mkdir -p $(dirname ${COVERAGE_REPORT_PATH}) # Crée le répertoire parent
     - echo "Exécution des tests unitaires avec collecte de couverture"
     - |
       dotnet test TestAuthentications/TestAuthentications.csproj \
@@ -86,6 +86,7 @@ sonarqube-check_analysis_report:
     allow_failure: false
   script:
     - echo "Lancement de l'analyse SonarQube."
+    - ls -l *
     - chmod +x sonar_check.sh; ./sonar_check.sh
     - echo "Génération du rapport SonarQube."
     - chmod +x sonar_report.sh; ./sonar_report.sh
