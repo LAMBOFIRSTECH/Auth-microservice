@@ -50,8 +50,8 @@ fi
 
 # Initialisation de l'analyse SonarQube
 colors "YELLOW" "Démarrage de l'analyse SonarQube"
-dotnet tool install --global dotnet-sonarscanner --version 5.11.0
-export PATH="$PATH:/root/.dotnet/tools"
+# dotnet tool install --global dotnet-sonarscanner --version 5.11.0
+# export PATH="$PATH:/root/.dotnet/tools"
 
 dotnet sonarscanner begin \
     /k:"$SONAR_PROJECT_KEY" \
@@ -61,7 +61,7 @@ dotnet sonarscanner begin \
 
 # Compilation du projet
 colors "YELLOW" "Construction du projet ${SONAR_PROJECT_KEY}"
-dotnet build "$FILE" --configuration "${BUILD_CONFIGURATION}"
+dotnet build Authentifications.sln --configuration "${BUILD_CONFIGURATION}"
 
 # Vérification de la réussite de la compilation
 if [[ $? -ne 0 ]]; then
