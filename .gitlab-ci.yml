@@ -107,7 +107,7 @@ sonarqube-check_analysis_report:
     - rm -rf Authentifications/obj || true
     - rm -rf TestAuthentications/bin || true
     - rm -rf TestAuthentications/obj || true
-    - echo "Lancement de l'analyse SonarQube"
+    - echo "Lancement de l'analyse SonarQube."
     - dotnet tool install --global dotnet-sonarscanner --version 5.11.0
     - export PATH="$PATH:/root/.dotnet/tools"
     - chmod +x sonar_check.sh; ./sonar_check.sh
