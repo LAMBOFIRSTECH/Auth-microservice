@@ -36,8 +36,8 @@ if [ "$check_server" != "200" ] && [ "$check_server" != "302" ]; then
     colors "RED" "Le serveur Sonarqube est down"
     exit 1
 fi
-dotnet tool install --global dotnet-sonarscanner --version 5.11.0
-export PATH="$PATH:/root/.dotnet/tools"
+# dotnet tool install --global dotnet-sonarscanner --version 5.11.0
+# export PATH="$PATH:/root/.dotnet/tools"
 
 dotnet sonarscanner begin \
     /k:"$SONAR_PROJECT_KEY" \

@@ -88,6 +88,8 @@ sonarqube-check_analysis_report:
     allow_failure: false
   script:
     - echo "Lancement de l'analyse SonarQube"
+    - dotnet tool install --global dotnet-sonarscanner --version 5.11.0
+    - export PATH="$PATH:/root/.dotnet/tools"
     - chmod +x sonar_check.sh; ./sonar_check.sh
     - chmod +x sonar_report.sh; ./sonar_report.sh
   dependencies:
