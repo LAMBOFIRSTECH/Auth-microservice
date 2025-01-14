@@ -39,6 +39,7 @@ restore:
     - echo "Nettoyage des caches locaux NuGet"
     - dotnet nuget locals all --clear
     - echo "Restauration des dépendances .NET"
+    - SRC=$(ls *.sln)
     - dotnet restore $SRC.sln
   artifacts:
     paths:
@@ -50,6 +51,7 @@ build:
   stage: build
   script:
     - echo "Compilation du projet principal"
+    - SRC=$(ls *.sln)
     - dotnet build $SRC.sln --configuration $BUILD_CONFIGURATION --no-restore
   dependencies:
     - restore # Dépend de la restauration
@@ -61,6 +63,7 @@ test:
     - echo "Création du répertoire pour le rapport de couverture si nécessaire"
     - mkdir -p $(dirname ${COVERAGE_REPORT_PATH}) # Crée le répertoire parent
     - echo "Exécution des tests unitaires avec collecte de couverture"
+    - TEST=$(ls | grep -o '\bTest\w*')
     - |
       dotnet test $TEST/$TEST.csproj \
         --configuration $BUILD_CONFIGURATION \
