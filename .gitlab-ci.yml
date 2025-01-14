@@ -40,7 +40,7 @@ restore:
     - dotnet nuget locals all --clear
     - echo "Restauration des dépendances .NET"
     - SRC=$(ls *.sln)
-    - dotnet restore $SRC.sln
+    - dotnet restore $SRC
   artifacts:
     paths:
       - ~/.nuget/packages/ # Sauvegarde le cache
@@ -52,7 +52,7 @@ build:
   script:
     - echo "Compilation du projet principal"
     - SRC=$(ls *.sln)
-    - dotnet build $SRC.sln --configuration $BUILD_CONFIGURATION --no-restore
+    - dotnet build $SRC --configuration $BUILD_CONFIGURATION --no-restore
   dependencies:
     - restore # Dépend de la restauration
 
