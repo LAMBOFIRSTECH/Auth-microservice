@@ -28,9 +28,12 @@ cache:
   paths:
     - .nuget/packages/
     - .gitlab-ci-tools/ # Cache des dépendances NuGet
-before_script:
-  - export SRC=$(ls *.sln)
-  - export TEST=$(ls | grep -o '\bTest\w*')
+######## PRETRAITEMENT ########
+prevtraitement:
+  stage: prevtraitement
+  script:
+    - echo "Suppression des dossiers bin et obj pour un nettoyage complet"
+    - rm -rf **/bin **/obj
 
 ######## RESTORE ########
 restore:
