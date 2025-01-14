@@ -15,11 +15,6 @@ default:
   tags:
     - gitlab-lamboft-docker-runner
 
-######## CACHE ########
-cache:
-  paths:
-    - .nuget/packages/
-    - .gitlab-ci-tools/ # Cache des dépendances NuGet
 ######## STAGES ########
 stages:
   - restore
@@ -28,6 +23,11 @@ stages:
   - sonarqube-check_analysis_report
   - deploy
 
+######## CACHE ########
+cache:
+  paths:
+    - .nuget/packages/
+    - .gitlab-ci-tools/ # Cache des dépendances NuGet
 ######## RESTORE ########
 restore:
   stage: restore
@@ -129,7 +129,7 @@ Env_dev:
       - .docker_tag
     expire_in: 1 day
 
-######## DEPLOY ENV STAGING ########
+######## DEPLOY ENV STAGING #########
 Env_staging:
   stage: deploy
   tags:
