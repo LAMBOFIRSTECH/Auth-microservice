@@ -39,15 +39,20 @@ prevtraitement:
 restore:
   stage: restore
   script:
+    - echo "Nettoyage des dossiers bin et obj"
+    - rm -rf **/bin **/obj
     - echo "Nettoyage des caches locaux NuGet"
     - dotnet nuget locals all --clear
+    - echo "Ajout des sources NuGet officielles"
+    - dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org || true
     - echo "Restauration des dépendances .NET"
     - SRC=$(ls *.sln)
-    - dotnet restore $SRC
+    - dotnet restore $SRC --force
   artifacts:
     paths:
       - ~/.nuget/packages/ # Sauvegarde le cache
     expire_in: 1 day
+
 
 ######## BUILD ########
 build:
