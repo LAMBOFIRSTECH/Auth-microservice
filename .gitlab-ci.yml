@@ -86,7 +86,7 @@ test:
 sonarqube-check_analysis_report:
   stage: sonarqube-check_analysis_report
   tags:
-    - gitlab-lamboft-shell-runner
+    - gitlab-lamboft-shell-develop
   variables:
     RUNNER_TAG: "development"
     allow_failure: false
@@ -103,7 +103,7 @@ sonarqube-check_analysis_report:
 Env_dev:
   stage: deploy
   tags:
-    - gitlab-lamboft-shell-runner
+    - gitlab-lamboft-shell-develop
   rules:
     - if: '$CI_COMMIT_BRANCH == "develop"'
   variables:
