@@ -36,7 +36,7 @@ restore:
     - dotnet nuget locals all --clear
     - echo "Restauration des dépendances .NET"
     - src=$(ls *.sln | sed -E 's/\.sln$//')
-    - dotnet restore $src/$src.sln
+    - dotnet restore Authentifications.sln
   artifacts:
     paths:
       - ~/.nuget/packages/ # Sauvegarde le cache 
