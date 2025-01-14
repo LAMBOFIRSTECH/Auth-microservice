@@ -9,7 +9,6 @@ variables:
   SONAR_HOST_URL: "https://your-sonarqube-url" # URL de SonarQube
   SONAR_USER_TOKEN: "${SONAR_USER_TOKEN}" # Jeton pour SonarQube
   DOCKER_IMAGE_TAG: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}" # Tag de l'image Docker
-  #toto: $(ls *.sln | sed -E 's/\.sln$//')
 
 default:
   tags:
@@ -17,6 +16,7 @@ default:
 
 ######## STAGES ########
 stages:
+  - prevtraitement
   - restore
   - build
   - test
@@ -28,6 +28,10 @@ cache:
   paths:
     - .nuget/packages/
     - .gitlab-ci-tools/ # Cache des dépendances NuGet
+before_script:
+  - export SRC=$(ls *.sln)
+  - export TEST=$(ls | grep -o '\bTest\w*')
+
 ######## RESTORE ########
 restore:
   stage: restore
@@ -35,11 +39,10 @@ restore:
     - echo "Nettoyage des caches locaux NuGet"
     - dotnet nuget locals all --clear
     - echo "Restauration des dépendances .NET"
-    - src=$(ls *.sln | sed -E 's/\.sln$//')
-    - dotnet restore Authentifications.sln
+    - dotnet restore $SRC.sln
   artifacts:
     paths:
-      - ~/.nuget/packages/ # Sauvegarde le cache 
+      - ~/.nuget/packages/ # Sauvegarde le cache
     expire_in: 1 day
 
 ######## BUILD ########
@@ -47,7 +50,7 @@ build:
   stage: build
   script:
     - echo "Compilation du projet principal"
-    - dotnet build Authentifications.sln --configuration $BUILD_CONFIGURATION --no-restore
+    - dotnet build $SRC.sln --configuration $BUILD_CONFIGURATION --no-restore
   dependencies:
     - restore # Dépend de la restauration
 
@@ -59,7 +62,7 @@ test:
     - mkdir -p $(dirname ${COVERAGE_REPORT_PATH}) # Crée le répertoire parent
     - echo "Exécution des tests unitaires avec collecte de couverture"
     - |
-      dotnet test TestAuthentications/TestAuthentications.csproj \
+      dotnet test $TEST/$TEST.csproj \
         --configuration $BUILD_CONFIGURATION \
         --no-restore \
         --collect:"XPlat Code Coverage" \
@@ -117,6 +120,11 @@ Env_dev:
         PORT_NUMBER=$(grep -oP 'EXPOSE\s+\K\d+' Dockerfile)
         docker rm -f dev-$CI_PROJECT_NAME || true
         docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name dev-$CI_PROJECT_NAME $DOCKER_IMAGE_TAG
+        if [ $? != 0 ]; then
+          echo "Echec de lancement du conatiner docker."
+          ./docker_cleanup.sh
+          exit 1
+        fi
       else
         echo "No environment tag set for this runner development"
         exit 1
