@@ -51,7 +51,7 @@ restore:
     - dotnet restore $SRC --force
   artifacts:
     paths:
-      - ~/.nuget/packages/ # Sauvegarde le cache
+      - ~/.nuget/packages/ # Sauvegarde le caches
     expire_in: 1 day
 
 ######## BUILD ########

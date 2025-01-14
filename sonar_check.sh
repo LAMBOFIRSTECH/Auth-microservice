@@ -62,7 +62,7 @@ dotnet sonarscanner begin \
 
 # Compilation du projet
 colors "YELLOW" "Construction du projet ${SONAR_PROJECT_KEY}"
-dotnet build Authentifications.sln --configuration "${BUILD_CONFIGURATION}" --no-restore
+dotnet build $FILE --configuration "${BUILD_CONFIGURATION}" --no-restore
 
 # Vérification de la réussite de la compilation
 if [[ $? -ne 0 ]]; then
