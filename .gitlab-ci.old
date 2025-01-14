@@ -16,6 +16,7 @@ default:
 
 ######## STAGES ########
 stages:
+  - prevtraitement
   - restore
   - build
   - test
@@ -29,14 +30,13 @@ cache:
     - .gitlab-ci-tools/ # Cache des dépendances NuGet
 
 ######## PRETRAITEMENT ########
-# prevtraitement:
-#   stage: prevtraitement
-#   script:
-#     - echo "Suppression des dossiers bin et obj pour un nettoyage complet"
-#     - rm -rf **/bin **/obj
-#     - echo "Forçage de la restauration des dépendances problématiques"
-#     - dotnet add package Microsoft.EntityFrameworkCore.Analyzers --version 6.0.20 || true
-
+prevtraitement:
+  stage: prevtraitement
+  script:
+    - echo "Suppression des dossiers bin et obj pour un nettoyage complet"
+    - rm -rf **/bin **/obj
+    - echo "Forçage de la restauration des dépendances problématiques"
+    - dotnet add package Microsoft.EntityFrameworkCore.Analyzers --version 6.0.20 || true
 
 ######## RESTORE ########
 restore:
@@ -44,49 +44,26 @@ restore:
   script:
     - echo "Nettoyage des caches locaux NuGet"
     - dotnet nuget locals all --clear
+    - echo "Ajout des sources NuGet officielles"
+    - dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org || true
     - echo "Restauration des dépendances .NET"
-    - src=$(ls *.sln | sed -E 's/\.sln$//')
-    - dotnet restore $src/$src.csproj
-    - dotnet restore TestAuthentications/TestAuthentications.csproj
+    - SRC=$(ls *.sln)
+    - dotnet restore $SRC --force
   artifacts:
     paths:
-      - ~/.nuget/packages/ # Sauvegarde le cache des dépendances
+      - ~/.nuget/packages/ # Sauvegarde le caches
     expire_in: 1 day
-
-# ######## RESTORE ########
-# restore:
-#   stage: restore
-#   script:
-#     - echo "Nettoyage des caches locaux NuGet"
-#     - dotnet nuget locals all --clear
-#     - echo "Ajout des sources NuGet officielles"
-#     - dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org || true
-#     - echo "Restauration des dépendances .NET"
-#     - SRC=$(ls *.sln)
-#     - dotnet restore $SRC --force
-#   artifacts:
-#     paths:
-#       - ~/.nuget/packages/ # Sauvegarde le caches
-#     expire_in: 1 day
 
 ######## BUILD ########
 build:
   stage: build
   script:
     - echo "Compilation du projet principal"
-    - dotnet restore Authentifications/Authentifications.csproj
-    - dotnet restore TestAuthentications/TestAuthentications.csproj
+    - SRC=$(ls *.sln)
+    - dotnet build $SRC --configuration $BUILD_CONFIGURATION --no-restore
   dependencies:
     - restore # Dépend de la restauration
-# ######## BUILD ########
-# build:
-#   stage: build
-#   script:
-#     - echo "Compilation du projet principal"
-#     - SRC=$(ls *.sln)
-#     - dotnet build $SRC --configuration $BUILD_CONFIGURATION --no-restore
-#   dependencies:
-#     - restore # Dépend de la restauration
+
 
 ######## TEST ########
 test:
@@ -157,7 +134,7 @@ Env_dev:
         docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name dev-$CI_PROJECT_NAME $DOCKER_IMAGE_TAG
         if [ $? != 0 ]; then
           echo "Echec de lancement du conatiner docker."
-          ./docker_cleanup.sh dev-$CI_PROJECT_NAME
+          ./docker_cleanup.sh
           exit 1
         fi
       else
