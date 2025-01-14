@@ -1,18 +1,25 @@
 ######## VARIABLES ########
 variables:
-  GIT_DEPTH: "0" # Pour récupérer toutes les branches
-  DOTNET_CLI_TELEMETRY_OPTOUT: "1" # Désactiver la télémétrie .NET
-  DOTNET_SKIP_FIRST_TIME_EXPERIENCE: "true" # Réduire les étapes initiales
-  DOTNET_NOLOGO: "true" # Supprimer le logo CLI .NET des logs
-  BUILD_CONFIGURATION: "Release" # Configuration utilisée pour la compilation
+  BUILD_CONFIGURATION: "Release"
   COVERAGE_REPORT_PATH: "coverage/coverage.opencover.xml"
-  SONAR_HOST_URL: "https://your-sonarqube-url" # URL de SonarQube
-  SONAR_USER_TOKEN: "${SONAR_USER_TOKEN}" # Jeton pour SonarQube
+  OBJECTS_DIRECTORY: 'obj'
+  NUGET_PACKAGES_DIRECTORY: '.nuget/packages'
+  SOLUTION_PATH: "Authentifications.sln"
   DOCKER_IMAGE_TAG: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}" # Tag de l'image Docker
+  #  SRC=$(ls *.sln)
 
 default:
   tags:
     - gitlab-lamboft-docker-runner
+
+
+######## CACHE ########
+cache:
+  key: "$CI_JOB_STAGE-$CI_COMMIT_REF_SLUG"
+  paths:
+    - '$NUGET_PACKAGES_DIRECTORY'
+    - '**/obj'
+    - '**/bin'
 
 ######## STAGES ########
 stages:
@@ -22,78 +29,34 @@ stages:
   - sonarqube-check_analysis_report
   - deploy
 
-######## CACHE ########
-cache:
-  paths:
-    - .nuget/packages/
-    - .gitlab-ci-tools/ # Cache des dépendances NuGet
-
-######## PRETRAITEMENT ########
-# prevtraitement:
-#   stage: prevtraitement
-#   script:
-#     - echo "Suppression des dossiers bin et obj pour un nettoyage complet"
-#     - rm -rf **/bin **/obj
-#     - echo "Forçage de la restauration des dépendances problématiques"
-#     - dotnet add package Microsoft.EntityFrameworkCore.Analyzers --version 6.0.20 || true
-
-
 ######## RESTORE ########
 restore:
   stage: restore
   script:
     - echo "Nettoyage des caches locaux NuGet"
     - dotnet nuget locals all --clear
-    - echo "Restauration des dépendances .NET"
-    - src=$(ls *.sln | sed -E 's/\.sln$//')
-    - dotnet restore $src/$src.csproj
-    - dotnet restore TestAuthentications/TestAuthentications.csproj
+    - echo "Restauration des dépendances à partir de $SOLUTION_PATH"
+    - dotnet restore $SOLUTION_PATH --packages $NUGET_PACKAGES_DIRECTORY
   artifacts:
     paths:
-      - ~/.nuget/packages/ # Sauvegarde le cache des dépendances
+      - $NUGET_PACKAGES_DIRECTORY
     expire_in: 1 day
-
-# ######## RESTORE ########
-# restore:
-#   stage: restore
-#   script:
-#     - echo "Nettoyage des caches locaux NuGet"
-#     - dotnet nuget locals all --clear
-#     - echo "Ajout des sources NuGet officielles"
-#     - dotnet nuget add source https://api.nuget.org/v3/index.json -n nuget.org || true
-#     - echo "Restauration des dépendances .NET"
-#     - SRC=$(ls *.sln)
-#     - dotnet restore $SRC --force
-#   artifacts:
-#     paths:
-#       - ~/.nuget/packages/ # Sauvegarde le caches
-#     expire_in: 1 day
 
 ######## BUILD ########
 build:
   stage: build
   script:
-    - echo "Compilation du projet principal"
-    - dotnet restore Authentifications/Authentifications.csproj
-    - dotnet restore TestAuthentications/TestAuthentications.csproj
+    - echo "Compilation des projets à partir de $SOLUTION_PATH"
+    - dotnet build $SOLUTION_PATH --configuration $BUILD_CONFIGURATION --no-restore
   dependencies:
-    - restore # Dépend de la restauration
-# ######## BUILD ########
-# build:
-#   stage: build
-#   script:
-#     - echo "Compilation du projet principal"
-#     - SRC=$(ls *.sln)
-#     - dotnet build $SRC --configuration $BUILD_CONFIGURATION --no-restore
-#   dependencies:
-#     - restore # Dépend de la restauration
+    - restore # Dépend de l'étape restore
 
 ######## TEST ########
 test:
   stage: test
   script:
     - echo "Création du répertoire pour le rapport de couverture si nécessaire"
-    - mkdir -p $(dirname ${COVERAGE_REPORT_PATH}) # Crée le répertoire parent
+    - mkdir -p $(dirname $COVERAGE_REPORT_PATH) # Crée le répertoire parent
     - echo "Exécution des tests unitaires avec collecte de couverture"
     - TEST=$(ls | grep -o '\bTest\w*')
     - |
@@ -110,9 +73,10 @@ test:
   artifacts:
     when: always
     paths:
-      - ${COVERAGE_REPORT_PATH}
+      - $COVERAGE_REPORT_PATH
     reports:
-      junit: ${COVERAGE_REPORT_PATH}
+      junit: $COVERAGE_REPORT_PATH
+
 
 ######## SONARQUBE ########
 sonarqube-check_analysis_report:
@@ -124,7 +88,6 @@ sonarqube-check_analysis_report:
     allow_failure: false
   script:
     - echo "Lancement de l'analyse SonarQube."
-    - ls -l *
     - chmod +x sonar_check.sh; ./sonar_check.sh
     - echo "Génération du rapport SonarQube."
     - chmod +x sonar_report.sh; ./sonar_report.sh
@@ -262,4 +225,3 @@ Env_staging:
 #     expire_in: 15 min
 
 #   - ./clean_old_container.sh meloaude-$CI_PROJECT_NAME # C'est dans ce scripte qu'on fait échouer le pipeline si jamais le containeur ne se lance pas
-
