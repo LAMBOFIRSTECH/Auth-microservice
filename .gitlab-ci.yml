@@ -28,19 +28,20 @@ cache:
   paths:
     - .nuget/packages/
     - .gitlab-ci-tools/ # Cache des dépendances NuGet
+
 ######## PRETRAITEMENT ########
 prevtraitement:
   stage: prevtraitement
   script:
     - echo "Suppression des dossiers bin et obj pour un nettoyage complet"
     - rm -rf **/bin **/obj
+    - echo "Forçage de la restauration des dépendances problématiques"
+    - dotnet add package Microsoft.EntityFrameworkCore.Analyzers --version 6.0.20 || true
 
 ######## RESTORE ########
 restore:
   stage: restore
   script:
-    - echo "Nettoyage des dossiers bin et obj"
-    - rm -rf **/bin **/obj
     - echo "Nettoyage des caches locaux NuGet"
     - dotnet nuget locals all --clear
     - echo "Ajout des sources NuGet officielles"
@@ -53,7 +54,6 @@ restore:
       - ~/.nuget/packages/ # Sauvegarde le cache
     expire_in: 1 day
 
-
 ######## BUILD ########
 build:
   stage: build
@@ -63,6 +63,7 @@ build:
     - dotnet build $SRC --configuration $BUILD_CONFIGURATION --no-restore
   dependencies:
     - restore # Dépend de la restauration
+
 
 ######## TEST ########
 test:
