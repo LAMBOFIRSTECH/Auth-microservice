@@ -95,22 +95,11 @@ dotnet sonarscanner begin \
     /d:sonar.login="$SONAR_USER_TOKEN" \
     /d:sonar.cs.opencover.reportsPaths="$COVERAGE_REPORT_PATH"
 # --------------------
-# 5. Exécution des Tests et Collecte de Couverture
+# 5. Restauration du projet
 # --------------------
 dotnet restore "$SOLUTION_FILE"
-colors "YELLOW" "Exécution des tests unitaires avec collecte de couverture"
-# dotnet test "$SOLUTION_FILE" \
-#     --configuration "$BUILD_CONFIGURATION" \
-#     --collect:"XPlat Code Coverage" \
-#     /p:CollectCoverage=true \
-#     /p:CoverletOutputFormat=opencover \
-#     /p:CoverletOutput="$COVERAGE_REPORT_PATH"
+colors "YELLOW" "Restauration du projet"
 
-# # Vérification de la réussite des tests
-# if [[ $? -ne 0 ]]; then
-#     colors "RED" "Échec des tests unitaires. Analyse SonarQube interrompue."
-#     exit 1
-# fi
 # --------------------
 # 5. Compilation du Projet
 # --------------------
