@@ -9,6 +9,7 @@
       "TestAuthentications/1.0.0": {
         "dependencies": {
           "Authentifications": "1.0.0",
+          "Microsoft.EntityFrameworkCore.Analyzers": "6.0.20",
           "Microsoft.EntityFrameworkCore.InMemory": "6.0.0",
           "Microsoft.Extensions.Configuration": "6.0.0",
           "Microsoft.NET.Test.Sdk": "17.1.0",

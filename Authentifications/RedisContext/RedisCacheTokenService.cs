@@ -12,7 +12,6 @@ public class RedisCacheTokenService : IRedisCacheTokenService
 	public RedisCacheTokenService( IDistributedCache cache, ILogger<RedisCacheService> logger)
 	{
 		_cache = cache;
-		
 		this.logger = logger;
 	}
 	public byte[] ComputeHashUsingByte(string email, string password)

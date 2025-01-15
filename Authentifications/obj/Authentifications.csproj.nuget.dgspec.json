@@ -1,20 +1,21 @@
 {
   "format": 1,
   "restore": {
-    "/home/lambo-ubuntu/Authentication/Authentifications/Authentifications.csproj": {}
+    "/home/snow/authentication/Authentifications/Authentifications.csproj": {}
   },
   "projects": {
-    "/home/lambo-ubuntu/Authentication/Authentifications/Authentifications.csproj": {
+    "/home/snow/authentication/Authentifications/Authentifications.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "/home/lambo-ubuntu/Authentication/Authentifications/Authentifications.csproj",
+        "projectUniqueName": "/home/snow/authentication/Authentifications/Authentifications.csproj",
         "projectName": "Authentifications",
-        "projectPath": "/home/lambo-ubuntu/Authentication/Authentifications/Authentifications.csproj",
-        "packagesPath": "/home/lambo-ubuntu/.nuget/packages/",
-        "outputPath": "/home/lambo-ubuntu/Authentication/Authentifications/obj/",
+        "projectPath": "/home/snow/authentication/Authentifications/Authentifications.csproj",
+        "packagesPath": "/home/snow/.nuget/packages/",
+        "outputPath": "/home/snow/authentication/Authentifications/obj/",
         "projectStyle": "PackageReference",
         "configFilePaths": [
-          "/home/lambo-ubuntu/.nuget/NuGet/NuGet.Config"
+          "/home/snow/authentication/NuGet.config",
+          "/home/snow/.nuget/NuGet/NuGet.Config"
         ],
         "originalTargetFrameworks": [
           "net6.0"
@@ -115,8 +116,7 @@
             "net47",
             "net471",
             "net472",
-            "net48",
-            "net481"
+            "net48"
           ],
           "assetTargetFallback": true,
           "warn": true,
@@ -128,7 +128,7 @@
               "privateAssets": "all"
             }
           },
-          "runtimeIdentifierGraphPath": "/usr/share/dotnet/sdk/6.0.421/RuntimeIdentifierGraph.json"
+          "runtimeIdentifierGraphPath": "/usr/lib/dotnet/sdk/6.0.136/RuntimeIdentifierGraph.json"
         }
       }
     }

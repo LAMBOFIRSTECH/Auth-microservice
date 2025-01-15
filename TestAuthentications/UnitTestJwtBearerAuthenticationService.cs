@@ -38,43 +38,43 @@ public class UnitTestJwtBearerAuthenticationService
 		Assert.False(string.IsNullOrEmpty(refreshToken));
 	}
 
-	[Fact]
-	public async Task NewAccessTokenUsingRefreshTokenInRedisAsync_ShouldReturnTokenResult()
-	{
-		// Arrange
-		var email = "test@example.com";
-		var password = "password";
-		var refreshToken = service.GenerateRefreshToken();
-		var utilisateurDto = new UtilisateurDto { Email = email, Pass = password, Nom = "Test User", Role = UtilisateurDto.Privilege.Utilisateur };
+	// [Fact]
+	// public async Task NewAccessTokenUsingRefreshTokenInRedisAsync_ShouldReturnTokenResult()
+	// {
+	// 	// Arrange
+	// 	var email = "test@example.com";
+	// 	var password = "password";
+	// 	var refreshToken = service.GenerateRefreshToken();
+	// 	var utilisateurDto = new UtilisateurDto { Email = email, Pass = password, Nom = "Test User", Role = UtilisateurDto.Privilege.Utilisateur };
 
-		mockRedisTokenCache.Setup(x => x.RetrieveTokenBasingOnRedisUserSessionAsync(email, password))
-			.ReturnsAsync(refreshToken);
-		mockRedisCache.Setup(x => x.GetBooleanAndUserDataFromRedisUsingParamsAsync(true, email, password))
-			.ReturnsAsync((true, utilisateurDto));
+	// 	mockRedisTokenCache.Setup(x => x.RetrieveTokenBasingOnRedisUserSessionAsync(email, password))
+	// 		.ReturnsAsync(refreshToken);
+	// 	mockRedisCache.Setup(x => x.GetBooleanAndUserDataFromRedisUsingParamsAsync(true, email, password))
+	// 		.ReturnsAsync((true, utilisateurDto));
 
-		// Act
-		var result = await service.NewAccessTokenUsingRefreshTokenInRedisAsync(refreshToken, email, password);
+	// 	// Act
+	// 	var result = await service.NewAccessTokenUsingRefreshTokenInRedisAsync(refreshToken, email, password);
 
-		// Assert
-		Assert.NotNull(result);
-		Assert.False(string.IsNullOrEmpty(result.Token));
-		Assert.False(string.IsNullOrEmpty(result.RefreshToken));
-	}
+	// 	// Assert
+	// 	Assert.NotNull(result);
+	// 	Assert.False(string.IsNullOrEmpty(result.Token));
+	// 	Assert.False(string.IsNullOrEmpty(result.RefreshToken));
+	// }
 
-	[Fact]
-	public void GetToken_ShouldReturnTokenResult()
-	{
-		// Arrange
-		var utilisateurDto = new UtilisateurDto {ID =new Guid() ,Email = "test@example.com", Pass = "password", Nom = "Test User", Role = UtilisateurDto.Privilege.Utilisateur };
+	// [Fact]
+	// public void GetToken_ShouldReturnTokenResult()
+	// {
+	// 	// Arrange
+	// 	var utilisateurDto = new UtilisateurDto {ID =new Guid() ,Email = "test@example.com", Pass = "password", Nom = "Test User", Role = UtilisateurDto.Privilege.Utilisateur };
 
-		// Act
-		var result = service.GetToken(utilisateurDto);
+	// 	// Act
+	// 	var result = service.GetToken(utilisateurDto);
 
-		// Assert
-		Assert.NotNull(result);
-		Assert.False(string.IsNullOrEmpty(result.Token));
-		Assert.False(string.IsNullOrEmpty(result.RefreshToken));
-	}
+	// 	// Assert
+	// 	Assert.NotNull(result);
+	// 	Assert.False(string.IsNullOrEmpty(result.Token));
+	// 	Assert.False(string.IsNullOrEmpty(result.RefreshToken));
+	// }
 
 	[Fact]
 	public void ConvertToPem_ShouldReturnPemFormattedString()

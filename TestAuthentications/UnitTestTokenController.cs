@@ -10,18 +10,12 @@ namespace TestAuthentications;
 public class UnitTestTokenController
 {
     private readonly Mock<IJwtAccessAndRefreshTokenService> mockJwtTokenService;
-    private readonly Mock<IRedisCacheTokenService> mockRedisTokenCacheService;
-    private readonly Mock<IRedisCacheService> mockRedisCacheService;
-    private readonly Mock<ILogger<TokenController>> mockLogger;
     private readonly TokenController controller;
 
     public UnitTestTokenController()
     {
         mockJwtTokenService = new Mock<IJwtAccessAndRefreshTokenService>();
-        mockRedisTokenCacheService = new Mock<IRedisCacheTokenService>();
-        mockRedisCacheService = new Mock<IRedisCacheService>();
-        mockLogger = new Mock<ILogger<TokenController>>();
-        controller = new TokenController(mockLogger.Object, mockRedisTokenCacheService.Object, mockJwtTokenService.Object, mockRedisCacheService.Object);
+        controller = new TokenController( mockJwtTokenService.Object);
     }
 
     [Fact]
