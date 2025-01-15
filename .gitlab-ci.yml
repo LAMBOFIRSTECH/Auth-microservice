@@ -42,6 +42,7 @@ build:
   script:
     - echo "Compilation des projets à partir de $SOLUTION_PATH"
     - dotnet build $SOLUTION_PATH --configuration $BUILD_CONFIGURATION
+    - ls
   cache:
     key: "$CI_COMMIT_REF_NAME"
     paths:
@@ -57,7 +58,6 @@ test:
   script:
     - echo "Création du répertoire pour le rapport de couverture si nécessaire"
     - mkdir -p $(dirname $COVERAGE_REPORT_PATH) # Crée le répertoire parent
-    - ls coverage/*
     - echo "Exécution des tests unitaires avec collecte de couverture"
     - TEST=$(ls | grep -o '\bTest\w*')
     - |
