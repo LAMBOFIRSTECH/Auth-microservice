@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "HdyXKP/oMILiSv+FJdR9mdyK2MR94ZcNkuyye1lFVK2KYHpBcBvxo95YPqWIEmQnrKhk0OlQCiFK6nDSElgcSA==",
+  "dgSpecHash": "SEs80JqpBW1nynJyts6S0hkJiD/XLgwaQagsffptd5eq4pFCBVzW80v0V1Et01JgGxWu8KVGLg9P0f2JRXQ83w==",
   "success": true,
   "projectFilePath": "/home/snow/authentication/TestAuthentications/TestAuthentications.csproj",
   "expectedPackageFiles": [
@@ -9,6 +9,7 @@
     "/home/snow/.nuget/packages/bouncycastle.cryptography/2.4.0/bouncycastle.cryptography.2.4.0.nupkg.sha512",
     "/home/snow/.nuget/packages/castle.core/4.4.0/castle.core.4.4.0.nupkg.sha512",
     "/home/snow/.nuget/packages/coverlet.collector/3.1.2/coverlet.collector.3.1.2.nupkg.sha512",
+    "/home/snow/.nuget/packages/coverlet.msbuild/3.0.3/coverlet.msbuild.3.0.3.nupkg.sha512",
     "/home/snow/.nuget/packages/docker.dotnet.enhanced/3.126.1/docker.dotnet.enhanced.3.126.1.nupkg.sha512",
     "/home/snow/.nuget/packages/docker.dotnet.enhanced.x509/3.126.1/docker.dotnet.enhanced.x509.3.126.1.nupkg.sha512",
     "/home/snow/.nuget/packages/hangfire/1.8.17/hangfire.1.8.17.nupkg.sha512",

@@ -17,6 +17,7 @@
           "RestSharp": "112.0.0",
           "Testcontainers": "4.1.0",
           "coverlet.collector": "3.1.2",
+          "coverlet.msbuild": "3.0.3",
           "xunit": "2.4.1",
           "xunit.runner.visualstudio": "2.4.3"
         },
@@ -80,6 +81,7 @@
         }
       },
       "coverlet.collector/3.1.2": {},
+      "coverlet.msbuild/3.0.3": {},
       "Docker.DotNet.Enhanced/3.126.1": {
         "dependencies": {
           "System.Buffers": "4.5.1",
@@ -1894,6 +1896,13 @@
       "sha512": "sha512-wuLDIDKD5XMt0A7lE31JPenT7QQwZPFkP5rRpdJeblyXZ9MGLI8rYjvm5fvAKln+2/X+4IxxQDxBtwdrqKNLZw==",
       "path": "coverlet.collector/3.1.2",
       "hashPath": "coverlet.collector.3.1.2.nupkg.sha512"
+    },
+    "coverlet.msbuild/3.0.3": {
+      "type": "package",
+      "serviceable": true,
+      "sha512": "sha512-fzxcn4+TZEfNEPP96mzmGWnKARCVKkEdBfhor8oTVhQWtxwZz9NuxuJxK7A2j7X20Rr8BSIK8qGclIJgTW7lsg==",
+      "path": "coverlet.msbuild/3.0.3",
+      "hashPath": "coverlet.msbuild.3.0.3.nupkg.sha512"
     },
     "Docker.DotNet.Enhanced/3.126.1": {
       "type": "package",

@@ -7,8 +7,9 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS publish
 WORKDIR /src
 
-# Copier les artefacts publiés depuis le pipeline CI
-COPY --from=build publish /app
+# Ajouter les sources de l'application pour publication
+COPY . . 
+RUN dotnet publish Authentifications.sln --configuration Release --output /app
 
 # Phase finale (runtime)
 FROM base AS final

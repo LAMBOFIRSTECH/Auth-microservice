@@ -200,10 +200,12 @@
               "version": "[4.1.0, )"
             },
             "coverlet.collector": {
-              "include": "Runtime, Build, Native, ContentFiles, Analyzers, BuildTransitive",
-              "suppressParent": "All",
               "target": "Package",
               "version": "[3.1.2, )"
+            },
+            "coverlet.msbuild": {
+              "target": "Package",
+              "version": "[3.0.3, )"
             },
             "xunit": {
               "target": "Package",
