@@ -29,7 +29,9 @@ cleanup:
   stage: cleanup
   script:
     - echo "Nettoyage des caches NuGet"
+    - echo "avant netttoyage du cache"
     - dotnet nuget locals all --clear # Nettoie les caches locaux NuGet
+    - echo "après nettoyage du cache"
     - echo "Nettoyage des fichiers intermédiaires"
     - rm -rf $(find . -name "*.dll")
     - rm -rf $(find . -name "*.pdb")
@@ -81,6 +83,7 @@ sonarqube-check_analysis_report:
     RUNNER_TAG: "development"
     allow_failure: false
   script:
+    - ls
     - echo "Lancement de l'analyse SonarQube."
     - chmod +x sonar_check.sh; ./sonar_check.sh
     - echo "Génération du rapport SonarQube."
