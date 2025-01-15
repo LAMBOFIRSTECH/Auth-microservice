@@ -44,6 +44,7 @@ build:
   script:
     - echo "Compilation des projets à partir de $SOLUTION_PATH"
     - dotnet build $SOLUTION_PATH --configuration $BUILD_CONFIGURATION
+    - chmod -R 777 Authentifications/bin/
   cache:
     key: "$CI_COMMIT_REF_NAME"
     paths:
@@ -66,6 +67,7 @@ test:
         /p:CollectCoverage=true \
         /p:CoverletOutputFormat=opencover \
         /p:CoverletOutput=$COVERAGE_REPORT_PATH
+    - chmod 777 $COVERAGE_REPORT_PATH 
     - cat $COVERAGE_REPORT_PATH
   artifacts:
     when: always

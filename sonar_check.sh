@@ -97,9 +97,10 @@ dotnet sonarscanner begin \
 # --------------------
 # 5. Restauration du projet
 # ------------------------
+dotnet restore "$SOLUTION_FILE"
+colors "YELLOW" "Restauration du projet terminée"
 
-# # Compilation du projet
-# dotnet build "$SOLUTION_FILE" --configuration Release --no-restore
+
 # --------------------
 # 5. Compilation du Projet
 # --------------------
