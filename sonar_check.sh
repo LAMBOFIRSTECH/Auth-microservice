@@ -93,7 +93,7 @@ dotnet sonarscanner begin \
     /k:"$SONAR_PROJECT_KEY" \
     /d:sonar.host.url="$SONAR_HOST_URL" \
     /d:sonar.login="$SONAR_USER_TOKEN" \
-    /d:sonar.cs.opencover.reportsPaths="$COVERAGE_REPORT_PATH"
+    /d:sonar.coverageReportPaths="$COVERAGE_REPORT_PATH"
 # --------------------
 # 5. Restauration du projet
 # ------------------------
