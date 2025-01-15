@@ -29,7 +29,11 @@ cleanup:
   stage: cleanup
   script:
     - echo "Nettoyage des caches NuGet"
+    - echo "avant netttoyage du cache"
+    - ls
     - dotnet nuget locals all --clear # Nettoie les caches locaux NuGet
+    - echo "après nettoyage du cache"
+    - ls
     - echo "Nettoyage des fichiers intermédiaires"
     - rm -rf $(find . -name "*.dll")
     - rm -rf $(find . -name "*.pdb")
@@ -57,7 +61,8 @@ test:
   stage: test
   script:
     - echo "Création du répertoire pour le rapport de couverture si nécessaire"
-    - mkdir -p $(dirname $COVERAGE_REPORT_PATH) # Crée le répertoire parent
+    #- mkdir -p $(dirname $COVERAGE_REPORT_PATH) # Crée le répertoire parent
+    - ls
     - echo "Exécution des tests unitaires avec collecte de couverture"
     - TEST=$(ls | grep -o '\bTest\w*')
     - |
