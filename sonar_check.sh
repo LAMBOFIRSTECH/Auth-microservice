@@ -94,7 +94,22 @@ dotnet sonarscanner begin \
     /d:sonar.host.url="$SONAR_HOST_URL" \
     /d:sonar.login="$SONAR_USER_TOKEN" \
     /d:sonar.cs.opencover.reportsPaths="$COVERAGE_REPORT_PATH"
+# --------------------
+# 5. Exécution des Tests et Collecte de Couverture
+# --------------------
+colors "YELLOW" "Exécution des tests unitaires avec collecte de couverture"
+dotnet test "$SOLUTION_FILE" \
+    --configuration "$BUILD_CONFIGURATION" \
+    --collect:"XPlat Code Coverage" \
+    /p:CollectCoverage=true \
+    /p:CoverletOutputFormat=opencover \
+    /p:CoverletOutput="$COVERAGE_REPORT_PATH"
 
+# Vérification de la réussite des tests
+if [[ $? -ne 0 ]]; then
+    colors "RED" "Échec des tests unitaires. Analyse SonarQube interrompue."
+    exit 1
+fi
 # --------------------
 # 5. Compilation du Projet
 # --------------------
@@ -121,8 +136,8 @@ fi
 # --------------------
 # 7. Message de Succès
 # --------------------
-colors "GREEN" "###################### Analyse SonarQube terminée avec succès ######################"
-colors "CYAN" "|  Rapport de couverture généré et envoyé à SonarQube                                   |"
-colors "CYAN" "|  Serveur SonarQube accessible et analyse complétée                                   |"
-colors "GREEN" "######################################################################################"
+colors "GREEN" "###################### Analyse SonarQube terminée avec succès ##########################"
+colors "CYAN"  "|  Rapport de couverture généré et envoyé à SonarQube                                  |"
+colors "CYAN"  "|  Serveur SonarQube accessible et analyse complétée                                   |"
+colors "GREEN" "########################################################################################"
 exit 0
