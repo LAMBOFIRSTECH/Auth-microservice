@@ -147,7 +147,7 @@ Env_dev:
         echo "Déploiement de l'image Docker"
         PORT_NUMBER=$(grep -oP 'EXPOSE\s+\K\d+' Dockerfile)
         docker rm -f dev-$CI_PROJECT_NAME || true
-        docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name dev-$CI_PROJECT_NAME $DOCKER_IMAGE_TAG
+        docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name dev-$CI_PROJECT_NAME $tag
         if [ $? != 0 ]; then
           echo "Echec de lancement du conatiner docker."
           ./docker_cleanup.sh dev-$CI_PROJECT_NAME
