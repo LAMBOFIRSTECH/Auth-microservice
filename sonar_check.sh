@@ -94,8 +94,21 @@ dotnet sonarscanner begin \
     /d:sonar.host.url="$SONAR_HOST_URL" \
     /d:sonar.login="$SONAR_USER_TOKEN" \
     /d:sonar.cs.opencover.reportsPaths="$COVERAGE_REPORT_PATH"
+
 # --------------------
-# 5. Fin de l'analyse SonarQube
+# 5. Compilation du Projet
+# --------------------
+colors "YELLOW" "Compilation de la solution $SOLUTION_FILE avec configuration $BUILD_CONFIGURATION"
+dotnet build "$SOLUTION_FILE" --configuration "$BUILD_CONFIGURATION" --no-restore
+
+# Vérification de la réussite de la compilation
+if [[ $? -ne 0 ]]; then
+    colors "RED" "Échec de la compilation. Analyse SonarQube interrompue."
+    exit 1
+fi
+
+# --------------------
+# 6. Fin de l'analyse SonarQube
 # --------------------
 colors "YELLOW" "Finalisation de l'analyse SonarQube"
 dotnet sonarscanner end /d:sonar.login="$SONAR_USER_TOKEN"
