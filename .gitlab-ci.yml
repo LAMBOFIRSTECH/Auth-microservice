@@ -49,7 +49,7 @@ build:
       - '$NUGET_PACKAGES_DIRECTORY' 
   artifacts:
     paths:
-      - '**/bin/**'  # Artéfacts de build si nécessaires
+      - '**/bin/**'  # Artéfacts de build si nécessaire
     expire_in: 1 hour
 
 ######## TEST ########
