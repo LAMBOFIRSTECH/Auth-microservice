@@ -53,7 +53,7 @@ test:
         --collect:"XPlat Code Coverage" \
         /p:CollectCoverage=true \
         /p:CoverletOutputFormat=opencover \
-        /p:CoverletOutput=${COVERAGE_REPORT_PATH}
+        /p:CoverletOutput=$COVERAGE_REPORT_PATH
   artifacts:
     when: always
     paths:
