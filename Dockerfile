@@ -7,12 +7,13 @@ EXPOSE 8081
 FROM mcr.microsoft.com/dotnet/sdk:6.0 AS publish
 WORKDIR /src
 
+# Ajouter les sources NuGet (ajout du cache local et d'un repo externe si nécessaire)
+RUN dotnet nuget add source https://api.nuget.org/v3/index.json --name nuget.org
+RUN dotnet restore Authentifications/*.csproj --disable-parallel
+
 # Copier les fichiers de la solution
 COPY Authentifications/*.csproj ./Authentifications/
-RUN dotnet restore Authentifications/*.csproj
-
 COPY Authentifications/ ./Authentifications/
-WORKDIR /src/Authentifications
 
 # Publier les fichiers nécessaires pour l'exécution
 RUN dotnet publish -c Release -o /app/publish --no-restore
@@ -25,7 +26,7 @@ WORKDIR /app
 COPY --from=publish /app/publish .
 
 # Copier les fichiers de configuration
-COPY Authentifications/appsettings.* .
+COPY Authentifications/appsettings.* . 
 
 # Copier le certificat nécessaire
 COPY TasksApi.pfx /etc/ssl/certs/TasksApi.pfx
