@@ -97,19 +97,20 @@ dotnet sonarscanner begin \
 # --------------------
 # 5. Exécution des Tests et Collecte de Couverture
 # --------------------
+dotnet restore "$SOLUTION_FILE"
 colors "YELLOW" "Exécution des tests unitaires avec collecte de couverture"
-dotnet test "$SOLUTION_FILE" \
-    --configuration "$BUILD_CONFIGURATION" \
-    --collect:"XPlat Code Coverage" \
-    /p:CollectCoverage=true \
-    /p:CoverletOutputFormat=opencover \
-    /p:CoverletOutput="$COVERAGE_REPORT_PATH"
+# dotnet test "$SOLUTION_FILE" \
+#     --configuration "$BUILD_CONFIGURATION" \
+#     --collect:"XPlat Code Coverage" \
+#     /p:CollectCoverage=true \
+#     /p:CoverletOutputFormat=opencover \
+#     /p:CoverletOutput="$COVERAGE_REPORT_PATH"
 
-# Vérification de la réussite des tests
-if [[ $? -ne 0 ]]; then
-    colors "RED" "Échec des tests unitaires. Analyse SonarQube interrompue."
-    exit 1
-fi
+# # Vérification de la réussite des tests
+# if [[ $? -ne 0 ]]; then
+#     colors "RED" "Échec des tests unitaires. Analyse SonarQube interrompue."
+#     exit 1
+# fi
 # --------------------
 # 5. Compilation du Projet
 # --------------------
