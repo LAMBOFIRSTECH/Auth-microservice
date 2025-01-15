@@ -2,54 +2,42 @@
 variables:
   BUILD_CONFIGURATION: "Release"
   COVERAGE_REPORT_PATH: "coverage/coverage.opencover.xml"
-  OBJECTS_DIRECTORY: 'obj'
   NUGET_PACKAGES_DIRECTORY: '.nuget/packages'
   SOLUTION_PATH: "Authentifications.sln"
   DOCKER_IMAGE_TAG: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}" # Tag de l'image Docker
-  #  SRC=$(ls *.sln)
 
 default:
   tags:
     - gitlab-lamboft-docker-runner
 
-
 ######## CACHE ########
 cache:
   key: "$CI_JOB_STAGE-$CI_COMMIT_REF_SLUG"
   paths:
-    - '$NUGET_PACKAGES_DIRECTORY'
-    - '**/obj'
-    - '**/bin'
+    - '$NUGET_PACKAGES_DIRECTORY' 
 
 ######## STAGES ########
 stages:
-  - restore
   - build
   - test
   - sonarqube-check_analysis_report
+  - release
   - deploy
-
-######## RESTORE ########
-restore:
-  stage: restore
-  script:
-    - echo "Nettoyage des caches locaux NuGet"
-    - dotnet nuget locals all --clear
-    - echo "Restauration des dépendances à partir de $SOLUTION_PATH"
-    - dotnet restore $SOLUTION_PATH --packages $NUGET_PACKAGES_DIRECTORY
-  artifacts:
-    paths:
-      - $NUGET_PACKAGES_DIRECTORY
-    expire_in: 1 day
 
 ######## BUILD ########
 build:
   stage: build
   script:
     - echo "Compilation des projets à partir de $SOLUTION_PATH"
-    - dotnet build $SOLUTION_PATH --configuration $BUILD_CONFIGURATION --no-restore
-  dependencies:
-    - restore # Dépend de l'étape restore
+    - dotnet build $SOLUTION_PATH --configuration $BUILD_CONFIGURATION
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    paths:
+      - '$NUGET_PACKAGES_DIRECTORY' 
+  artifacts:
+    paths:
+      - '**/bin/**'  # Artéfacts de build si nécessaires
+    expire_in: 1 hour
 
 ######## TEST ########
 test:
@@ -62,21 +50,16 @@ test:
     - |
       dotnet test $TEST/$TEST.csproj \
         --configuration $BUILD_CONFIGURATION \
-        --no-restore \
         --collect:"XPlat Code Coverage" \
         /p:CollectCoverage=true \
         /p:CoverletOutputFormat=opencover \
         /p:CoverletOutput=${COVERAGE_REPORT_PATH}
-
-  dependencies:
-    - build # Dépend de la compilation
   artifacts:
     when: always
     paths:
       - $COVERAGE_REPORT_PATH
     reports:
       junit: $COVERAGE_REPORT_PATH
-
 
 ######## SONARQUBE ########
 sonarqube-check_analysis_report:
@@ -93,6 +76,25 @@ sonarqube-check_analysis_report:
     - chmod +x sonar_report.sh; ./sonar_report.sh
   dependencies:
     - test # Dépend des tests et de la couverture
+
+######## RELEASE ########
+release:
+  stage: release
+  only:
+    - master # Publier uniquement depuis la branche master
+  script:
+    - echo "Publication des artefacts pour le déploiement"
+    - dotnet publish $SOLUTION_PATH --configuration Release --output publish/
+  artifacts:
+    paths:
+      - publish/
+    expire_in: 1 week
+    reports:
+      dotenv: publish/.env # Optionnel : ajoutez un fichier d'environnement pour votre déploiement si nécessaire
+
+
+
+
 
 ######## DEPLOY ENV DEV ########
 Env_dev:

@@ -1,8 +1,9 @@
-Redis/redis-data/dump.rdb
+# Ignorer les dossiers bin et obj dans TestAuthentifications
+/bin/
+/obj/
 # Ignorer les autres fichiers compilés ou temporaires générés
 *.dll
 *.exe
 *.pdb
 *.cache
 *.log
-*.vs/
