@@ -93,6 +93,8 @@ sonar-build:
     paths:
       - "${SONAR_USER_HOME}/cache"
       - sonar-scanner/
+  dependencies:
+    - test # Dépend des tests et de la couverture
 
 ######## SONARQUBE REPORT ########
 sonarqube-analysis_report:
@@ -106,7 +108,7 @@ sonarqube-analysis_report:
     - echo "Génération du rapport SonarQube."
     - chmod +x sonar_report.sh; ./sonar_report.sh
   dependencies:
-    - test # Dépend des tests et de la couverture
+    - sonar-build # Dépend du build de sonar
 
 ######## RELEASE ########
 release:
@@ -173,85 +175,31 @@ Env_staging:
   rules:
     - if: '$CI_COMMIT_BRANCH == "main"'
   script:
-    - echo "Déploiement en environnement de staging"
-    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-    - docker build -t $DOCKER_IMAGE_TAG .
-    - docker push $DOCKER_IMAGE_TAG
-    - echo "Lancement de l'image Docker pour l'environnement de staging"
-    - PORT_NUMBER=$(grep -oP 'EXPOSE\s+\K\d+' Dockerfile)
-    - docker rm -f staging-$CI_PROJECT_NAME || true
-    - docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name staging-$CI_PROJECT_NAME $DOCKER_IMAGE_TAG
+    - |
+      if [[ "$STAGING_TAG" == "true" ]]; then
+        echo "Déploiement en environnement de staging"
+        echo "Construction de l'image Docker"
+        dotnet nuget locals all --clear
+        tag=$(./image_tag.sh | tr -cd '0-9.')
+        docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+        docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag .
+        docker push  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
+        echo "Déploiement de l'image Docker"
+        PORT_NUMBER=$(grep -oP 'EXPOSE\s+\K\d+' Dockerfile)
+        docker rm -f staging-$CI_PROJECT_NAME || true
+        docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name staging-$CI_PROJECT_NAME  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
+        if [ $? != 0 ]; then
+          echo "Echec de lancement du conatiner docker."
+          ./docker_cleanup.sh staging-$CI_PROJECT_NAME
+          exit 1
+        fi
+      else
+        echo "No environment tag set for this runner staging"
+        exit 1
+      fi
   artifacts:
     reports:
       dotenv: build.env
     paths:
       - .docker_tag
     expire_in: 1 day
-# ######### DEPLOY TO DEV ENVIRONMENT
-# Env_dev:
-#   stage: deploy
-#   tags:
-#     - development
-#   rules:
-#     - if: '$CI_COMMIT_BRANCH == "develop"'
-#       variables:
-#         RUNNER_TAG: "development"
-#       allow_failure: false
-#   script:
-#     - echo "Déploiement en environnement de développement"
-#     - echo "DEVELOPMENT_TAG=$DEVELOPMENT_TAG" >> build.env
-#     - |
-#       if [[ "$DEVELOPMENT_TAG" == "true" ]]; then
-#         echo "Construction et push de l'image Docker"
-#         docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-#         docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest .
-#         docker push $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest
-#         echo "Déploiement en cours..."
-#         PORT_NUMBER=$(grep -oP 'EXPOSE\s+\K\d+' Dockerfile)
-#         docker rm -f dev-$CI_PROJECT_NAME || true
-#         docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name dev-$CI_PROJECT_NAME $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest
-#       else
-#         echo "Pas de tag environnement pour ce runner"
-#         exit 1
-#       fi
-#   artifacts:
-#     reports:
-#       dotenv: build.env
-#     paths:
-#       - .docker_tag
-#     expire_in: 15 min
-
-# ######### DEPLOY TO STAGING ENVIRONMENT
-# Env_staging:
-#   stage: deploy
-#   tags:
-#     - staging
-#   rules:
-#     - if: '$CI_COMMIT_BRANCH == "main"'
-#       variables:
-#         RUNNER_TAG: "staging"
-#   script:
-#     - echo "Déploiement en environnement de staging"
-#     - echo "STAGING_TAG=$STAGING_TAG" >> build.env
-#     - |
-#       if [[ "$STAGING_TAG" == "true" ]]; then
-#         echo "Construction et push de l'image Docker"
-#         docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-#         docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest .
-#         docker push $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest
-#         echo "Déploiement en cours..."
-#         PORT_NUMBER=$(grep -oP 'EXPOSE\s+\K\d+' Dockerfile)
-#         docker rm -f staging-$CI_PROJECT_NAME || true
-#         docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name staging-$CI_PROJECT_NAME $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:latest
-#       else
-#         echo "Pas de tag environnement pour ce runner"
-#         exit 1
-#       fi
-#   artifacts:
-#     reports:
-#       dotenv: build.env
-#     paths:
-#       - .docker_tag
-#     expire_in: 15 min
-
-#   - ./clean_old_container.sh meloaude-$CI_PROJECT_NAME # C'est dans ce scripte qu'on fait échouer le pipeline si jamais le containeur ne se lance pas
