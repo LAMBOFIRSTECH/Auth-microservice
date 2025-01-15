@@ -64,6 +64,7 @@ test:
         /p:CollectCoverage=true \
         /p:CoverletOutputFormat=opencover \
         /p:CoverletOutput=$COVERAGE_REPORT_PATH
+    - cat $COVERAGE_REPORT_PATH
   artifacts:
     when: always
     paths:
