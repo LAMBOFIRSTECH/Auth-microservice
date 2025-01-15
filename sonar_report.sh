@@ -27,7 +27,7 @@ curl --request GET \
 
 coverage=$(echo "${SONAR_PROJECT_KEY}-sonar-report.json" | jq -r '.component.measures[] | select(.metric == "coverage") | .value')
 coverage_value=$(echo "$coverage" | awk '{print $1 + 0}')
-if (($(echo "$coverage_value > 20.0" | bc -l))); then 
+if (($(echo "$coverage_value > 0.0" | bc -l))); then 
     colors "RED" "Ce code doit être optimisé"
     echo ""
     colors "YELLOW" "L'image docker ne sera pas construite"
