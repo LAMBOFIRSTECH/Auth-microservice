@@ -29,9 +29,7 @@ cleanup:
   stage: cleanup
   script:
     - echo "Nettoyage des caches NuGet"
-    - echo "avant netttoyage du cache"
     - dotnet nuget locals all --clear # Nettoie les caches locaux NuGet
-    - echo "après nettoyage du cache"
     - echo "Nettoyage des fichiers intermédiaires"
     - rm -rf $(find . -name "*.dll")
     - rm -rf $(find . -name "*.pdb")
@@ -44,7 +42,6 @@ build:
   script:
     - echo "Compilation des projets à partir de $SOLUTION_PATH"
     - dotnet build $SOLUTION_PATH --configuration $BUILD_CONFIGURATION
-    - ls
   cache:
     key: "$CI_COMMIT_REF_NAME"
     paths:
@@ -83,7 +80,6 @@ sonarqube-check_analysis_report:
     RUNNER_TAG: "development"
     allow_failure: false
   script:
-    - ls
     - echo "Lancement de l'analyse SonarQube."
     - chmod +x sonar_check.sh; ./sonar_check.sh
     - echo "Génération du rapport SonarQube."
@@ -94,8 +90,8 @@ sonarqube-check_analysis_report:
 ######## RELEASE ########
 release:
   stage: release
-  only:
-    - master # Publier uniquement depuis la branche master
+  tags:
+    - gitlab-lamboft-shell-develop
   script:
     - echo "Publication des artefacts pour le déploiement"
     - dotnet publish $SOLUTION_PATH --configuration Release --output publish/
