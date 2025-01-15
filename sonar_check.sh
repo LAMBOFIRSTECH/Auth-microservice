@@ -113,7 +113,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # --------------------
-# 6. Fin de l'analyse SonarQube
+# 6. Fin de l'analyse SonarQube.
 # --------------------
 colors "YELLOW" "Finalisation de l'analyse SonarQube"
 dotnet sonarscanner end /d:sonar.login="$SONAR_USER_TOKEN"
