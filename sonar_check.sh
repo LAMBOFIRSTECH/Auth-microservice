@@ -86,8 +86,9 @@ if ! command -v dotnet-sonarscanner &>/dev/null; then
     colors "CYAN" "SonarScanner pour .NET non trouvé. Installation en cours..."
     dotnet tool install --global dotnet-sonarscanner --version 5.11.0
     export PATH="$PATH:$HOME/.dotnet/tools"
+else
+    export PATH="$PATH:$HOME/.dotnet/tools"
 fi
-export PATH="$PATH:$HOME/.dotnet/tools"
 # Initialisation de l'analyse
 dotnet sonarscanner begin \
     /k:"$SONAR_PROJECT_KEY" \
