@@ -79,15 +79,15 @@ sonar-build:
   stage: sonar-build
   tags:
     - gitlab-lamboft-shell-develop
+  script:
+    - echo "Lancement de l'analyse SonarQube."
+    - chmod +x sonar_check.sh; ./sonar_check.sh
   cache:
     policy: pull-push
     key: "sonar-cache-$CI_COMMIT_REF_SLUG"
     paths:
       - "${SONAR_USER_HOME}/cache"
       - sonar-scanner/
-    script:
-      - echo "Lancement de l'analyse SonarQube."
-      - chmod +x sonar_check.sh; ./sonar_check.sh
 
 ######## SONARQUBE REPORT ########
 sonarqube-analysis_report:
