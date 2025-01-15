@@ -23,7 +23,8 @@ COPY Authentifications/appsettings.* .
 
 # Copier le certificat nécessaire
 COPY TasksApi.pfx /etc/ssl/certs/TasksApi.pfx
-COPY Redis/certs/redis-client.pfx Redis/certs/redis-client.pfx
+COPY Redis/certs/redis-client.pfx /app/Redis/certs/redis-client.pfx
+COPY Redis/certs/ca.crt /app/Redis/certs/ca.crt
 
 # Configuration des variables d'environnement
 ENV ASPNETCORE_Kestrel__Certificates__Default__Path=/etc/ssl/certs/TasksApi.pfx
