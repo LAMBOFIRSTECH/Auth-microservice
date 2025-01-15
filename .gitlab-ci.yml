@@ -139,6 +139,7 @@ Env_dev:
       if [[ "$DEVELOPMENT_TAG" == "true" ]]; then
         echo "Déploiement en environnement de développement"
         echo "Construction de l'image Docker"
+        dotnet nuget locals all --clear
         tag=$(./image_tag.sh | tr -cd '0-9.')
         docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
         docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag .
