@@ -47,6 +47,7 @@ if [ -z "$SONAR_HOST_URL" ] || [ -z "$SONAR_USER_TOKEN" ]; then
     exit 1
 fi
 ls
+ls ../
 if [ ! -f "$COVERAGE_REPORT_PATH" ]; then
     colors "RED" "Erreur : Fichier de couverture ($COVERAGE_REPORT_PATH) introuvable."
     exit 1

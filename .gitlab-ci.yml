@@ -45,6 +45,7 @@ test:
   script:
     - echo "Création du répertoire pour le rapport de couverture si nécessaire"
     - mkdir -p $(dirname $COVERAGE_REPORT_PATH) # Crée le répertoire parent
+    - ls
     - echo "Exécution des tests unitaires avec collecte de couverture"
     - TEST=$(ls | grep -o '\bTest\w*')
     - |
