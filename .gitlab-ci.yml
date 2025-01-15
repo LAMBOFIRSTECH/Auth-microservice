@@ -18,12 +18,24 @@ cache:
 
 ######## STAGES ########
 stages:
+  - cleanup
   - build
   - test
   - sonarqube-check_analysis_report
   - release
   - deploy
-
+######## CLEANUP ########
+cleanup:
+  stage: cleanup
+  script:
+    - echo "Nettoyage des caches NuGet"
+    - dotnet nuget locals all --clear # Nettoie les caches locaux NuGet
+    - echo "Nettoyage des fichiers intermédiaires"
+    - rm -rf $(find . -name "*.dll")
+    - rm -rf $(find . -name "*.pdb")
+    - rm -rf $(find . -name "*.tmp")
+  tags:
+    - gitlab-lamboft-docker-runner
 ######## BUILD ########
 build:
   stage: build
