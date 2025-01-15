@@ -96,9 +96,9 @@ dotnet sonarscanner begin \
     /d:sonar.cs.opencover.reportsPaths="$COVERAGE_REPORT_PATH"
 # --------------------
 # 5. Restauration du projet
-# --------------------
+# ------------------------
 dotnet restore "$SOLUTION_FILE"
-colors "YELLOW" "Restauration du projet"
+colors "YELLOW" "Restauration du projet terminée"
 
 # --------------------
 # 5. Compilation du Projet
