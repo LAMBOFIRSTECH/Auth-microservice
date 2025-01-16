@@ -1,7 +1,7 @@
 ######## VARIABLES ########
 variables:
   BUILD_CONFIGURATION: "Release"
-  COVERAGE_REPORT_PATH: "../Couverture"
+  COVERAGE_REPORT_PATH: "../Couverture/"
   NUGET_PACKAGES_DIRECTORY: ".nuget/packages"
   SOLUTION_PATH: "Authentifications.sln"
   DOCKER_IMAGE_TAG: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}" # Tag de l'image Docker
@@ -71,16 +71,14 @@ test:
         /p:CoverletOutputFormat=cobertura \
         /p:CoverletOutput=$COVERAGE_REPORT_PATH
         ls
-        ls ../
-        chmod 777 $COVERAGE_REPORT_PATH/coverage.cobertura.xml
+        ls $TEST/
     - rm -rf $TEST/TestResults
-
   artifacts:
     when: always
     paths:
-      - $COVERAGE_REPORT_PATH/coverage.cobertura.xml
+      - $COVERAGE_REPORT_PATH
     reports:
-      junit: $COVERAGE_REPORT_PATH/coverage.cobertura.xml
+      junit: $COVERAGE_REPORT_PATH
 
 
 ######## SONARQUBE ########
