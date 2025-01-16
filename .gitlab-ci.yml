@@ -70,7 +70,7 @@ test:
         /p:CoverletOutputFormat=cobertura \
         /p:CoverletOutput=$COVERAGE_REPORT_PATH
         ls 
-        cat Couverture/coverage.cobertura.xml
+        ls $TEST
         rm -rf $TEST/TestResults
       
     #- chmod 777 $COVERAGE_REPORT_PATH 
