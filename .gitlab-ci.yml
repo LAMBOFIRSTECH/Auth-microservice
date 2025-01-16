@@ -17,6 +17,7 @@ cache:
   paths:
     - "$NUGET_PACKAGES_DIRECTORY"
 
+
 ######## STAGES ########
 stages:
   - cleanup
@@ -53,7 +54,8 @@ build:
     paths:
       - "**/bin/**" # Artéfacts de build si nécessaire
     expire_in: 1 hour
-
+before_script:
+  - dotnet tool install --global dotnet-reportgenerator-globaltool
 ######## TEST ########
 test:
   stage: test
@@ -68,7 +70,9 @@ test:
         /p:CoverletOutputFormat=cobertura \
         /p:CoverletOutput=$COVERAGE_REPORT_PATH
     - chmod 777 $COVERAGE_REPORT_PATH 
-    - cat $COVERAGE_REPORT_PATH
+    - echo "Génération du rapport HTML de couverture"
+    - reportgenerator -reports:$COVERAGE_REPORT_PATH/coverage.cobertura.xml -targetdir:$COVERAGE_REPORT_PATH/HtmlReport -reporttypes:Html
+    - echo "Rapport de couverture généré"
   artifacts:
     when: always
     paths:
