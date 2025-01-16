@@ -68,6 +68,8 @@ test:
         /p:CollectCoverage=true \
         /p:CoverletOutputFormat=cobertura \
         /p:CoverletOutput=$COVERAGE_REPORT_PATH
+        ls 
+        cat Couverture/coverage.cobertura.xml
     #- chmod 777 $COVERAGE_REPORT_PATH 
     - echo "Génération du rapport HTML de couverture"
    # - dotnet reportgenerator -reports:Couverture/coverage.cobertura.xml -targetdir:Couverture/HtmlReport -reporttypes:Html
