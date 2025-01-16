@@ -69,10 +69,10 @@ test:
         /p:CoverletOutputFormat=cobertura \
         /p:CoverletOutput=$COVERAGE_REPORT_PATH
         rm -rf $TEST/TestResults
-        chmod 777 $COVERAGE_REPORT_PATH 
     - echo "Génération du rapport HTML de couverture"
    # -   reportgenerator -reports:Couverture/coverage.cobertura.xml -targetdir:/Couverture/coverage.cobertura.xml -reporttypes:xml
     - echo "Rapport de couverture généré"
+    - chmod 777 Couverture/coverage.cobertura.xml 
   artifacts:
     when: always
     paths:
@@ -89,6 +89,7 @@ sonar-build:
     RUNNER_TAG: "development"
     allow_failure: false
   script:
+    - chmod 777 Couverture/coverage.cobertura.xml 
     - echo "Lancement de l'analyse SonarQube."
     - chmod +x sonar_check.sh; ./sonar_check.sh
   cache:
