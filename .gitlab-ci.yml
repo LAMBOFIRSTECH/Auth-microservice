@@ -71,6 +71,8 @@ test:
         /p:CoverletOutputFormat=cobertura \
         /p:CoverletOutput=$COVERAGE_REPORT_PATH
         chmod 777 $COVERAGE_REPORT_PATH/coverage.cobertura.xml
+        ls
+        ls ../
     - rm -rf $TEST/TestResults
 
   artifacts:
