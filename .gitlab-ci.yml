@@ -70,9 +70,9 @@ test:
         /p:CollectCoverage=true \
         /p:CoverletOutputFormat=cobertura \
         /p:CoverletOutput=$COVERAGE_REPORT_PATH
-        chmod 777 $COVERAGE_REPORT_PATH/coverage.cobertura.xml
         ls
         ls ../
+        chmod 777 $COVERAGE_REPORT_PATH/coverage.cobertura.xml
     - rm -rf $TEST/TestResults
 
   artifacts:
