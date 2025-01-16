@@ -68,11 +68,8 @@ test:
         /p:CollectCoverage=true \
         /p:CoverletOutputFormat=cobertura \
         /p:CoverletOutput=$COVERAGE_REPORT_PATH
-        ls 
-        ls $TEST
         rm -rf $TEST/TestResults
-      
-    #- chmod 777 $COVERAGE_REPORT_PATH 
+        chmod 777 $COVERAGE_REPORT_PATH 
     - echo "Génération du rapport HTML de couverture"
    # -   reportgenerator -reports:Couverture/coverage.cobertura.xml -targetdir:/Couverture/coverage.cobertura.xml -reporttypes:xml
     - echo "Rapport de couverture généré"
