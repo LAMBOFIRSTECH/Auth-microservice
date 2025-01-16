@@ -17,7 +17,6 @@ cache:
   paths:
     - "$NUGET_PACKAGES_DIRECTORY"
 
-
 ######## STAGES ########
 stages:
   - cleanup
@@ -27,6 +26,7 @@ stages:
   - sonarqube-analysis_report
   - release
   - deploy
+
 ######## CLEANUP ########
 cleanup:
   stage: cleanup
@@ -39,6 +39,7 @@ cleanup:
     - rm -rf $(find . -name "*.tmp")
   tags:
     - gitlab-lamboft-docker-runner
+
 ######## BUILD ########
 build:
   stage: build
@@ -54,6 +55,7 @@ build:
     paths:
       - "**/bin/**" # Artéfacts de build si nécessaire
     expire_in: 1 hour
+
 ######## TEST ########
 test:
   stage: test
@@ -68,17 +70,19 @@ test:
         /p:CollectCoverage=true \
         /p:CoverletOutputFormat=cobertura \
         /p:CoverletOutput=$COVERAGE_REPORT_PATH
-        rm -rf $TEST/TestResults
+    - rm -rf $TEST/TestResults
     - echo "Génération du rapport HTML de couverture"
-   # -   reportgenerator -reports:Couverture/coverage.cobertura.xml -targetdir:/Couverture/coverage.cobertura.xml -reporttypes:xml
-    - echo "Rapport de couverture généré"
-    - chmod 777 Couverture/coverage.cobertura.xml 
+    - reportgenerator -reports:$COVERAGE_REPORT_PATH/coverage.cobertura.xml -targetdir:$COVERAGE_REPORT_PATH/HtmlReport -reporttypes:Html
+    - echo "Rapport HTML généré dans $COVERAGE_REPORT_PATH/HtmlReport"
+    - mv $COVERAGE_REPORT_PATH/coverage.cobertura.xml $COVERAGE_REPORT_PATH/coverage.cobertura.xml
+    - chmod 777 $COVERAGE_REPORT_PATH/coverage.cobertura.xml
   artifacts:
     when: always
     paths:
-      - $COVERAGE_REPORT_PATH
+      - $COVERAGE_REPORT_PATH/coverage.cobertura.xml
     reports:
-      junit: $COVERAGE_REPORT_PATH
+      junit: $COVERAGE_REPORT_PATH/coverage.cobertura.xml
+
 
 ######## SONARQUBE ########
 sonar-build:
