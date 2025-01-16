@@ -1,12 +1,4 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <coverage line-rate="0.80" branch-rate="0.75" lines-covered="80" lines-valid="100" branches-covered="75" branches-valid="100">
-  <packages>
-    <package name="MyProject" line-rate="0.80" branch-rate="0.75">
-      <classes>
-        <class name="MyClass" filename="MyClass.cs" line-rate="0.80" branch-rate="0.75">
-          <!-- Coverage data here -->
-        </class>
-      </classes>
-    </package>
-  </packages>
+
 </coverage>

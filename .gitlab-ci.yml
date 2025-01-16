@@ -71,7 +71,8 @@ test:
         /p:CoverletOutput=$COVERAGE_REPORT_PATH
     - chmod 777 $COVERAGE_REPORT_PATH 
     - echo "Génération du rapport HTML de couverture"
-    - reportgenerator -reports:$COVERAGE_REPORT_PATH/coverage.cobertura.xml -targetdir:$COVERAGE_REPORT_PATH/HtmlReport -reporttypes:Html
+    - reportgenerator -reports:Couverture/coverage.cobertura.xml -targetdir:Couverture/HtmlReport -reporttypes:Html
+
     - echo "Rapport de couverture généré"
   artifacts:
     when: always
