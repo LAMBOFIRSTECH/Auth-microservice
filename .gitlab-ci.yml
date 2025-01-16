@@ -54,7 +54,8 @@ build:
     paths:
       - "**/bin/**" # Artéfacts de build si nécessaire
     expire_in: 1 hour
-
+before_script:
+  - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.4
 ######## TEST ########
 test:
   stage: test
