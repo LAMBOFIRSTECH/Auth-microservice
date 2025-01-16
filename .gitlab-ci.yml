@@ -60,7 +60,6 @@ test:
   script:
     - echo "Exécution des tests unitaires avec collecte de couverture"
     - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.4
-    - chmod 777 $COVERAGE_REPORT_PATH
     - TEST=$(ls | grep -o '\bTest\w*')
     - |
       dotnet test $TEST/$TEST.csproj \
