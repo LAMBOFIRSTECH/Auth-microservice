@@ -74,7 +74,7 @@ test:
         # reportgenerator -reports:$COVERAGE_REPORT_PATH/coverage.cobertura.xml -targetdir:$COVERAGE_REPORT_PATH/HtmlReport -reporttypes:Html
     - echo "Génération du rapport HTML de couverture" 
     - echo "Rapport HTML généré dans $COVERAGE_REPORT_PATH/HtmlReport"
-    - mv $COVERAGE_REPORT_PATH/coverage.cobertura.xml $COVERAGE_REPORT_PATH/coverage.cobertura.xml
+    #- mv $COVERAGE_REPORT_PATH/coverage.cobertura.xml $COVERAGE_REPORT_PATH/coverage.cobertura.xml
     - chmod 777 $COVERAGE_REPORT_PATH/coverage.cobertura.xml
   artifacts:
     when: always
