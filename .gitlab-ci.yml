@@ -1,7 +1,7 @@
 ######## VARIABLES ########
 variables:
   BUILD_CONFIGURATION: "Release"
-  COVERAGE_REPORT_PATH: "Couverture/"
+  COVERAGE_REPORT_PATH: "../Couverture/"
   NUGET_PACKAGES_DIRECTORY: ".nuget/packages"
   SOLUTION_PATH: "Authentifications.sln"
   DOCKER_IMAGE_TAG: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}" # Tag de l'image Docker
@@ -60,6 +60,7 @@ test:
   script:
     - echo "Exécution des tests unitaires avec collecte de couverture"
     - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.4
+    - chmod 777 $COVERAGE_REPORT_PATH
     - TEST=$(ls | grep -o '\bTest\w*')
     - |
       dotnet test $TEST/$TEST.csproj \
@@ -70,12 +71,12 @@ test:
         /p:CoverletOutput=$COVERAGE_REPORT_PATH
         ls 
         cat Couverture/coverage.cobertura.xml
+        rm -rf $TEST/TestResults
+      
     #- chmod 777 $COVERAGE_REPORT_PATH 
     - echo "Génération du rapport HTML de couverture"
-   # - dotnet reportgenerator -reports:Couverture/coverage.cobertura.xml -targetdir:Couverture/HtmlReport -reporttypes:Html
+   # -   reportgenerator -reports:Couverture/coverage.cobertura.xml -targetdir:/Couverture/coverage.cobertura.xml -reporttypes:xml
     - echo "Rapport de couverture généré"
-    - mv $COVERAGE_REPORT_PATH ../
-    - rm -rf $TEST/TestResults
   artifacts:
     when: always
     paths:
