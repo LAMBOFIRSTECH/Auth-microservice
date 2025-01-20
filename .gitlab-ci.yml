@@ -78,6 +78,8 @@ test:
     reports:
       junit: $COVERAGE_REPORT_PATH
 
+before_script:
+  - export $(cat .env | xargs)
 
 ######## SONARQUBE ########
 sonar-build:
@@ -88,8 +90,14 @@ sonar-build:
     RUNNER_TAG: "development"
     allow_failure: false
   script:
-    - source .env # récupérer le jeton depuis .env
-    - REPOSITORY_ID=$(curl -s --header  "PRIVATE-TOKEN:glpat-AdJ785L5v-uv1rM9xd-A"  "${GITLAB_REPOSITORY_URL}" | jq -r '.[0].id')
+    - ls
+    #- REPOSITORY_ID=$(curl -s --header  "PRIVATE-TOKEN:$GITLAB_API_TOKEN"  "${GITLAB_REPOSITORY_URL}" | jq -r '.[0].id')
+    - curl -s --header  "PRIVATE-TOKEN:glpat-AdJ785L5v-uv1rM9xd-A"  "${GITLAB_REPOSITORY_URL}" | jq -r '.[0].id'
+    - curl -s --header  "PRIVATE-TOKEN:glpat-zjLudcxHubQxtN1Dn5Ax"  "${GITLAB_REPOSITORY_URL}" | jq -r '.[0].id'
+    - REPOSITORY_RESPONSE=$(curl -s --header "PRIVATE-TOKEN:$GITLAB_API_TOKEN" "${GITLAB_REPOSITORY_URL}")
+    - echo "$REPOSITORY_RESPONSE"
+    - REPOSITORY_ID=$(echo "$REPOSITORY_RESPONSE" | jq -r '.[0].id')
+
     - cat $REPOSITORY_ID
     
     - ALL_Jobs=$(curl -s --header "PRIVATE-TOKEN:glpat-AdJ785L5v-uv1rM9xd-A"  "${GITLAB_REPOSITORY_URL}/$REPOSITORY_ID/jobs"
