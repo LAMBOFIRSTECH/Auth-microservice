@@ -1,10 +1,10 @@
 ######## VARIABLES ########
 variables:
   BUILD_CONFIGURATION: "Release"
-  COVERAGE_REPORT_PATH: "Couverture/coverage.cobertura.xml"
+  COVERAGE_REPORT_PATH: "Couverture/coverage.lcov.xml"
   NUGET_PACKAGES_DIRECTORY: ".nuget/packages"
   SOLUTION_PATH: "Authentifications.sln"
-  DOCKER_IMAGE_TAG: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}" # Tag de l'image Docker glpat-AdJ785L5v-uv1rM9xd-A
+  DOCKER_IMAGE_TAG: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}" # Tag de l'image Docker 
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
 
 default:
@@ -68,7 +68,7 @@ test:
         --configuration $BUILD_CONFIGURATION \
         --collect:"XPlat Code Coverage" \
         /p:CollectCoverage=true \
-        /p:CoverletOutputFormat=cobertura \
+        /p:CoverletOutputFormat=lcov \
         /p:CoverletOutput=../Couverture/
     - rm -rf $TEST/TestResults
   artifacts:
@@ -90,24 +90,7 @@ sonar-build:
     RUNNER_TAG: "development"
     allow_failure: false
   script:
-    - ls
-    - cat Couverture/coverage.cobertura.xml
-    # #- REPOSITORY_ID=$(curl -s --header  "PRIVATE-TOKEN:$GITLAB_API_TOKEN"  "${GITLAB_REPOSITORY_URL}" | jq -r '.[0].id')
-    # - curl -s --header  "PRIVATE-TOKEN:glpat-AdJ785L5v-uv1rM9xd-A"  "${GITLAB_REPOSITORY_URL}" | jq -r '.[0].id'
-    # - curl -s --header  "PRIVATE-TOKEN:glpat-zjLudcxHubQxtN1Dn5Ax"  "${GITLAB_REPOSITORY_URL}" | jq -r '.[0].id'
-    # - REPOSITORY_RESPONSE=$(curl -s --header "PRIVATE-TOKEN:$GITLAB_API_TOKEN" "${GITLAB_REPOSITORY_URL}")
-    # - echo "$REPOSITORY_RESPONSE"
-    # - REPOSITORY_ID=$(echo "$REPOSITORY_RESPONSE" | jq -r '.[0].id')
-
-    # - cat $REPOSITORY_ID
-    
-    # - ALL_Jobs=$(curl -s --header "PRIVATE-TOKEN:glpat-AdJ785L5v-uv1rM9xd-A"  "${GITLAB_REPOSITORY_URL}/$REPOSITORY_ID/jobs"
-    # - cat $ALL_Jobs
-    # #- curl --header "PRIVATE-TOKEN: <your_access_token>"  --output artifact.zip  "https://gitlab.com/api/v4/projects/<project_id>/jobs/<job_id>/artifacts"
-    # - echo "# on va dézipper le fichier ici" 
-    # - mkdir -p $COVERAGE_REPORT_PATH # on va copier le contenu ici
-    - echo "les pb commencent ici----------------------"
-    - chmod 777 Couverture/coverage.cobertura.xml 
+    - chmod 777 Couverture/coverage.lcov.xml 
     - echo "Lancement de l'analyse SonarQube."
     - chmod +x sonar_check.sh; ./sonar_check.sh
   cache:
