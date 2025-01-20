@@ -69,7 +69,7 @@ test:
         --collect:"XPlat Code Coverage" \
         /p:CollectCoverage=true \
         /p:CoverletOutputFormat=cobertura \
-        /p:CoverletOutput=$COVERAGE_REPORT_PATH
+        /p:CoverletOutput=../Couverture/
         echo 'voici le fichier de couverture de code-------------------------------'
         cat Couverture/coverage.cobertura.xml
     - rm -rf $TEST/TestResults
