@@ -1,7 +1,7 @@
 ######## VARIABLES ########
 variables:
   BUILD_CONFIGURATION: "Release"
-  COVERAGE_REPORT_PATH: "Couverture/coverage.lcov.xml"
+  COVERAGE_REPORT_PATH: "Couverture/coverage.cobertura.xml"
   NUGET_PACKAGES_DIRECTORY: ".nuget/packages"
   SOLUTION_PATH: "Authentifications.sln"
   DOCKER_IMAGE_TAG: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}" # Tag de l'image Docker 
@@ -68,7 +68,7 @@ test:
         --configuration $BUILD_CONFIGURATION \
         --collect:"XPlat Code Coverage" \
         /p:CollectCoverage=true \
-        /p:CoverletOutputFormat=lcov \
+        /p:CoverletOutputFormat=cobertura \
         /p:CoverletOutput=../Couverture/
     - rm -rf $TEST/TestResults
   artifacts:
@@ -90,7 +90,7 @@ sonar-build:
     RUNNER_TAG: "development"
     allow_failure: false
   script:
-    - chmod 777 Couverture/coverage.lcov.xml 
+    - chmod 777 Couverture/coverage.cobertura.xml 
     - echo "Lancement de l'analyse SonarQube."
     - chmod +x sonar_check.sh; ./sonar_check.sh
   cache:
