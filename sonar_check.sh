@@ -23,8 +23,6 @@ if [ ! -f .env ]; then
     colors "RED" "Erreur : Fichier .env non trouvé. Veuillez configurer les variables nécessaires."
     exit 1
 fi
-
-# Chargement des variables depuis le fichier .env
 source .env
 
 # Détection automatique de la solution .sln
@@ -51,48 +49,29 @@ if [ ! -f "$COVERAGE_REPORT_PATH" ]; then
     colors "RED" "Erreur : Fichier de couverture ($COVERAGE_REPORT_PATH) introuvable."
     exit 1
 fi
+
 # --------------------
 # 2. Formattage du fichier de couverture de code
 # --------------------
-# 1. Modifier la version et timestamp
+# a- Modifier la version et timestamp
 sed -i 's/version="1.9"/version="1"/' $COVERAGE_REPORT_PATH
 sed -i "s|timestamp=\"[^\"]*\"|timestamp=\"$(date +%s)\"|g" $COVERAGE_REPORT_PATH
-
-# 2. Supprimer les balises <sources> et leur contenu
+# b- Supprimer les balises <sources> et leur contenu
 sed -i '/<sources>/,/<\/sources>/d' $COVERAGE_REPORT_PATH
-
-# 3. Remplacer chaque <classes> par <file> sous <package> et ajouter l'attribut "path"
+# c- Remplacer chaque <classes> par <file> sous <package> et ajouter l'attribut "path"
 sed -i 's|<classes>|<file path="Authentifications/Program.cs">|g' $COVERAGE_REPORT_PATH
 sed -i 's|</classes>|</file>|g' $COVERAGE_REPORT_PATH
-
-# 4. Supprimer la balise <packages> et son contenu
-sed -i 's|<packages>.*</packages>||g' $COVERAGE_REPORT_PATH
-
-# 5. Réorganiser les lignes sous <method>
-# - Remplacer <lines> par le bon format, ajouter des indentations correctes
+# Supprimer complètement la balise <packages> et son contenu
+sed -i '/<packages>/,/<\/packages>/d' $COVERAGE_REPORT_PATH
+# e- Réorganiser les lignes sous <method>
 sed -i 's|<lines>.*</lines>||g' $COVERAGE_REPORT_PATH
 sed -i 's|<line|  <line|g' $COVERAGE_REPORT_PATH
-
-# 6. Ajouter l'attribut "path" à toutes les balises <file>
-# Ceci est nécessaire si vous avez plusieurs fichiers et que vous devez spécifier les chemins
+# f- Ajouter l'attribut "path" à toutes les balises <file>
 sed -i 's|<file name="|<file path="Authentifications/|g' $COVERAGE_REPORT_PATH
-
-
 cat $COVERAGE_REPORT_PATH
-# --------------------
-# 3. Configuration de l'accès SSH (si nécessaire)
-# --------------------
-if [ -n "$SSH_PRIVATE_KEY" ]; then
-    colors "YELLOW" "Configuration de la clé SSH pour SonarQube."
-    mkdir -p ~/.ssh
-    echo "$SSH_PRIVATE_KEY" >~/.ssh/id_rsa
-    chmod 600 ~/.ssh/id_rsa
-else
-    colors "CYAN" "Aucune clé SSH fournie. Passage à l'étape suivante."
-fi
 
 # --------------------
-# 4. Vérification du Serveur SonarQube
+# 3. Vérification du Serveur SonarQube
 # --------------------
 colors "CYAN" "Vérification de l'état du serveur SonarQube à l'adresse $SONAR_HOST_URL"
 check_server=$(curl -s -L -o /dev/null -w "%{http_code}" "$SONAR_HOST_URL")
@@ -103,7 +82,7 @@ if [[ "$check_server" != "200" && "$check_server" != "302" ]]; then
 fi
 
 # --------------------
-# 5. Analyse SonarQube
+# 4. Analyse SonarQube
 # --------------------
 colors "YELLOW" "Démarrage de l'analyse SonarQube pour le projet $SONAR_PROJECT_KEY"
 
@@ -121,15 +100,15 @@ dotnet sonarscanner begin \
     /d:sonar.host.url="$SONAR_HOST_URL" \
     /d:sonar.login="$SONAR_USER_TOKEN" \
     /d:sonar.coverageReportPaths="$COVERAGE_REPORT_PATH"
+
 # --------------------
-# 6. Restauration du projet
+# 5. Restauration du projet
 # ------------------------
 dotnet restore "$SOLUTION_FILE"
 colors "YELLOW" "Restauration du projet terminée"
 
-
 # --------------------
-# 7. Compilation du Projet
+# 6. Compilation du Projet
 # --------------------
 colors "YELLOW" "Compilation de la solution $SOLUTION_FILE avec configuration $BUILD_CONFIGURATION"
 dotnet build "$SOLUTION_FILE" --configuration "$BUILD_CONFIGURATION" --no-restore
@@ -141,7 +120,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # --------------------
-# 8. Fin de l'analyse SonarQube.
+# 7. Fin de l'analyse SonarQube.
 # --------------------
 colors "YELLOW" "Finalisation de l'analyse SonarQube"
 dotnet sonarscanner end /d:sonar.login="$SONAR_USER_TOKEN"
@@ -152,7 +131,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # --------------------
-# 9. Message de Succès
+# 8. Message de Succès
 # --------------------
 colors "GREEN" "###################### Analyse SonarQube terminée avec succès ##########################"
 colors "CYAN"  "|  Rapport de couverture généré et envoyé à SonarQube                                  |"
