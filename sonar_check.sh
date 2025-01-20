@@ -63,7 +63,7 @@ sed -i '/<sources>/,/<\/sources>/d' $COVERAGE_REPORT_PATH
 sed -i 's|<classes>|<file name="Program.cs">|g' $COVERAGE_REPORT_PATH
 sed -i 's|</classes>|</file>|g' $COVERAGE_REPORT_PATH
 
-
+cat $COVERAGE_REPORT_PATH
 # --------------------
 # 3. Configuration de l'accès SSH (si nécessaire)
 # --------------------
