@@ -62,13 +62,14 @@ test:
   script:
     - echo "Exécution des tests unitaires avec collecte de couverture"
     - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.4
+    - export PATH="$PATH:/root/.dotnet/tools"
     - TEST=$(ls | grep -o '\bTest\w*')
     - |
       dotnet test $TEST/$TEST.csproj \
         --configuration $BUILD_CONFIGURATION \
         --collect:"XPlat Code Coverage" \
         /p:CollectCoverage=true \
-        /p:CoverletOutputFormat=cobertura \
+        /p:CoverletOutputFormat=opencover \
         /p:CoverletOutput=../Couverture/
     - rm -rf $TEST/TestResults
   artifacts:
