@@ -51,10 +51,21 @@ if [ ! -f "$COVERAGE_REPORT_PATH" ]; then
     colors "RED" "Erreur : Fichier de couverture ($COVERAGE_REPORT_PATH) introuvable."
     exit 1
 fi
-# formattage du fichier de couverture de code pour la version 1.0 au lieu de 1.9
-sed -i 's/version="1.9"/version="1"/' $COVERAGE_REPORT_PATH
 # --------------------
-# 2. Configuration de l'accès SSH (si nécessaire)
+# 2. Formattage du fichier de couverture de code
+# --------------------
+
+sed -i 's/version="1.9"/version="1"/' $COVERAGE_REPORT_PATH
+# Supprimer les balises <sources> et leur contenu
+sed -i '/<sources>/,/<\/sources>/d' $COVERAGE_REPORT_PATH
+
+# Remplacer chaque <file> avec une structure correcte sous <package>
+sed -i 's|<classes>|<file name="Program.cs">|g' $COVERAGE_REPORT_PATH
+sed -i 's|</classes>|</file>|g' $COVERAGE_REPORT_PATH
+
+
+# --------------------
+# 3. Configuration de l'accès SSH (si nécessaire)
 # --------------------
 if [ -n "$SSH_PRIVATE_KEY" ]; then
     colors "YELLOW" "Configuration de la clé SSH pour SonarQube."
@@ -66,7 +77,7 @@ else
 fi
 
 # --------------------
-# 3. Vérification du Serveur SonarQube
+# 4. Vérification du Serveur SonarQube
 # --------------------
 colors "CYAN" "Vérification de l'état du serveur SonarQube à l'adresse $SONAR_HOST_URL"
 check_server=$(curl -s -L -o /dev/null -w "%{http_code}" "$SONAR_HOST_URL")
@@ -77,7 +88,7 @@ if [[ "$check_server" != "200" && "$check_server" != "302" ]]; then
 fi
 
 # --------------------
-# 4. Analyse SonarQube
+# 5. Analyse SonarQube
 # --------------------
 colors "YELLOW" "Démarrage de l'analyse SonarQube pour le projet $SONAR_PROJECT_KEY"
 
@@ -96,14 +107,14 @@ dotnet sonarscanner begin \
     /d:sonar.login="$SONAR_USER_TOKEN" \
     /d:sonar.coverageReportPaths="$COVERAGE_REPORT_PATH"
 # --------------------
-# 5. Restauration du projet
+# 6. Restauration du projet
 # ------------------------
 dotnet restore "$SOLUTION_FILE"
 colors "YELLOW" "Restauration du projet terminée"
 
 
 # --------------------
-# 5. Compilation du Projet
+# 7. Compilation du Projet
 # --------------------
 colors "YELLOW" "Compilation de la solution $SOLUTION_FILE avec configuration $BUILD_CONFIGURATION"
 dotnet build "$SOLUTION_FILE" --configuration "$BUILD_CONFIGURATION" --no-restore
@@ -115,7 +126,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # --------------------
-# 6. Fin de l'analyse SonarQube.
+# 8. Fin de l'analyse SonarQube.
 # --------------------
 colors "YELLOW" "Finalisation de l'analyse SonarQube"
 dotnet sonarscanner end /d:sonar.login="$SONAR_USER_TOKEN"
@@ -126,7 +137,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # --------------------
-# 7. Message de Succès
+# 9. Message de Succès
 # --------------------
 colors "GREEN" "###################### Analyse SonarQube terminée avec succès ##########################"
 colors "CYAN"  "|  Rapport de couverture généré et envoyé à SonarQube                                  |"
