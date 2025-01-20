@@ -90,7 +90,7 @@ sonar-build:
     RUNNER_TAG: "development"
     allow_failure: false
   script:
-    - chmod 777 Couverture/coverage.cobertura.xml 
+    - chmod 777 Couverture/coverage.xml 
     - echo "Lancement de l'analyse SonarQube."
     - chmod +x sonar_check.sh; ./sonar_check.sh
   cache:
