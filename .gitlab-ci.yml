@@ -161,6 +161,7 @@ Env_dev:
           ./docker_cleanup.sh dev-$CI_PROJECT_NAME
           exit 1
         fi
+        docker network connect redis_redis dev-$CI_PROJECT_NAME
       else
         echo "No environment tag set for this runner development"
         exit 1

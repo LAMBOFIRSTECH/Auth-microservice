@@ -54,6 +54,7 @@ fi
 # 2. Formattage du fichier de couverture de code
 # --------------------
 # a- Modifier la version et timestamp
+# 1. Mettre à jour la version et le timestamp
 sed -i 's/version="1.9"/version="1"/' $COVERAGE_REPORT_PATH
 sed -i "s|timestamp=\"[^\"]*\"|timestamp=\"$(date +%s)\"|g" $COVERAGE_REPORT_PATH
 
@@ -76,6 +77,9 @@ sed -i '/<packages>/,/<\/packages>/d' $COVERAGE_REPORT_PATH
 
 # 7. Supprimer les balises <lines> et leur contenu (si nécessaire)
 sed -i 's|<lines>.*</lines>||g' $COVERAGE_REPORT_PATH
+
+# 8. Ajouter des balises de méthode de base (si nécessaire)
+sed -i 's|</coverage>|<file path="Authentifications/Program.cs"><class name="Program" filename="Program.cs"><methods><method name="Main" signature="(System.String[])"><lines><line number="20" hits="0" branch="False" /></lines></method></methods></class></file></coverage>|g' $COVERAGE_REPORT_PATH
 
 cat  $COVERAGE_REPORT_PATH
 # --------------------
