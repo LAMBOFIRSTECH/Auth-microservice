@@ -129,6 +129,6 @@ fi
 # --------------------
 colors "GREEN" "###################### Analyse SonarQube terminée avec succès ##########################"
 colors "CYAN"  "|  Rapport de couverture généré et envoyé à SonarQube                                  |"
-colors "CYAN"  "|  Serveur SonarQube accessible et analyse complétée                                   |"
+colors "CYAN"  "|  Serveur SonarQube accessible et analyse effectuée                                   |"
 colors "GREEN" "########################################################################################"
 exit 0
