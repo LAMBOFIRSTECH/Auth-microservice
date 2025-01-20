@@ -71,7 +71,7 @@ test:
         /p:CoverletOutputFormat=cobertura \
         /p:CoverletOutput=$COVERAGE_REPORT_PATH
         ls
-        ls $TEST/
+        ls $TEST/TestResults
     - rm -rf $TEST/TestResults
   artifacts:
     when: always

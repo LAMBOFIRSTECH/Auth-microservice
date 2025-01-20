@@ -1,5 +1,4 @@
 version: "3.3"
-
 services:
   hashicorp-vault:
     image: hashicorp/vault:1.17.5
@@ -38,8 +37,6 @@ services:
     command: "agent -dev -client=0.0.0.0"
     volumes:
       - consul-data:/consul/data
-
-
 volumes:
   consul-data:
   vault-data: 

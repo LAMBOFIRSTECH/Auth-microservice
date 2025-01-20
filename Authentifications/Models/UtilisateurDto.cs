@@ -5,7 +5,6 @@ using System.ComponentModel.DataAnnotations.Schema;
 namespace Authentifications.Models;
 public class UtilisateurDto
 {
-
 	/// <summary>
 	/// Représente l'identifiant unique d'un utilisateur.
 	/// </summary>

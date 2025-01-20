@@ -46,7 +46,7 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         if (!refreshTokenFromRedis.Equals(refresh))
             throw new Exception("Not the same refresh token");
         GetToken(utilisateurDto);
-        return GetToken(utilisateurDto); ;
+        return GetToken(utilisateurDto); 
 
     }
     public TokenResult GetToken(UtilisateurDto utilisateurDto)
@@ -64,7 +64,7 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         if (rsaSecurityKey != null)
             return rsaSecurityKey;
         var rsa = RSA.Create(2048);
-        _ = ConvertToPem(rsa.ExportRSAPrivateKey(), "RSA PRIVATE KEY");
+        _ = ConvertToPem(rsa.ExportRSAPrivateKey(), "RSA PRIVATE KEY"); // A stocker dans les variables d'env & gérer le processus de rotation des clés
         var publicKey = ConvertToPem(rsa.ExportRSAPublicKey(), "RSA PUBLIC KEY");
         StorePublicKeyInVault(publicKey);
         rsaSecurityKey = new RsaSecurityKey(rsa.ExportParameters(true));
@@ -110,38 +110,38 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
             throw new Exception("The service is unavailable. Please retry soon.", ex);
         }
     }
-    public TokenResult GenerateJwtTokenAndStatefulRefreshToken(UtilisateurDto utilisateurDto)
+public TokenResult GenerateJwtTokenAndStatefulRefreshToken(UtilisateurDto utilisateurDto)
+{
+    var tokenHandler = new JwtSecurityTokenHandler();
+    var additionalAudiences = new[] { "https://localhost:7082", "https://audience2.com", "https://localhost:9500", "https://192.168.153.131:7250", "https://audience1.com" };
+    var tokenDescriptor = new SecurityTokenDescriptor
     {
-        var tokenHandler = new JwtSecurityTokenHandler();
-        var additionalAudiences = new[] { "https://localhost:7082", "https://audience2.com", "https://localhost:9500", "https://192.168.153.131:7250", "https://audience1.com" };
-        var tokenDescriptor = new SecurityTokenDescriptor
-        {
-            Subject = new ClaimsIdentity(new[] {
-                    new Claim(ClaimTypes.Name, utilisateurDto.Nom),
-                    new Claim(ClaimTypes.Email, utilisateurDto.Email!),
-                    new Claim(ClaimTypes.Role, utilisateurDto.Role.ToString()),
-                    new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
-                    new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
-                }
-            ),
-            Expires = DateTime.UtcNow.AddMinutes(15),
-            SigningCredentials = new SigningCredentials(GetOrCreateSigningKey(), SecurityAlgorithms.RsaSha512),
-            Issuer = configuration.GetSection("JwtSettings")["Issuer"],
-            Audience = null,
-            Claims = new Dictionary<string, object>
-        {
-            { JwtRegisteredClaimNames.Aud, additionalAudiences }
-        }
-        };
-        var tokenCreation = tokenHandler.CreateToken(tokenDescriptor);
-        var token = tokenHandler.WriteToken(tokenCreation);
-        TokenResult result = new()
-        {
-            Token = token,
-            RefreshToken = refreshToken
-        };
-        return result;
+        Subject = new ClaimsIdentity(new[] {
+                new Claim(ClaimTypes.Name, utilisateurDto.Nom),
+                new Claim(ClaimTypes.Email, utilisateurDto.Email!),
+                new Claim(ClaimTypes.Role, utilisateurDto.Role.ToString()),
+                new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
+                new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
+            }
+        ),
+        Expires = DateTime.UtcNow.AddMinutes(15),
+        SigningCredentials = new SigningCredentials(GetOrCreateSigningKey(), SecurityAlgorithms.RsaSha512),
+        Issuer = configuration.GetSection("JwtSettings")["Issuer"],
+        Audience = null,
+        Claims = new Dictionary<string, object>
+    {
+        { JwtRegisteredClaimNames.Aud, additionalAudiences }
     }
+    };
+    var tokenCreation = tokenHandler.CreateToken(tokenDescriptor);
+    var token = tokenHandler.WriteToken(tokenCreation);
+    TokenResult result = new()
+    {
+        Token = token,
+        RefreshToken = refreshToken
+    };
+    return result;
+}
     public async Task<UtilisateurDto> AuthUserDetailsAsync((bool IsValid, string email, string password) tupleParameter)
     {
         await Task.Delay(50);
