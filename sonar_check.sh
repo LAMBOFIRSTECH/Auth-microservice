@@ -107,8 +107,8 @@ fi
 dotnet sonarscanner begin \
     /k:"$SONAR_PROJECT_KEY" \
     /d:sonar.host.url="$SONAR_HOST_URL" \
-    /d:sonar.login="$SONAR_USER_TOKEN" \
-    /d:sonar.coverageReportPaths="$COVERAGE_REPORT_PATH"
+    /d:sonar.token="$SONAR_USER_TOKEN" \
+    /d:sonar.cs.vscoveragexml.reportsPaths="$COVERAGE_REPORT_PATH"
 
 # --------------------
 # 5. Restauration du projet
@@ -131,7 +131,9 @@ fi
 # --------------------
 # 7. Fin de l'analyse SonarQube.
 # --------------------
+TEST=$(ls | grep -o '\bTest\w*')
 colors "YELLOW" "Finalisation de l'analyse SonarQube"
+dotnet-coverage collect "dotnet test $TEST/$TEST.csproj" -f xml -o "$COVERAGE_REPORT_PATH"
 dotnet sonarscanner end /d:sonar.login="$SONAR_USER_TOKEN"
 
 if [[ $? -ne 0 ]]; then

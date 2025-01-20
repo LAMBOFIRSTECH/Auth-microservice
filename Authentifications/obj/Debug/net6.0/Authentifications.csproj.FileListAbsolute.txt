@@ -199,4 +199,4 @@
 /home/snow/authentication/Authentifications/obj/Debug/net6.0/Authentifications.xml
 /home/snow/authentication/Authentifications/obj/Debug/net6.0/Authentifications.pdb
 /home/snow/authentication/Authentifications/obj/Debug/net6.0/Authentifications.genruntimeconfig.cache
-/home/snow/authentication/Authentifications/bin/Debug/net6.0/appsettings.Production.json
+/home/snow/authentication/Authentifications/bin/Debug/net6.0/appsettings.Development.json

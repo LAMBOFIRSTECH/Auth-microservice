@@ -339,4 +339,4 @@
 /home/snow/authentication/TestAuthentications/bin/Debug/net6.0/Authentifications.xml
 /home/snow/authentication/TestAuthentications/obj/Debug/net6.0/TestAuthentications.csproj.CopyComplete
 /home/snow/authentication/TestAuthentications/obj/Debug/net6.0/TestAuthentications.genruntimeconfig.cache
-/home/snow/authentication/TestAuthentications/bin/Debug/net6.0/appsettings.Production.json
+/home/snow/authentication/TestAuthentications/bin/Debug/net6.0/appsettings.Development.json
