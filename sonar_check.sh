@@ -137,7 +137,7 @@ dotnet-coverage collect "dotnet test $TEST/$TEST.csproj" -f xml -o "$COVERAGE_RE
 dotnet sonarscanner end /d:sonar.login="$SONAR_USER_TOKEN"
 
 if [[ $? -ne 0 ]]; then
-    colors "RED" "Échec de l'analyse SonarQube."
+    colors "RED" "Échec de l'analyse SonarQube.."
     exit 1
 fi
 
