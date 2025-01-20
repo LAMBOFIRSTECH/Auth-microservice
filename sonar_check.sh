@@ -56,12 +56,25 @@ fi
 # --------------------
 
 sed -i 's/version="1.9"/version="1"/' $COVERAGE_REPORT_PATH
+sed -i "s|timestamp=\"[^\"]*\"|timestamp=\"$(date +%s)\"|g" $COVERAGE_REPORT_PATH
 # Supprimer les balises <sources> et leur contenu
 sed -i '/<sources>/,/<\/sources>/d' $COVERAGE_REPORT_PATH
-
 # Remplacer chaque <file> avec une structure correcte sous <package>
-sed -i 's|<classes>|<file name="Program.cs">|g' $COVERAGE_REPORT_PATH
+sed -i 's|<classes>|<file name="*.cs">|g' $COVERAGE_REPORT_PATH
 sed -i 's|</classes>|</file>|g' $COVERAGE_REPORT_PATH
+---------------------------------------------
+# 1. Supprimer la balise <packages> et son contenu
+sed -i 's|<packages>.*</packages>||g' $COVERAGE_REPORT_PATH
+
+# 2. Convertir <package> en <file> et </package> en </file>
+sed -i 's|<package[^>]*>|<file>|g' $COVERAGE_REPORT_PATH
+# sed -i 's|</package>|</file>|g' cobertura.xml
+
+
+
+# 4. Réorganiser les lignes sous <method>
+sed -i 's|<lines>.*</lines>||g' $COVERAGE_REPORT_PATH
+sed -i 's|<line|  <line|g'$COVERAGE_REPORT_PATH
 
 cat $COVERAGE_REPORT_PATH
 # --------------------
