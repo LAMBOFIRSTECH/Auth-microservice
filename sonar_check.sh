@@ -68,7 +68,6 @@ sed -i 's|<lines>.*</lines>||g' $COVERAGE_REPORT_PATH
 sed -i 's|<line|  <line|g' $COVERAGE_REPORT_PATH
 # f- Ajouter l'attribut "path" à toutes les balises <file>
 sed -i 's|<file name="|<file path="Authentifications/|g' $COVERAGE_REPORT_PATH
-cat $COVERAGE_REPORT_PATH
 
 # --------------------
 # 3. Vérification du Serveur SonarQube
