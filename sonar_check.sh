@@ -56,27 +56,27 @@ fi
 # a- Modifier la version et timestamp
 
 sed -i 's/version="1.9"/version="1"/' $COVERAGE_REPORT_PATH
-sed -i "s|timestamp=\"[^\"]*\"|timestamp=\"$(date +%s)\"|g" $COVERAGE_REPORT_PATH
+# sed -i "s|timestamp=\"[^\"]*\"|timestamp=\"$(date +%s)\"|g" $COVERAGE_REPORT_PATH
 
-# 2. Remove the <sources> and its content
-sed -i '/<sources>/,/<\/sources>/d' $COVERAGE_REPORT_PATH
+# # 2. Remove the <sources> and its content
+# sed -i '/<sources>/,/<\/sources>/d' $COVERAGE_REPORT_PATH
 
-# 3. Replace <classes> with <file> and add the "path" attribute
-sed -i 's|<classes>|<file path="Authentifications/Program.cs">|g' $COVERAGE_REPORT_PATH
-sed -i 's|</classes>|</file>|g' $COVERAGE_REPORT_PATH
+# # 3. Replace <classes> with <file> and add the "path" attribute
+# sed -i 's|<classes>|<file path="Authentifications/Program.cs">|g' $COVERAGE_REPORT_PATH
+# sed -i 's|</classes>|</file>|g' $COVERAGE_REPORT_PATH
 
-# 4. Replace <method> with relevant structure and add signature if necessary
-sed -i 's|<method name="Main"|<method name="Main" signature="(System.String[])"|g' $COVERAGE_REPORT_PATH
+# # 4. Replace <method> with relevant structure and add signature if necessary
+# sed -i 's|<method name="Main"|<method name="Main" signature="(System.String[])"|g' $COVERAGE_REPORT_PATH
 
-# 5. Replace line information with correct line-to-cover structure
-sed -i 's|<line|<lineToCover|g' $COVERAGE_REPORT_PATH
-sed -i 's|</line>|</lineToCover>|g' $COVERAGE_REPORT_PATH
+# # 5. Replace line information with correct line-to-cover structure
+# sed -i 's|<line|<lineToCover|g' $COVERAGE_REPORT_PATH
+# sed -i 's|</line>|</lineToCover>|g' $COVERAGE_REPORT_PATH
 
-# 6. Remove the <packages> block entirely, as it is not necessary
-sed -i '/<packages>/,/<\/packages>/d' $COVERAGE_REPORT_PATH
+# # 6. Remove the <packages> block entirely, as it is not necessary
+# sed -i '/<packages>/,/<\/packages>/d' $COVERAGE_REPORT_PATH
 
-# 7. Clean up the <lines> tags (if necessary)
-sed -i 's|<lines>.*</lines>||g' $COVERAGE_REPORT_PATH
+# # 7. Clean up the <lines> tags (if necessary)
+# sed -i 's|<lines>.*</lines>||g' $COVERAGE_REPORT_PATH
 
 cat  $COVERAGE_REPORT_PATH
 # --------------------
