@@ -51,7 +51,8 @@ if [ ! -f "$COVERAGE_REPORT_PATH" ]; then
     colors "RED" "Erreur : Fichier de couverture ($COVERAGE_REPORT_PATH) introuvable."
     exit 1
 fi
-
+# formattage du fichier de couverture de code pour la version 1.0 au lieu de 1.9
+sed -i 's/version="1.9"/version="1.0"/' $COVERAGE_REPORT_PATH
 # --------------------
 # 2. Configuration de l'accès SSH (si nécessaire)
 # --------------------
