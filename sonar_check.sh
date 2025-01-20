@@ -56,19 +56,28 @@ fi
 # a- Modifier la version et timestamp
 sed -i 's/version="1.9"/version="1"/' $COVERAGE_REPORT_PATH
 sed -i "s|timestamp=\"[^\"]*\"|timestamp=\"$(date +%s)\"|g" $COVERAGE_REPORT_PATH
-# b- Supprimer les balises <sources> et leur contenu
+
+# 2. Supprimer les balises <sources> et leur contenu
 sed -i '/<sources>/,/<\/sources>/d' $COVERAGE_REPORT_PATH
-# c- Remplacer chaque <classes> par <file> sous <package> et ajouter l'attribut "path"
+
+# 3. Remplacer chaque <classes> par <file> sous <package> et ajouter l'attribut "path"
 sed -i 's|<classes>|<file path="Authentifications/Program.cs">|g' $COVERAGE_REPORT_PATH
 sed -i 's|</classes>|</file>|g' $COVERAGE_REPORT_PATH
-# Supprimer complètement la balise <packages> et son contenu
-sed -i '/<packages>/,/<\/packages>/d' $COVERAGE_REPORT_PATH
-# e- Réorganiser les lignes sous <method>
-sed -i 's|<lines>.*</lines>||g' $COVERAGE_REPORT_PATH
+sed -i 's|<method name="Main"|<method name="Main" signature="(System.String[])"|g' $COVERAGE_REPORT_PATH
+
+# 4. Réorganiser les lignes sous <method>
 sed -i 's|<line|  <line|g' $COVERAGE_REPORT_PATH
-# f- Ajouter l'attribut "path" à toutes les balises <file>
+
+# 5. Ajouter l'attribut "path" à toutes les balises <file>
 sed -i 's|<file name="|<file path="Authentifications/|g' $COVERAGE_REPORT_PATH
 
+# 6. Supprimer complètement la balise <packages> et son contenu (après transformation)
+sed -i '/<packages>/,/<\/packages>/d' $COVERAGE_REPORT_PATH
+
+# 7. Supprimer les balises <lines> et leur contenu (si nécessaire)
+sed -i 's|<lines>.*</lines>||g' $COVERAGE_REPORT_PATH
+
+cat  $COVERAGE_REPORT_PATH
 # --------------------
 # 3. Vérification du Serveur SonarQube
 # --------------------
