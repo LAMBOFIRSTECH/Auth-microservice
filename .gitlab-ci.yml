@@ -4,7 +4,7 @@ variables:
   COVERAGE_REPORT_PATH: "Couverture/coverage.cobertura.xml"
   NUGET_PACKAGES_DIRECTORY: ".nuget/packages"
   SOLUTION_PATH: "Authentifications.sln"
-  DOCKER_IMAGE_TAG: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}" # Tag de l'image Docker
+  DOCKER_IMAGE_TAG: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}" # Tag de l'image Docker glpat-AdJ785L5v-uv1rM9xd-A
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
 
 default:
@@ -70,9 +70,6 @@ test:
         /p:CollectCoverage=true \
         /p:CoverletOutputFormat=cobertura \
         /p:CoverletOutput=../Couverture/
-        cat $TEST/TestResults/*.html
-        echo "-----------------------------------------"
-        cat $TEST/TestResults/*.xml
     - rm -rf $TEST/TestResults
   artifacts:
     when: always
@@ -91,8 +88,14 @@ sonar-build:
     RUNNER_TAG: "development"
     allow_failure: false
   script:
-    - ls
-    - ls $COVERAGE_REPORT_PATH
+    - REPOSITORY_ID=$(curl -s --header  "PRIVATE-TOKEN:glpat-AdJ785L5v-uv1rM9xd-A"  "${GITLAB_REPOSITORY_URL}" | jq -r '.[0].id')
+    - cat $REPOSITORY_ID
+    
+    - ALL_Jobs=$(curl -s --header "PRIVATE-TOKEN:glpat-AdJ785L5v-uv1rM9xd-A"  "${GITLAB_REPOSITORY_URL}/$REPOSITORY_ID/jobs"
+    - cat $ALL_Jobs
+    #- curl --header "PRIVATE-TOKEN: <your_access_token>"  --output artifact.zip  "https://gitlab.com/api/v4/projects/<project_id>/jobs/<job_id>/artifacts"
+    - echo "# on va dézipper le fichier ici" 
+    - mkdir -p $COVERAGE_REPORT_PATH # on va copier le contenu ici
     - echo "les pb commencent ici----------------------"
     - chmod 777 Couverture/coverage.cobertura.xml 
     - echo "Lancement de l'analyse SonarQube."
