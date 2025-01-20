@@ -11,4 +11,10 @@ services:
       - .:/app
     environment:
       - ENV=development
+  hashicorp-vault:
+    image: hashicorp/vault:1.17.5
+    container_name: HASHICORP-VAULT
+  hashicorp-consul:
+    image: hashicorp/consul:1.17
+    container_name: CONSUL-VAULT-STORAGE
     
