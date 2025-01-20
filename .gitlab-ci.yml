@@ -70,8 +70,8 @@ test:
         /p:CollectCoverage=true \
         /p:CoverletOutputFormat=cobertura \
         /p:CoverletOutput=$COVERAGE_REPORT_PATH
-        ls
-        ls Couverture
+        echo 'voici le fichier de couverture de code-------------------------------'
+        cat Couverture/coverage.cobertura.xml
     - rm -rf $TEST/TestResults
   artifacts:
     when: always
