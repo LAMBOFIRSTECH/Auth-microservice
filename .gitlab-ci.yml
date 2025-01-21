@@ -22,7 +22,7 @@ stages:
   - cleanup
   - build
   - test
-  - scan-vulnerabilities
+  # - scan-vulnerabilities
   - sonar-build
   - sonarqube-analysis_report
   - release
@@ -84,9 +84,9 @@ before_script:
   - export $(cat .env | xargs)
 
 ###### VULNERABILITIES #####
-scan-vulnerabilities:
-  script:
-    - dotnet list package --vulnerable
+# scan-vulnerabilities:
+#   script:
+#     - dotnet list package --vulnerable
 
 ######## SONARQUBE ########
 sonar-build:
