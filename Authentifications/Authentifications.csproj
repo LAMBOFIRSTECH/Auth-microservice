@@ -8,6 +8,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>Authentifications</RootNamespace>
     <GenerateDocumentationFile>true</GenerateDocumentationFile>
+    <EnableLongPaths>true</EnableLongPaths>
     <NoWarn>$(NoWarn);1591</NoWarn>
   </PropertyGroup>
 
