@@ -70,8 +70,7 @@ test:
         --collect:"XPlat Code Coverage" \
         /p:CollectCoverage=true \
         /p:CoverletOutput=../Couverture/ \
-        /p:CoverletOutputFormat="cobertura,opencover"
-    - reportgenerator "-reports:Couverture/coverage.opencover.xml" "-targetdir:Couverture/Report" -reporttypes:Html
+        /p:CoverletOutputFormat="opencover"
     - rm -rf $TEST/TestResults
   artifacts:
     when: always
