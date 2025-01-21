@@ -28,7 +28,16 @@ source .env
 # Détection automatique de la solution .sln
 SONAR_PROJECT_KEY=$(ls *.sln | sed -E 's/\.sln$//')
 SOLUTION_FILE=$(ls *.sln)
-
+# Vérification des variables essentielles
+# required_vars=("SONAR_PROJECT_KEY" "SONAR_HOST_URL" "SONAR_USER_TOKEN" "COVERAGE_REPORT_PATH" "SOLUTION_FILE" "BUILD_CONFIGURATION")
+# for var in "${required_vars[@]}"; do
+#   if [[ -z "${!var}" ]]; then
+#     colors "RED" "La variable $var n'est pas définie. Veuillez vérifier votre configuration."
+#     exit 1
+#   fi
+# done
+ROOT_DIR=$(pwd)
+COVERAGE_REPORT_PATH="$ROOT_DIR/Couverture/coverage.opencover.xml"
 if [ ! -f "$SOLUTION_FILE" ]; then
     colors "RED" "Erreur : Fichier solution (.sln) introuvable."
     exit 1
@@ -78,7 +87,7 @@ sed -i 's/version="1.9"/version="1"/' $COVERAGE_REPORT_PATH
 # # 7. Clean up the <lines> tags (if necessary)
 # sed -i 's|<lines>.*</lines>||g' $COVERAGE_REPORT_PATH
 
-cat  $COVERAGE_REPORT_PATH
+
 # --------------------
 # 3. Vérification du Serveur SonarQube
 # --------------------
@@ -109,7 +118,6 @@ dotnet sonarscanner begin \
     /d:sonar.host.url="$SONAR_HOST_URL" \
     /d:sonar.token="$SONAR_USER_TOKEN" \
     /d:sonar.cs.opencover.reportsPaths="$COVERAGE_REPORT_PATH"
-
 # --------------------
 # 5. Restauration du projet
 # ------------------------
@@ -134,7 +142,7 @@ fi
 
 colors "YELLOW" "Finalisation de l'analyse SonarQube"
 
-dotnet sonarscanner end /d:sonar.login="$SONAR_USER_TOKEN"
+dotnet sonarscanner end /d:sonar.token="$SONAR_USER_TOKEN"
 
 if [[ $? -ne 0 ]]; then
     colors "RED" "Échec de l'analyse SonarQube.."
