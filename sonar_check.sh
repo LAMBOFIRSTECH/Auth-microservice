@@ -110,6 +110,7 @@ if ! command -v dotnet-sonarscanner &>/dev/null; then
     dotnet tool install --global dotnet-sonarscanner --version 5.11.0
     export PATH="$PATH:$HOME/.dotnet/tools"
 else
+    colors "CYAN" "Mise à jour dans les variables d'env"
     export PATH="$PATH:$HOME/.dotnet/tools"
 fi
 # Initialisation de l'analyse
