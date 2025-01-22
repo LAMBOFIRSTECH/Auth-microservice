@@ -46,7 +46,7 @@ build:
   script:
     - echo "Compilation des projets à partir de $SOLUTION_PATH"
     - dotnet build $SOLUTION_PATH --configuration $BUILD_CONFIGURATION
-    - chmod -R 777 Authentifications/bin/  # bonne pratiques pour la securité
+    - chmod -R 750 Authentifications/bin/  # bonne pratiques pour la securité on restreint l'accès aux binaires
   cache:
     key: "$CI_COMMIT_REF_NAME"
     paths:
@@ -76,7 +76,6 @@ test:
     when: always
     paths:
       - $COVERAGE_REPORT_PATH
-      - Couverture/Report/
     reports:
       junit: $COVERAGE_REPORT_PATH
 
