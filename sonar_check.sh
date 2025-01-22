@@ -115,6 +115,7 @@ fi
 # Initialisation de l'analyse
 dotnet sonarscanner begin \
     /k:"$SONAR_PROJECT_KEY" \
+    /d:sonar.verbose=true \
     /d:sonar.host.url="$SONAR_HOST_URL" \
     /d:sonar.token="$SONAR_USER_TOKEN" \
     /d:sonar.cs.opencover.reportsPaths="$COVERAGE_REPORT_PATH"
