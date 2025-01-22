@@ -137,9 +137,9 @@ if [[ $? -ne 0 ]]; then
     exit 1
 fi
 
-# --------------------
+# ------------------------
 # 7. Fin de l'analyse SonarQube.
-# --------------------
+# ------------------------
 
 colors "YELLOW" "Finalisation de l'analyse SonarQube"
 
