@@ -85,7 +85,6 @@ before_script:
 ###### VULNERABILITIES #####
 scan-vulnerabilities:
   image: aquasec/trivy:latest
-  stage: scan
   script:
     - dotnet list package --vulnerable
     - | 
@@ -103,7 +102,7 @@ scan-vulnerabilities:
           project_dir=$(dirname "$file")
           
           # Trivy FS scan
-          trivy fs "$project_dir"
+           trivy fs "$project_dir" --format json --output trivy_scan_report.json
           
           # Vérification du statut
           if [ $? -ne 0 ]; then
@@ -115,6 +114,10 @@ scan-vulnerabilities:
 
         echo "Analyse complète terminée."
   allow_failure: false
+  artifacts:
+    paths:
+      - trivy_scan_report.json 
+    expire_in: 20 minutes
 
 ######## SONARQUBE ########
 sonar-build:
