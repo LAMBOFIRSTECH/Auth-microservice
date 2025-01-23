@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # ====================
-# Script SonarQube Analysis
+# Script de scan Trivy
 # ====================
 
 # Fonction pour gérer les couleurs dans l'affichage
@@ -13,7 +13,11 @@ colors() {
     NC="\033[0m" # Réinitialisation
     printf "${!1}${2} ${NC}\n"
 }
-BASE_DIR="./Authentication/Authentications/"
+
+# Définir la racine du projet, incluant le projet principal et les tests
+BASE_DIR="./Authentication"  # Répertoire racine du projet
+
+# Chercher tous les fichiers .csproj dans le répertoire
 csproj_files=$(find "$BASE_DIR" -name "*.csproj")
 
 # Vérifier si des fichiers .csproj ont été trouvés
@@ -21,21 +25,20 @@ if [ -z "$csproj_files" ]; then
     echo "Aucun fichier .csproj trouvé dans $BASE_DIR."
     exit 0
 fi
+
+# Pour chaque fichier .csproj trouvé, effectuer un scan Trivy sur son répertoire
 for file in $csproj_files; do
     echo "Analyse du fichier : $file"
     project_dir=$(dirname "$file")
-    project_name=$(basename "$file" .csproj)
-    report_file="/tmp/trivy_scan_report_${project_name}.json"
 
-    # Trivy FS scan avec redirection vers un fichier JSON
-    trivy fs "$project_dir" --format json --output trivy_scan_report.json
-    trivy fs --scanners misconfig "$project_dir" --format json --output conf.json
+    # Trivy FS scan avec redirection vers un fichier JSON dans /tmp
+    trivy fs "$project_dir" --format json --output "/tmp/trivy_scan_report_$(basename $project_dir).json"
 
     # Vérification du statut
     if [ $? -ne 0 ]; then
-        colors "RED" "Le scan pour $file a rencontré une erreur."
+        echo "Le scan pour $file a rencontré une erreur."
     else
-        colors "GREEN" "Scan terminé pour $file."
+        echo "Scan terminé pour $file."
     fi
 done
 
