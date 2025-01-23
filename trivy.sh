@@ -15,7 +15,7 @@ colors() {
 }
 
 # Définir la racine du projet, incluant le projet principal et les tests
-BASE_DIR="./Authentifications"  # Répertoire racine du projet
+BASE_DIR="./Authentifications" # Répertoire racine du projet
 
 # Chercher tous les fichiers .csproj dans le répertoire
 csproj_files=$(find "$BASE_DIR" -name "*.csproj")
@@ -26,22 +26,40 @@ if [ -z "$csproj_files" ]; then
     exit 0
 fi
 
+# Créer un répertoire pour stocker les rapports de Trivy
+REPORT_DIR="./trivy_reports"
+mkdir -p "$REPORT_DIR"
+
 # Pour chaque fichier .csproj trouvé, effectuer un scan Trivy sur son répertoire
 for file in $csproj_files; do
-    echo "Analyse du fichier : $file"
+    echo -e "\n${CYAN}Analyse du fichier : $file${NC}"
     project_dir=$(dirname "$file")
 
-    # Trivy FS scan avec redirection vers un fichier JSON dans /tmp
-    trivy fs "$project_dir" --format json --output "/tmp/trivy_scan_report_$(basename $project_dir).json"
-    docker rm -f TRIVY || true
-    docker run -p 8070:8080 -v $project_dir:$project_dir  --name TRIVY aquasec/trivy-ui
+    # Trivy FS scan avec redirection vers un fichier JSON dans le répertoire des rapports
+    echo -e "${YELLOW}Exécution du scan Trivy sur le répertoire : $project_dir${NC}"
+    trivy fs "$project_dir" --format json --output "$REPORT_DIR/trivy_scan_report_$(basename $project_dir).json"
 
-    # Vérification du statut
+    # Arrêter et supprimer un conteneur TRIVY existant s'il y en a un
+    echo -e "${YELLOW}Vérification et suppression du conteneur TRIVY existant...${NC}"
+    docker rm -f TRIVY || true
+
+    # Lancer le conteneur Docker avec l'interface graphique de Trivy
+    echo -e "${YELLOW}Lancement du conteneur Docker avec l'interface Trivy UI...${NC}"
+    docker run -d \
+        -p 8070:8080 \
+        -v "$project_dir:$project_dir" \
+        -e TRIVY_DB_BACKEND="auto" \
+        -e TRIVY_DB_URL="https://github.com/aquasecurity/trivy-db" \
+        --name TRIVY \
+        aquasec/trivy:latest ui
+
+    # Vérification du statut du conteneur Docker
     if [ $? -ne 0 ]; then
-        echo "Le scan pour $file a rencontré une erreur."
+        echo -e "${RED}Le scan pour $file a rencontré une erreur.${NC}"
     else
-        echo "Scan terminé pour $file."
+        echo -e "${GREEN}Scan terminé pour $file.${NC}"
     fi
 done
 
-echo "Analyse complète terminée."
+# Indication de fin d'analyse
+echo -e "\n${GREEN}Analyse complète terminée. Les rapports sont stockés dans le répertoire $REPORT_DIR.${NC}"
