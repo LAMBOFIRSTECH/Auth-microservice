@@ -95,7 +95,7 @@ scan-vulnerabilities:
   allow_failure: false
   artifacts:
     paths:
-     - "*.json"   # Sauvegarde du fichier de rapport JSON
+     - /tmp/trivy_scan_report_*.json   # Sauvegarde du fichier de rapport JSON
     expire_in: 5 minutes
 
 
