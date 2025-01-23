@@ -33,6 +33,14 @@ mkdir -p "$REPORT_DIR"
 # Obtenir le chemin absolu de BASE_DIR
 BASE_DIR_ABS=$(pwd)/$BASE_DIR
 
+# Lancer Trivy en mode serveur (une seule fois)
+echo -e "${YELLOW}Démarrage du serveur Trivy...${NC}"
+docker rm -f trivy-server || true
+docker run -d \
+  -p 4954:4954 \
+  --name trivy-server \
+  aquasec/trivy:latest server
+
 # Pour chaque fichier .csproj trouvé, effectuer un scan Trivy sur son répertoire
 for file in $csproj_files; do
     echo -e "\n${CYAN}Analyse du fichier : $file${NC}"
@@ -44,17 +52,15 @@ for file in $csproj_files; do
 
     # Arrêter et supprimer un conteneur TRIVY existant s'il y en a un
     echo -e "${YELLOW}Vérification et suppression du conteneur TRIVY existant...${NC}"
-    docker rm -f TRIVY || true
+    docker rm -f trivy-ui || true
 
-    # Lancer le conteneur Docker avec l'interface graphique de Trivy
+    # Lancer l'interface graphique Trivy UI
     echo -e "${YELLOW}Lancement du conteneur Docker avec l'interface Trivy UI...${NC}"
     docker run -d \
-        -p 8070:8080 \
-        -v "$BASE_DIR_ABS:$BASE_DIR_ABS" \
-        -e TRIVY_DB_BACKEND="auto" \
-        -e TRIVY_DB_URL="https://github.com/aquasecurity/trivy-db" \
-        --name TRIVY \
-        aquasec/trivy:latest ui
+      -p 8070:8080 \
+      --name trivy-ui \
+      -e TRIVY_SERVER_URL="http://localhost:4954" \
+      aquasec/trivy:latest ui
 
     # Vérification du statut du conteneur Docker
     if [ $? -ne 0 ]; then
