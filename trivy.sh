@@ -28,8 +28,8 @@ for file in $csproj_files; do
     report_file="/tmp/trivy_scan_report_${project_name}.json"
 
     # Trivy FS scan avec redirection vers un fichier JSON
-    trivy fs "$project_dir" --format json --output /tmp/trivy_scan_report.json
-    trivy fs --scanners misconfig "$project_dir" --format json --output /tmp/conf.json
+    trivy fs "$project_dir" --format json --output trivy_scan_report.json
+    trivy fs --scanners misconfig "$project_dir" --format json --output conf.json
 
     # Vérification du statut
     if [ $? -ne 0 ]; then

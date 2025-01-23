@@ -95,7 +95,7 @@ scan-vulnerabilities:
   allow_failure: false
   artifacts:
     paths:
-     - /tmp/*.json   # Sauvegarde du fichier de rapport JSON
+     - "*.json"   # Sauvegarde du fichier de rapport JSON
     expire_in: 5 minutes
 
 
