@@ -62,6 +62,7 @@ test:
   script:
     - echo "Exécution des tests unitaires avec collecte de couverture"
     - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.4
+    - dotnet tool install --global dotnet-sonarscanner
     - export PATH="$PATH:/root/.dotnet/tools"
     - TEST=$(ls | grep -o '\bTest\w*')
     - |
@@ -129,7 +130,7 @@ release:
     - gitlab-lamboft-shell-develop
   script:
     - echo "Publication des artefacts pour le déploiement"
-    - dotnet publish $SOLUTION_PATH --configuration Release --output publish/
+    - dotnet publish $SOLUTION_PATH --configuration $BUILD_CONFIGURATION --output publish/
   artifacts:
     paths:
       - publish/
