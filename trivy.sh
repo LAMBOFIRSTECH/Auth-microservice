@@ -15,7 +15,7 @@ colors() {
 }
 
 # Définir la racine du projet, incluant le projet principal et les tests
-BASE_DIR="./Authentication"  # Répertoire racine du projet
+BASE_DIR="./Authentifications"  # Répertoire racine du projet
 
 # Chercher tous les fichiers .csproj dans le répertoire
 csproj_files=$(find "$BASE_DIR" -name "*.csproj")
