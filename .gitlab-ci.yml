@@ -85,9 +85,10 @@ before_script:
 ###### VULNERABILITIES #####
 scan-vulnerabilities:
   image: aquasec/trivy:latest
+  stage: scan-vulnerabilities  # Remplacer 'scan' par 'test' ou un autre stage valide
   script:
     - dotnet list package --vulnerable
-    - | 
+    - |
       BASE_DIR="./Authentication"
       csproj_files=$(find "$BASE_DIR" -name "*.csproj")
 
@@ -96,28 +97,28 @@ scan-vulnerabilities:
         echo "Aucun fichier .csproj trouvé dans $BASE_DIR."
         exit 0
       fi
-        for file in $csproj_files; do
-          echo "Analyse du fichier : $file"
-          # Effectue un scan Trivy sur le répertoire contenant le fichier .csproj
-          project_dir=$(dirname "$file")
-          
-          # Trivy FS scan
-           trivy fs "$project_dir" --format json --output trivy_scan_report.json
-          
-          # Vérification du statut
-          if [ $? -ne 0 ]; then
-            echo "Le scan pour $file a rencontré une erreur."
-          else
-            echo "Scan terminé pour $file."
-          fi
-        done
+      for file in $csproj_files; do
+        echo "Analyse du fichier : $file"
+        project_dir=$(dirname "$file")
+        
+        # Trivy FS scan avec redirection vers un fichier JSON
+        trivy fs "$project_dir" --format json --output /tmp/trivy_scan_report.json
+        
+        # Vérification du statut
+        if [ $? -ne 0 ]; then
+          echo "Le scan pour $file a rencontré une erreur."
+        else
+          echo "Scan terminé pour $file."
+        fi
+      done
 
-        echo "Analyse complète terminée."
+      echo "Analyse complète terminée."
   allow_failure: false
   artifacts:
     paths:
-      - trivy_scan_report.json 
-    expire_in: 20 minutes
+      - /tmp/trivy_scan_report.json  # Sauvegarde du fichier de rapport JSON
+    expire_in: 5 minutes
+
 
 ######## SONARQUBE ########
 sonar-build:
