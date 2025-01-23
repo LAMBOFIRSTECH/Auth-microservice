@@ -13,7 +13,7 @@ colors() {
     NC="\033[0m" # Réinitialisation
     printf "${!1}${2} ${NC}\n"
 }
-BASE_DIR="./Authentication"
+BASE_DIR="./Authentication/Authentications/"
 csproj_files=$(find "$BASE_DIR" -name "*.csproj")
 
 # Vérifier si des fichiers .csproj ont été trouvés
@@ -29,6 +29,7 @@ for file in $csproj_files; do
 
     # Trivy FS scan avec redirection vers un fichier JSON
     trivy fs "$project_dir" --format json --output /tmp/trivy_scan_report.json
+    trivy fs --scanners misconfig "$project_dir" --format json --output /tmp/conf.json
 
     # Vérification du statut
     if [ $? -ne 0 ]; then
