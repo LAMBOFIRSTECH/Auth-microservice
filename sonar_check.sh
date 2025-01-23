@@ -123,7 +123,7 @@ dotnet sonarscanner begin \
 # --------------------
 # 5. Restauration du projet
 # ------------------------
-dotnet restore "$SOLUTION_FILE"
+# dotnet restore "$SOLUTION_FILE"
 colors "YELLOW" "Restauration du projet terminée"
 
 # --------------------
