@@ -33,6 +33,8 @@ for file in $csproj_files; do
 
     # Trivy FS scan avec redirection vers un fichier JSON dans /tmp
     trivy fs "$project_dir" --format json --output "/tmp/trivy_scan_report_$(basename $project_dir).json"
+    docker rm -f TRIVY || true
+    docker run -p 8070:8080 -v $project_dir:$project_dir  --name TRIVY aquasec/trivy-ui
 
     # Vérification du statut
     if [ $? -ne 0 ]; then
