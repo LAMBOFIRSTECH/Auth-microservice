@@ -65,28 +65,6 @@ fi
 # a- Modifier la version et timestamp
 
 sed -i 's/version="1.9"/version="1"/' $COVERAGE_REPORT_PATH
-# sed -i "s|timestamp=\"[^\"]*\"|timestamp=\"$(date +%s)\"|g" $COVERAGE_REPORT_PATH
-
-# # 2. Remove the <sources> and its content
-# sed -i '/<sources>/,/<\/sources>/d' $COVERAGE_REPORT_PATH
-
-# # 3. Replace <classes> with <file> and add the "path" attribute
-# sed -i 's|<classes>|<file path="Authentifications/Program.cs">|g' $COVERAGE_REPORT_PATH
-# sed -i 's|</classes>|</file>|g' $COVERAGE_REPORT_PATH
-
-# # 4. Replace <method> with relevant structure and add signature if necessary
-# sed -i 's|<method name="Main"|<method name="Main" signature="(System.String[])"|g' $COVERAGE_REPORT_PATH
-
-# # 5. Replace line information with correct line-to-cover structure
-# sed -i 's|<line|<lineToCover|g' $COVERAGE_REPORT_PATH
-# sed -i 's|</line>|</lineToCover>|g' $COVERAGE_REPORT_PATH
-
-# # 6. Remove the <packages> block entirely, as it is not necessary
-# sed -i '/<packages>/,/<\/packages>/d' $COVERAGE_REPORT_PATH
-
-# # 7. Clean up the <lines> tags (if necessary)
-# sed -i 's|<lines>.*</lines>||g' $COVERAGE_REPORT_PATH
-
 
 # --------------------
 # 3. Vérification du Serveur SonarQube
@@ -104,15 +82,24 @@ fi
 # --------------------
 colors "YELLOW" "Démarrage de l'analyse SonarQube pour le projet $SONAR_PROJECT_KEY"
 
-# Installation de l'outil SonarScanner si nécessaire
+# Configuration du PATH pour les outils .NET
+export PATH="$PATH:$HOME/.dotnet/tools"
+
+# Vérification de la présence de dotnet-sonarscanner
 if ! command -v dotnet-sonarscanner &>/dev/null; then
     colors "CYAN" "SonarScanner pour .NET non trouvé. Installation en cours..."
-    dotnet tool install --global dotnet-sonarscanner --version 5.11.0
-    export PATH="$PATH:$HOME/.dotnet/tools"
+    
+    # Installation de dotnet-sonarscanner
+    if ! dotnet tool install --global dotnet-sonarscanner --version 5.11.0; then
+        colors "RED" "Erreur : Impossible d'installer dotnet-sonarscanner."
+        exit 1
+    fi
+
+    colors "GREEN" "SonarScanner pour .NET installé avec succès."
 else
-    colors "CYAN" "Mise à jour dans les variables d'env"
-    export PATH="$PATH:$HOME/.dotnet/tools"
+    colors "CYAN" "SonarScanner pour .NET déjà installé."
 fi
+
 # Initialisation de l'analyse
 dotnet sonarscanner begin \
     /k:"$SONAR_PROJECT_KEY" \
