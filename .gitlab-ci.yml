@@ -84,13 +84,13 @@ before_script:
 
 ###### VULNERABILITIES #####
 scan-vulnerabilities:
-  image: aquasec/trivy:latest
+  image: aquasec/trivy:v0.58.2  # Spécifier une version stable
   stage: scan-vulnerabilities
-  # tags:
-  #   - gitlab-lamboft-shell-develop 
+  tags:
+    - gitlab-lamboft-shell-develop 
   script:
     - dotnet list package --vulnerable
-    - trivy fs Authentifications/Authentifications.csproj --format json --output /tmp/trivy_scan_report.json
+    - trivy fs Authentifications/ --format json --output /tmp/trivy_scan_report.json
     - chmod +x trivy.sh
     #- ./trivy.sh 
   allow_failure: false
