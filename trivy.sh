@@ -30,6 +30,9 @@ fi
 REPORT_DIR="./trivy_reports"
 mkdir -p "$REPORT_DIR"
 
+# Obtenir le chemin absolu de BASE_DIR
+BASE_DIR_ABS=$(pwd)/$BASE_DIR
+
 # Pour chaque fichier .csproj trouvé, effectuer un scan Trivy sur son répertoire
 for file in $csproj_files; do
     echo -e "\n${CYAN}Analyse du fichier : $file${NC}"
@@ -47,7 +50,7 @@ for file in $csproj_files; do
     echo -e "${YELLOW}Lancement du conteneur Docker avec l'interface Trivy UI...${NC}"
     docker run -d \
         -p 8070:8080 \
-        -v "$project_dir:$project_dir" \
+        -v "$BASE_DIR_ABS:$BASE_DIR_ABS" \
         -e TRIVY_DB_BACKEND="auto" \
         -e TRIVY_DB_URL="https://github.com/aquasecurity/trivy-db" \
         --name TRIVY \
