@@ -89,6 +89,7 @@ scan-vulnerabilities:
   tags:
     - gitlab-lamboft-shell-develop 
   script:
+    - ls
     - dotnet list package --vulnerable
     - chmod +x trivy.sh
     - ./trivy.sh 

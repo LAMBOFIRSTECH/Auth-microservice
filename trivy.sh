@@ -14,53 +14,31 @@ colors() {
     printf "${!1}${2} ${NC}\n"
 }
 
-# Définir la racine du projet, incluant le projet principal et les tests
-BASE_DIR="./Authentifications" # Répertoire racine du projet
+# Répertoire racine du projet
+BASE_DIR=$(find . -name "*.csproj" | sed 's|^\./||')
 
 # Chercher tous les fichiers .csproj dans le répertoire
-csproj_files=$(find "$BASE_DIR" -name "*.csproj")
+csproj_files=$(find . -name "*.csproj")
 
 # Vérifier si des fichiers .csproj ont été trouvés
 if [ -z "$csproj_files" ]; then
     echo "Aucun fichier .csproj trouvé dans $BASE_DIR."
     exit 0
 fi
-
-# Créer un répertoire pour stocker les rapports de Trivy
+# Créer un repertoire pour le rapports trivy
 REPORT_DIR="./trivy_reports"
 mkdir -p "$REPORT_DIR"
 
-# Obtenir le chemin absolu de BASE_DIR
-BASE_DIR_ABS=$(pwd)/$BASE_DIR
-
-# Lancer Trivy en mode serveur (une seule fois)
-echo -e "${YELLOW}Démarrage du serveur Trivy...${NC}"
-docker rm -f trivy-server || true
-docker run -d \
-  -p 4954:4954 \
-  --name trivy-server \
-  aquasec/trivy:latest server
-
-# Pour chaque fichier .csproj trouvé, effectuer un scan Trivy sur son répertoire
 for file in $csproj_files; do
+    file=$(realpath "$file")  # Convertit le chemin en absolu
     echo -e "\n${CYAN}Analyse du fichier : $file${NC}"
     project_dir=$(dirname "$file")
 
     # Trivy FS scan avec redirection vers un fichier JSON dans le répertoire des rapports
     echo -e "${YELLOW}Exécution du scan Trivy sur le répertoire : $project_dir${NC}"
     trivy fs "$project_dir" --format json --output "$REPORT_DIR/trivy_scan_report_$(basename $project_dir).json"
+    #trivy fs ./ --format json --output toto.json on le fait pour tout le repertoire projet
 
-    # Arrêter et supprimer un conteneur TRIVY existant s'il y en a un
-    echo -e "${YELLOW}Vérification et suppression du conteneur TRIVY existant...${NC}"
-    docker rm -f trivy-ui || true
-
-    # Lancer l'interface graphique Trivy UI
-    echo -e "${YELLOW}Lancement du conteneur Docker avec l'interface Trivy UI...${NC}"
-    docker run -d \
-      -p 8070:8080 \
-      --name trivy-ui \
-      -e TRIVY_SERVER_URL="http://localhost:4954" \
-      aquasec/trivy:latest ui
 
     # Vérification du statut du conteneur Docker
     if [ $? -ne 0 ]; then
@@ -69,6 +47,11 @@ for file in $csproj_files; do
         echo -e "${GREEN}Scan terminé pour $file.${NC}"
     fi
 done
-
+# si l'instruction précédente se termine avec un succès 
+# lancer le script python (qui va lire chaque rapport de trivy et insérer les data dans un tableau html généré)
+# utiliser python -m http.server port => pour lancer un serveur web 
+# accéder au fichier html http://localhost:port/file.html (on pourra faire passer ceci derriere nginx à terme) 
+# soit mettre dans nginx le fichier html et créer un lien symbolique pour charger le fichier html dans nginx à chaque update
 # Indication de fin d'analyse
 echo -e "\n${GREEN}Analyse complète terminée. Les rapports sont stockés dans le répertoire $REPORT_DIR.${NC}"
+
