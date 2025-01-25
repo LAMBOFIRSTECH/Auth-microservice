@@ -42,8 +42,8 @@ if [ $? -ne 0 ]; then
     exit 0
 fi
 cp report.html /tmp/
-chown www-data:www-data /tmp/report.html 
-mv /tmp/report.html /var/www/report/
+
+sudo cp report.html /var/www/report/
 mv report.html ../../../../../
 # Filtrer le json et récupérer quantité de sévérités | mettre le resultat dans un dictionnaire exemple => ("HIGH",3)
 # trivy fs --severity MEDIUM,HIGH,CRITICAL --format json $REPORT_DIR/trivy_scan_report.json | jq -r '.Results[].Secrets[].Severity' | sort | uniq -c
