@@ -97,7 +97,7 @@ if [ "$Total_High_Severities" -gt 3 ]; then
 fi
 
 # Vérification pour MEDIUM
-if [ "$Total_Medium_Severities" -gt 5 ]; then
+if [ "$Total_Medium_Severities" -gt 4 ]; then
    colors "RED" "Trivy scan result : $Total_Medium_Severities gravités de type MEDIUM.${NC}"
    colors "CYAN" "Veuillez consulter le rapport de vulnérabilités $lien"
    exit 1
