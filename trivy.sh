@@ -41,6 +41,7 @@ if [ $? -ne 0 ]; then
     echo -e "${RED}Le rapport Trivy n'a pas été généré correctement.${NC}"
     exit 0
 fi
+mv report.html ../../../../../
 # Filtrer le json et récupérer quantité de sévérités | mettre le resultat dans un dictionnaire exemple => ("HIGH",3)
 # trivy fs --severity MEDIUM,HIGH,CRITICAL --format json $REPORT_DIR/trivy_scan_report.json | jq -r '.Results[].Secrets[].Severity' | sort | uniq -c
 # trivy fs --severity MEDIUM,HIGH,CRITICAL --format json ./ | jq -r '.Results[].Vulnerabilities[].Severity' | sort | uniq -c
@@ -51,5 +52,6 @@ fi
 ### si nombre total de severité high >= 3 Echec
 ### si nombre total de severité critical >= 1 Echec
 
+# rm -rf $REPORT_DIR
 # accéder au fichier html http://localhost:port/file.html (on pourra faire passer ceci derriere nginx à terme)
 # soit mettre dans nginx le fichier html et créer un lien symbolique pour charger le fichier html dans nginx à chaque update

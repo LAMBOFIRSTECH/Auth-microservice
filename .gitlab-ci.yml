@@ -37,7 +37,7 @@ stages:
 #     - echo "Nettoyage des caches NuGet"
 #     - dotnet nuget locals all --clear # Nettoie les caches locaux NuGet
 #     - echo "Nettoyage des fichiers intermédiaires"
-#     - find . -name "*.dll" -o -name "*.pdb" -o -name "*.tmp" | xargs rm -rf
+#     - find . -name "*.dll" -o -name "*.pdb" -o -name "*.tmp" -o -name "*.md"| xargs rm -rf
 
 
 # ######## BUILD ########
