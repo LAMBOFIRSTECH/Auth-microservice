@@ -84,21 +84,21 @@ Total_Critical_Severities=$((Secret_critical_severity + Vulnerabilities_critical
 
 # Vérification pour MEDIUM
 if [ "$Total_Medium_Severities" -gt 5 ]; then
-   echo -e "${RED}Nombre de gravités de type MEDIUM trop important.${NC}"
+   colors "RED" "$Total_Medium_Severities de gravités de type MEDIUM trop important.${NC}"
    colors "CYAN" "Veuillez consulter le rapport de vulnérabilités $lien"
    exit 1
 fi
 
 # Vérification pour HIGH
 if [ "$Total_High_Severities" -gt 3 ]; then
-   echo -e "${RED}Nombre de gravités de type HIGH trop important.${NC}"
+   colors "RED" "Nombre de gravités de type HIGH trop important.${NC}"
    colors "CYAN" "Veuillez consulter le rapport de vulnérabilités $lien"
    exit 1
 fi
 
 # Vérification pour CRITICAL
 if [ "$Total_Critical_Severities" -gt 1 ]; then
-   echo -e "${RED}Nombre de gravités de type CRITICAL trop important.${NC}"
+   colors "RED" "Nombre de gravités de type CRITICAL trop important.${NC}"
    colors "CYAN" "Veuillez consulter le rapport de vulnérabilités $lien"
    exit 1
 fi
