@@ -59,7 +59,6 @@ for result in data.get("Results", []):
             "Title": secret.get("Title"),
         })
 
-# Définir l'ossature HTML de base
 html_base = f"""
 <!DOCTYPE html>
 <html lang="fr">
@@ -105,10 +104,11 @@ html_base = f"""
         }}
 
         th, td {{
-            padding: 12px;
+            padding: 15px; /* Augmenter le padding pour plus d'espacement */
             text-align: left;
             border: 1px solid #ddd;
             word-wrap: break-word;
+            text-align: center; /* Centrer le texte dans les cellules */
         }}
 
         th {{
@@ -151,41 +151,15 @@ html_base = f"""
             margin-bottom: 40px;
         }}
 
-        /* Proportions et largeur dynamique pour les colonnes */
-        th:nth-child(1), td:nth-child(1) {{
-            width: 15%;
+        .table-header {{
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 13px;
         }}
 
-        th:nth-child(2), td:nth-child(2) {{
-            width: 12%;
-        }}
-
-        th:nth-child(3), td:nth-child(3) {{
-            width: 18%;
-        }}
-
-        th:nth-child(4), td:nth-child(4) {{
-            width: 20%;
-        }}
-
-        th:nth-child(5), td:nth-child(5) {{
-            width: 12%;
-        }}
-
-        th:nth-child(6), td:nth-child(6) {{
-            width: 10%;
-        }}
-
-        th:nth-child(7), td:nth-child(7) {{
-            width: 8%;
-        }}
-
-        th:nth-child(8), td:nth-child(8) {{
-            width: 10%;
-        }}
-
-        th:nth-child(9), td:nth-child(9) {{
-            width: 10%;
+        /* Largeur homogène des colonnes */
+        th, td {{
+            width: 11%; /* Définir une largeur uniforme pour chaque colonne */
         }}
 
         /* Responsiveness */
@@ -199,7 +173,6 @@ html_base = f"""
                 padding: 10px;
             }}
         }}
-
     </style>
 </head>
 <body>
@@ -279,7 +252,5 @@ html_content = html_base + html_table_vulnerabilities + html_table_secrets + "</
 # Enregistrer le fichier HTML final
 with open("report.html", "w") as report_file:
     report_file.write(html_content)
-
-
 
 print("Tableau généré : report.html")
