@@ -13,6 +13,8 @@ colors() {
     printf "${!1}${2} ${NC}\n"
 }
 
+# Lien pour accéder au rapport de vulnérabilités
+lien=https://develop.lamboft.it/trivy-report
 # Répertoire racine du projet
 BASE_DIR=$(find . -name "*.csproj" | sed 's|^\./||')
 
@@ -22,7 +24,7 @@ csproj_files=$(find . -name "*.csproj")
 # Vérifier si des fichiers .csproj ont été trouvés
 if [ -z "$csproj_files" ]; then
     echo "Aucun fichier .csproj trouvé dans $BASE_DIR."
-    exit 0
+    exit 1
 fi
 # Créer un repertoire pour le rapports trivy
 REPORT_DIR="./trivy_reports"
@@ -33,28 +35,64 @@ trivy fs ./ --format json --output "$REPORT_DIR/trivy_scan_report.json"
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}Le scan FS du repertoire racine a rencontré une erreur.${NC}"
-    exit 0
+    exit 1
 fi
 echo -e "\n${GREEN}Analyse complète terminée. Les rapports sont stockés dans le répertoire $REPORT_DIR.${NC}"
 python3 fs_trivy_vulnerabilities.py
 if [ $? -ne 0 ]; then
     echo -e "${RED}Le rapport Trivy n'a pas été généré correctement.${NC}"
-    exit 0
+    exit 1
 fi
 #usermod -aG www-data gitlab-runner
 #chmod 775 /var/www/report/
 mv report.html /var/www/report/
 
-# Filtrer le json et récupérer quantité de sévérités | mettre le resultat dans un dictionnaire exemple => ("HIGH",3)
-# trivy fs --severity MEDIUM,HIGH,CRITICAL --format json $REPORT_DIR/trivy_scan_report.json | jq -r '.Results[].Secrets[].Severity' | sort | uniq -c
-# trivy fs --severity MEDIUM,HIGH,CRITICAL --format json ./ | jq -r '.Results[].Vulnerabilities[].Severity' | sort | uniq -c
+jq '[.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[].Severity] | group_by(.) | map({(.[0]): length}) | add' $REPORT_DIR/trivy_scan_report.json > $REPORT_DIR/Vulnerabilities.json
+jq '[.Results[] | select(.Secrets != null) | .Secrets[].Severity] | group_by(.) | map({(.[0]): length}) | add' $REPORT_DIR/trivy_scan_report.json > $REPORT_DIR/Secrets.json
 
-## En fonction des valeurs reçues on va émettre des conditions pour faire échouer ou passer le pipeline
-### Additionner les sévérités de Results[].Vulnerabilities[].Severity et Results[].Secrets[].Severity
-### si nombre total de severité medium >= 5 Echec
-### si nombre total de severité high >= 3 Echec
-### si nombre total de severité critical >= 1 Echec
+Secret_medium_severity= $(cat $REPORT_DIR/Secrets.json | jq -r '.MEDIUM // 0')
+Secret_high_severity= $(cat $REPORT_DIR/Secrets.json | jq -r '.HIGH // 0')
+Secret_critical_severity= $(cat $REPORT_DIR/Secrets.json | jq -r '.CRITICAL // 0')
 
-# rm -rf $REPORT_DIR
-# accéder au fichier html http://localhost:port/file.html (on pourra faire passer ceci derriere nginx à terme)
-# soit mettre dans nginx le fichier html et créer un lien symbolique pour charger le fichier html dans nginx à chaque update
+Vulnerabilities_medium_severity= $(cat $REPORT_DIR/Vulnerabilities.json | jq -r '.MEDIUM // 0')
+Vulnerabilities_high_severity= $(cat $REPORT_DIR/Vulnerabilities.json | jq -r '.HIGH // 0')
+Vulnerabilities_critical_severity= $(cat $REPORT_DIR/Vulnerabilities.json | jq -r '.CRITICAL // 0')
+
+if [ "$Secret_medium_severity" = "null" ]; then
+  Secret_medium_severity=0
+fi
+if [ "$Secret_high_severity" = "null" ]; then
+  Secret_high_severity=0
+fi
+if [ "$Secret_critical_severity" = "null" ]; then
+  Secret_critical_severity=0
+fi
+if [ "$Vulnerabilities_medium_severity" = "null" ]; then
+  Vulnerabilities_medium_severity=0
+fi
+if [ "$Vulnerabilities_high_severity" = "null" ]; then
+  Vulnerabilities_high_severity=0
+fi
+if [ "$Vulnerabilities_critical_severity" = "null" ]; then
+  Vulnerabilities_critical_severity=0
+fi
+Total_Medium_Severities= $Secret_medium_severity + $Vulnerabilities_medium_severity 
+Total_High_Severities= $Secret_high_severity + $Vulnerabilities_high_severity 
+Total_Critical_Severities= $Secret_critical_severity + $Vulnerabilities_critical_severity 
+
+if [ "${Total_Medium_Severities}"  -gt 5] then;
+   echo -e "${RED}Nombre de gravités de type MEDIUM trop important.${NC}"
+   colors "CYAN" "Veuillez consulter le rapport de vulnérabilités $lien"
+   exit 1
+fi
+
+if [ "${Total_High_Severities}" -gt 3] then;
+   echo -e "${RED}Nombre de gravités de type HIGH trop important.${NC}"
+   colors "CYAN" "Veuillez consulter le rapport de vulnérabilités $lien"
+   exit 1
+fi
+if [ "${Total_Critical_Severities}" -gt 1] then;
+   echo -e "${RED}Nombre de gravités de type CRITICAL trop important.${NC}"
+   colors "CYAN" "Veuillez consulter le rapport de vulnérabilités $lien"
+   exit 1
+fi
