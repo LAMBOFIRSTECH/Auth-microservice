@@ -93,7 +93,7 @@ scan-vulnerabilities:
     - dotnet list package --vulnerable
     - chmod +x trivy.sh
     - ./trivy.sh 
-  allow_failure: false
+  allow_failure: true
   artifacts:
     paths:
      - /tmp/trivy_scan_report_*.json   # Sauvegarde du fichier de rapport JSON

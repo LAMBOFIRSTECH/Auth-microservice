@@ -1,12 +1,24 @@
 import json
-# check si le dosssier existe et s'il contient les fichiers
-# Aller dans le dossier trivy_reports
-# charger chaque rapport de vulnérabilités json file
-# Charger le JSON
+import os
 
 
-# Ouvrir le fichier JSON et le charger
-file_path = 'report.json'  # Remplacez par le chemin de votre fichier JSON
+current_directory = os.getcwd()
+project = os.path.basename(current_directory)
+
+def find_file(filename, search_path='.'):
+    for root, dirs, files in os.walk(search_path):
+        if filename in files:
+            return os.path.join(root, filename)
+    return None
+
+result = find_file("trivy_scan_report.json")
+if not result:
+    print("Fichier de rapport non trouvé.")
+    exit(1)
+    
+print(f"Fichier trouvé : {result}")
+
+file_path = 'trivy_scan_report.json' 
 
 try:
     with open(file_path, 'r') as file:
@@ -24,16 +36,18 @@ secrets = []
 
 # Extraction des vulnérabilités
 for result in data.get("Results", []):
+    target = result.get("Target", "Unknown Target")
     for vuln in result.get("Vulnerabilities", []):
         vulnerabilities.append({
+            "Target": target,
             "VulnerabilityID": vuln.get("VulnerabilityID"),
             "PkgName": vuln.get("PkgName"),
+            "Title": vuln.get("Title"),
             "InstalledVersion": vuln.get("InstalledVersion"),
             "FixedVersion": vuln.get("FixedVersion"),
             "Severity": vuln.get("Severity"),
             "PrimaryURL": vuln.get("PrimaryURL"),
-            "PublishedDate": vuln.get("PublishedDate"),
-            "LastModifiedDate": vuln.get("LastModifiedDate")
+            "PublishedDate": vuln.get("PublishedDate")
         })
 
     # Extraction des secrets
@@ -45,82 +59,81 @@ for result in data.get("Results", []):
             "Category": secret.get("Category"),
             "Severity": secret.get("Severity"),
             "Title": secret.get("Title"),
-            "Match": secret.get("Match"),
-            "StartLine": secret.get("StartLine"),
-            "EndLine": secret.get("EndLine")
         })
 
 # Générer le tableau HTML pour les vulnérabilités
-html_table_vulnerabilities = """
+html_table_vulnerabilities = f"""
 <style>
-    table {
+    table {{
         width: 100%;
         border-collapse: collapse;
         table-layout: 12.5%; /* Fixe la largeur des colonnes */
-    }
-    th, td {
+    }}
+    th, td {{
         padding: 12px;
         text-align: left;
         border: 1px solid #ddd;
         width: 12.5%; /* Fixe la largeur à 12.5% pour chaque colonne */
-    }
-    th {
+    }}
+    th {{
         background-color: #4CAF50;
         color: white;
-    }
-    tr:nth-child(even) {
+    }}
+    tr:nth-child(even) {{
         background-color: #f2f2f2;
-    }
-    tr:hover {
+    }}
+    tr:hover {{
         background-color: #ddd;
-    }
-    a {
+    }}
+    a {{
         color: #4CAF50;
         text-decoration: none;
-    }
-    a:hover {
+    }}
+    a:hover {{
         text-decoration: underline;
-    }
-    h2 {
+    }}
+    h2 {{
         text-align: center;
         color: #333;
         font-family: Arial, sans-serif;
-    }
+    }}
 </style>
 
-<h2>Vulnerabilities Report</h2>
+<h2>Vulnerabilities Report for {project} project </h2>
 <table>
     <tr>
+        <th>Target</th>
         <th>Vulnerability ID</th>
         <th>Package Name</th>
+        <th>Title</th>
         <th>Installed Version</th>
         <th>Fixed Version</th>
         <th>Severity</th>
         <th>Primary URL</th>
         <th>Published Date</th>
-        <th>Last Modified Date</th>
     </tr>
 """
 
 for vuln in vulnerabilities:
     html_table_vulnerabilities += f"""
     <tr>
+        <td>{vuln['Target']}</td>
         <td>{vuln['VulnerabilityID']}</td>
         <td>{vuln['PkgName']}</td>
+        <td>{vuln['Title']}</td>
         <td>{vuln['InstalledVersion']}</td>
         <td>{vuln['FixedVersion']}</td>
         <td>{vuln['Severity']}</td>
         <td><a href="{vuln['PrimaryURL']}">Link</a></td>
         <td>{vuln['PublishedDate']}</td>
-        <td>{vuln['LastModifiedDate']}</td>
     </tr>
     """
 
 html_table_vulnerabilities += "</table>"
 
 # Générer le tableau HTML pour les secrets
-html_table_secrets = """
-<h2>Secrets Report</h2>
+html_table_secrets = f"""
+<h2>Secrets Report for {project} project</h2>
 <table>
     <tr>
         <th>Target</th>
@@ -129,8 +142,6 @@ html_table_secrets = """
         <th>Category</th>
         <th>Severity</th>
         <th>Title</th>
-        <th>Start Line</th>
-        <th>End Line</th>
     </tr>
 """
 
@@ -143,8 +154,6 @@ for secret in secrets:
         <td>{secret['Category']}</td>
         <td>{secret['Severity']}</td>
         <td>{secret['Title']}</td>
-        <td>{secret['StartLine']}</td>
-        <td>{secret['EndLine']}</td>
     </tr>
     """
 
