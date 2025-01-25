@@ -31,7 +31,7 @@ REPORT_DIR="./trivy_reports"
 mkdir -p "$REPORT_DIR"
 # Trivy FS scan avec redirection vers un fichier JSON dans le répertoire des rapports
 echo -e "${YELLOW}Exécution du scan Trivy sur le répertoire racine du projet ${NC}"
-trivy fs ./ --format json --output "$REPORT_DIR/trivy_scan_report.json"
+trivy fs ./ --format json --silent --output "$REPORT_DIR/trivy_scan_report.json"
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}Le scan FS du repertoire racine a rencontré une erreur.${NC}"
@@ -50,32 +50,15 @@ mv report.html /var/www/report/
 jq '[.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[].Severity] | group_by(.) | map({(.[0]): length}) | add' $REPORT_DIR/trivy_scan_report.json > $REPORT_DIR/Vulnerabilities.json
 jq '[.Results[] | select(.Secrets != null) | .Secrets[].Severity] | group_by(.) | map({(.[0]): length}) | add' $REPORT_DIR/trivy_scan_report.json > $REPORT_DIR/Secrets.json
 
-Secret_medium_severity= $(cat $REPORT_DIR/Secrets.json | jq -r '.MEDIUM // 0')
-Secret_high_severity= $(cat $REPORT_DIR/Secrets.json | jq -r '.HIGH // 0')
-Secret_critical_severity= $(cat $REPORT_DIR/Secrets.json | jq -r '.CRITICAL // 0')
+Secret_medium_severity= $(cat $REPORT_DIR/Secrets.json | jq -r '.MEDIUM')
+Secret_high_severity= $(cat $REPORT_DIR/Secrets.json | jq -r '.HIGH')
+Secret_critical_severity= $(cat $REPORT_DIR/Secrets.json | jq -r '.CRITICAL')
 
-Vulnerabilities_medium_severity= $(cat $REPORT_DIR/Vulnerabilities.json | jq -r '.MEDIUM // 0')
-Vulnerabilities_high_severity= $(cat $REPORT_DIR/Vulnerabilities.json | jq -r '.HIGH // 0')
-Vulnerabilities_critical_severity= $(cat $REPORT_DIR/Vulnerabilities.json | jq -r '.CRITICAL // 0')
+Vulnerabilities_medium_severity= $(cat $REPORT_DIR/Vulnerabilities.json | jq -r '.MEDIUM')
+Vulnerabilities_high_severity= $(cat $REPORT_DIR/Vulnerabilities.json | jq -r '.HIGH')
+Vulnerabilities_critical_severity= $(cat $REPORT_DIR/Vulnerabilities.json | jq -r '.CRITICAL')
 
-if [ "$Secret_medium_severity" = "null" ]; then
-  Secret_medium_severity=0
-fi
-if [ "$Secret_high_severity" = "null" ]; then
-  Secret_high_severity=0
-fi
-if [ "$Secret_critical_severity" = "null" ]; then
-  Secret_critical_severity=0
-fi
-if [ "$Vulnerabilities_medium_severity" = "null" ]; then
-  Vulnerabilities_medium_severity=0
-fi
-if [ "$Vulnerabilities_high_severity" = "null" ]; then
-  Vulnerabilities_high_severity=0
-fi
-if [ "$Vulnerabilities_critical_severity" = "null" ]; then
-  Vulnerabilities_critical_severity=0
-fi
+
 Total_Medium_Severities= $Secret_medium_severity + $Vulnerabilities_medium_severity 
 Total_High_Severities= $Secret_high_severity + $Vulnerabilities_high_severity 
 Total_Critical_Severities= $Secret_critical_severity + $Vulnerabilities_critical_severity 
