@@ -59,109 +59,152 @@ for result in data.get("Results", []):
             "Title": secret.get("Title"),
         })
 
+# Définir l'ossature HTML de base
+html_base = f"""
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vulnerabilities & Secrets Report for {project} project</title>
+    <style>
+        /* Style général */
+        body {{
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }}
+
+        h2 {{
+            text-align: center;
+            color: #333;
+            font-size: 24px;
+            margin-top: 30px;
+        }}
+
+        table {{
+            width: 90%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: #fff;
+        }}
+
+        th, td {{
+            padding: 12px;
+            text-align: left;
+            border: 1px solid #ddd;
+            word-wrap: break-word;
+        }}
+
+        th {{
+            background-color: #4CAF50;
+            color: white;
+        }}
+
+        tr:nth-child(even) {{
+            background-color: #f2f2f2;
+        }}
+
+        tr:hover {{
+            background-color: #ddd;
+        }}
+
+        a {{
+            color: #4CAF50;
+            text-decoration: none;
+        }}
+
+        a:hover {{
+            text-decoration: underline;
+        }}
+
+        .container {{
+            width: 100%;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }}
+
+        .table-section {{
+            margin-bottom: 40px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+"""
+
 # Générer le tableau HTML pour les vulnérabilités
 html_table_vulnerabilities = f"""
-<style>
-    table {{
-        width: 100%;
-        border-collapse: collapse;
-        table-layout: 12.5%; /* Fixe la largeur des colonnes */
-    }}
-    th, td {{
-        padding: 12px;
-        text-align: left;
-        border: 1px solid #ddd;
-        width: 12.5%; /* Fixe la largeur à 12.5% pour chaque colonne */
-    }}
-    th {{
-        background-color: #4CAF50;
-        color: white;
-    }}
-    tr:nth-child(even) {{
-        background-color: #f2f2f2;
-    }}
-    tr:hover {{
-        background-color: #ddd;
-    }}
-    a {{
-        color: #4CAF50;
-        text-decoration: none;
-    }}
-    a:hover {{
-        text-decoration: underline;
-    }}
-    h2 {{
-        text-align: center;
-        color: #333;
-        font-family: Arial, sans-serif;
-    }}
-</style>
-
-<h2>Vulnerabilities Report for {project} project </h2>
-<table>
-    <tr>
-        <th>Target</th>
-        <th>Vulnerability ID</th>
-        <th>Package Name</th>
-        <th>Title</th>
-        <th>Installed Version</th>
-        <th>Fixed Version</th>
-        <th>Severity</th>
-        <th>Primary URL</th>
-        <th>Published Date</th>
-    </tr>
+    <div class="table-section">
+        <h2>Vulnerabilities Report </h2>
+        <table>
+            <tr>
+                <th>Target</th>
+                <th>Vulnerability ID</th>
+                <th>Package Name</th>
+                <th>Title</th>
+                <th>Installed Version</th>
+                <th>Fixed Version</th>
+                <th>Severity</th>
+                <th>Primary URL</th>
+                <th>Published Date</th>
+            </tr>
 """
 
 for vuln in vulnerabilities:
     html_table_vulnerabilities += f"""
-    <tr>
-        <td>{vuln['Target']}</td>
-        <td>{vuln['VulnerabilityID']}</td>
-        <td>{vuln['PkgName']}</td>
-        <td>{vuln['Title']}</td>
-        <td>{vuln['InstalledVersion']}</td>
-        <td>{vuln['FixedVersion']}</td>
-        <td>{vuln['Severity']}</td>
-        <td><a href="{vuln['PrimaryURL']}">Link</a></td>
-        <td>{vuln['PublishedDate']}</td>
-    </tr>
+        <tr>
+            <td>{vuln['Target']}</td>
+            <td>{vuln['VulnerabilityID']}</td>
+            <td>{vuln['PkgName']}</td>
+            <td>{vuln['Title']}</td>
+            <td>{vuln['InstalledVersion']}</td>
+            <td>{vuln['FixedVersion']}</td>
+            <td>{vuln['Severity']}</td>
+            <td><a href="{vuln['PrimaryURL']}">Link</a></td>
+            <td>{vuln['PublishedDate']}</td>
+        </tr>
     """
 
-html_table_vulnerabilities += "</table>"
+html_table_vulnerabilities += "</table></div>"
 
 # Générer le tableau HTML pour les secrets
 html_table_secrets = f"""
-<h2>Secrets Report for {project} project</h2>
-<table>
-    <tr>
-        <th>Target</th>
-        <th>Class</th>
-        <th>Rule ID</th>
-        <th>Category</th>
-        <th>Severity</th>
-        <th>Title</th>
-    </tr>
+    <div class="table-section">
+        <h2>Secrets Report</h2>
+        <table>
+            <tr>
+                <th>Target</th>
+                <th>Class</th>
+                <th>Rule ID</th>
+                <th>Category</th>
+                <th>Severity</th>
+                <th>Title</th>
+            </tr>
 """
 
 for secret in secrets:
     html_table_secrets += f"""
-    <tr>
-        <td>{secret['Target']}</td>
-        <td>{secret['Class']}</td>
-        <td>{secret['RuleID']}</td>
-        <td>{secret['Category']}</td>
-        <td>{secret['Severity']}</td>
-        <td>{secret['Title']}</td>
-    </tr>
+        <tr>
+            <td>{secret['Target']}</td>
+            <td>{secret['Class']}</td>
+            <td>{secret['RuleID']}</td>
+            <td>{secret['Category']}</td>
+            <td>{secret['Severity']}</td>
+            <td>{secret['Title']}</td>
+        </tr>
     """
 
-html_table_secrets += "</table>"
+html_table_secrets += "</table></div>"
 
-# Si vous souhaitez les enregistrer dans un fichier HTML:
+# Combiner l'ossature HTML avec les tableaux
+html_content = html_base + html_table_vulnerabilities + html_table_secrets + "</div></body></html>"
+
+# Enregistrer le fichier HTML final
 with open("report.html", "w") as report_file:
-    report_file.write(html_table_vulnerabilities)
-    report_file.write("<br><br>")
-    report_file.write(html_table_secrets)
-
+    report_file.write(html_content)
 
 print("Tableau généré : report.html")
