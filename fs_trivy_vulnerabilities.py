@@ -5,7 +5,7 @@ import os
 current_directory = os.getcwd()
 project = os.path.basename(current_directory)
 
-def find_file(filename, search_path='.'):
+def find_file(filename, search_path='.',root=None):
     for root, dirs, files in os.walk(search_path):
         if filename in files:
             return os.path.join(root, filename)
@@ -18,15 +18,13 @@ if not result:
     
 print(f"Fichier trouvé : {result}")
 
-file_path = 'trivy_scan_report.json' 
-
 try:
-    with open(file_path, 'r') as file:
+    with open(result, 'r') as file:
         data = json.load(file)
 except json.JSONDecodeError as e:
     print(f"Erreur de décodage JSON: {e}")
 except FileNotFoundError:
-    print(f"Le fichier {file_path} n'a pas été trouvé.")
+    print(f"Le fichier {result} n'a pas été trouvé.")
 except Exception as e:
     print(f"Une erreur s'est produite: {e}")
 
