@@ -84,21 +84,21 @@ Total_Critical_Severities=$((Secret_critical_severity + Vulnerabilities_critical
 
 # Vérification pour CRITICAL
 if [ "$Total_Critical_Severities" -gt 1 ]; then
-   colors "RED" "$Total_Critical_Severities gravités de type CRITICAL.${NC}"
+   colors "RED" "Trivy scan result : $Total_Critical_Severities gravités de type CRITICAL.${NC}"
    colors "CYAN" "Veuillez consulter le rapport de vulnérabilités $lien"
    exit 1
 fi
 
 # Vérification pour HIGH
 if [ "$Total_High_Severities" -gt 3 ]; then
-   colors "RED" "$Total_High_Severities gravités de type HIGH.${NC}"
+   colors "RED" "Trivy scan result : $Total_High_Severities gravités de type HIGH.${NC}"
    colors "CYAN" "Veuillez consulter le rapport de vulnérabilités $lien"
    exit 1
 fi
 
 # Vérification pour MEDIUM
 if [ "$Total_Medium_Severities" -gt 5 ]; then
-   colors "RED" "$Total_Medium_Severities gravités de type MEDIUM.${NC}"
+   colors "RED" "Trivy scan result : $Total_Medium_Severities gravités de type MEDIUM.${NC}"
    colors "CYAN" "Veuillez consulter le rapport de vulnérabilités $lien"
    exit 1
 fi
