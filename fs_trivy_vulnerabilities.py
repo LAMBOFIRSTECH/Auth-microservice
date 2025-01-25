@@ -96,7 +96,7 @@ html_base = f"""
         }}
 
         table {{
-            width: 90%;
+            width: 95%;
             margin: 20px auto;
             border-collapse: collapse;
             background-color: #ffffff;
@@ -151,10 +151,53 @@ html_base = f"""
             margin-bottom: 40px;
         }}
 
-        .table-header {{
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 13px;
+        /* Proportions et largeur dynamique pour les colonnes */
+        th:nth-child(1), td:nth-child(1) {{
+            width: 15%;
+        }}
+
+        th:nth-child(2), td:nth-child(2) {{
+            width: 12%;
+        }}
+
+        th:nth-child(3), td:nth-child(3) {{
+            width: 18%;
+        }}
+
+        th:nth-child(4), td:nth-child(4) {{
+            width: 20%;
+        }}
+
+        th:nth-child(5), td:nth-child(5) {{
+            width: 12%;
+        }}
+
+        th:nth-child(6), td:nth-child(6) {{
+            width: 10%;
+        }}
+
+        th:nth-child(7), td:nth-child(7) {{
+            width: 8%;
+        }}
+
+        th:nth-child(8), td:nth-child(8) {{
+            width: 10%;
+        }}
+
+        th:nth-child(9), td:nth-child(9) {{
+            width: 10%;
+        }}
+
+        /* Responsiveness */
+        @media (max-width: 768px) {{
+            table {{
+                width: 100%;
+                font-size: 12px;
+            }}
+
+            th, td {{
+                padding: 10px;
+            }}
         }}
 
     </style>
@@ -182,6 +225,7 @@ html_table_vulnerabilities = f"""
             </tr>
 """
 
+# Remplir le tableau des vulnérabilités
 for vuln in vulnerabilities:
     html_table_vulnerabilities += f"""
         <tr>
@@ -214,6 +258,7 @@ html_table_secrets = f"""
             </tr>
 """
 
+# Remplir le tableau des secrets
 for secret in secrets:
     html_table_secrets += f"""
         <tr>
@@ -234,6 +279,7 @@ html_content = html_base + html_table_vulnerabilities + html_table_secrets + "</
 # Enregistrer le fichier HTML final
 with open("report.html", "w") as report_file:
     report_file.write(html_content)
+
 
 
 print("Tableau généré : report.html")
