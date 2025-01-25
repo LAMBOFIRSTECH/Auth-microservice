@@ -66,15 +66,25 @@ html_base = f"""
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vulnerabilities & Secrets Report for {project} project</title>
+    <title>Vulnerabilities & Secrets Report</title>
     <style>
         /* Style général */
         body {{
-            font-family: Arial, sans-serif;
-            background-color: #f4f4f4;
+            font-family: 'Arial', sans-serif;
+            background-color: #f9f9f9;
             color: #333;
             margin: 0;
             padding: 0;
+            line-height: 1.6;
+        }}
+
+        h1 {{
+            text-align: center;
+            color: #ffffff;
+            background-color: #4CAF50;
+            padding: 20px;
+            margin: 0;
+            font-size: 30px;
         }}
 
         h2 {{
@@ -82,13 +92,16 @@ html_base = f"""
             color: #333;
             font-size: 24px;
             margin-top: 30px;
+            font-weight: bold;
         }}
 
         table {{
             width: 90%;
             margin: 20px auto;
             border-collapse: collapse;
-            background-color: #fff;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }}
 
         th, td {{
@@ -101,14 +114,21 @@ html_base = f"""
         th {{
             background-color: #4CAF50;
             color: white;
+            text-transform: uppercase;
+            font-size: 14px;
         }}
 
         tr:nth-child(even) {{
-            background-color: #f2f2f2;
+            background-color: #f9f9f9;
         }}
 
         tr:hover {{
-            background-color: #ddd;
+            background-color: #f1f1f1;
+        }}
+
+        td {{
+            background-color: #f8f8f8;
+            font-size: 14px;
         }}
 
         a {{
@@ -130,16 +150,24 @@ html_base = f"""
         .table-section {{
             margin-bottom: 40px;
         }}
+
+        .table-header {{
+            font-weight: bold;
+            text-transform: uppercase;
+            font-size: 13px;
+        }}
+
     </style>
 </head>
 <body>
+    <h1>Vulnerabilities & Secrets Report for {project} project</h1>
     <div class="container">
 """
 
 # Générer le tableau HTML pour les vulnérabilités
 html_table_vulnerabilities = f"""
     <div class="table-section">
-        <h2>Vulnerabilities Report </h2>
+        <h2>Vulnerabilities Report</h2>
         <table>
             <tr>
                 <th>Target</th>
@@ -206,5 +234,6 @@ html_content = html_base + html_table_vulnerabilities + html_table_secrets + "</
 # Enregistrer le fichier HTML final
 with open("report.html", "w") as report_file:
     report_file.write(html_content)
+
 
 print("Tableau généré : report.html")
