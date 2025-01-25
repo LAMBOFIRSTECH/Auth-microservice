@@ -63,18 +63,18 @@ Total_Medium_Severities= $Secret_medium_severity + $Vulnerabilities_medium_sever
 Total_High_Severities= $Secret_high_severity + $Vulnerabilities_high_severity 
 Total_Critical_Severities= $Secret_critical_severity + $Vulnerabilities_critical_severity 
 
-if [ "${Total_Medium_Severities}"  -gt 5] then;
+if [ "${Total_Medium_Severities}"  -gt 5]; then
    echo -e "${RED}Nombre de gravités de type MEDIUM trop important.${NC}"
    colors "CYAN" "Veuillez consulter le rapport de vulnérabilités $lien"
    exit 1
 fi
 
-if [ "${Total_High_Severities}" -gt 3] then;
+if [ "${Total_High_Severities}" -gt 3]; then
    echo -e "${RED}Nombre de gravités de type HIGH trop important.${NC}"
    colors "CYAN" "Veuillez consulter le rapport de vulnérabilités $lien"
    exit 1
 fi
-if [ "${Total_Critical_Severities}" -gt 1] then;
+if [ "${Total_Critical_Severities}" -gt 1]; then
    echo -e "${RED}Nombre de gravités de type CRITICAL trop important.${NC}"
    colors "CYAN" "Veuillez consulter le rapport de vulnérabilités $lien"
    exit 1
