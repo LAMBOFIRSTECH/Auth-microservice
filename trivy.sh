@@ -31,7 +31,7 @@ REPORT_DIR="./trivy_reports"
 mkdir -p "$REPORT_DIR"
 # Trivy FS scan avec redirection vers un fichier JSON dans le répertoire des rapports
 echo -e "${YELLOW}Exécution du scan Trivy sur le répertoire racine du projet ${NC}"
-trivy fs ./ --format json --silent --output "$REPORT_DIR/trivy_scan_report.json"
+trivy fs ./ --format json --output "$REPORT_DIR/trivy_scan_report.json"
 
 if [ $? -ne 0 ]; then
     echo -e "${RED}Le scan FS du repertoire racine a rencontré une erreur.${NC}"
