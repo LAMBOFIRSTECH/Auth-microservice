@@ -160,8 +160,10 @@ html_base = f"""
 # Générer le graphique pour les vulnérabilités
 vuln_severity_counts = {"Low": 0, "Medium": 0, "High": 0, "Critical": 0}
 for vuln in vulnerabilities:
-    vuln_severity_counts[vuln['Severity']] += 1
-
+    severity = vuln['Severity'].strip().capitalize()  
+    if severity in vuln_severity_counts:
+        vuln_severity_counts[severity] += 1
+   
 html_vuln_pie_chart = f"""
     <div class="chart-container">
         <h2>Vulnerability Severity Distribution</h2>
