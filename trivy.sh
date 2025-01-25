@@ -50,13 +50,13 @@ mv report.html /var/www/report/
 jq '[.Results[] | select(.Vulnerabilities != null) | .Vulnerabilities[].Severity] | group_by(.) | map({(.[0]): length}) | add' $REPORT_DIR/trivy_scan_report.json > $REPORT_DIR/Vulnerabilities.json
 jq '[.Results[] | select(.Secrets != null) | .Secrets[].Severity] | group_by(.) | map({(.[0]): length}) | add' $REPORT_DIR/trivy_scan_report.json > $REPORT_DIR/Secrets.json
 
-Secret_medium_severity= $(jq -r '.MEDIUM // 0' $REPORT_DIR/Secrets.json)
-Secret_high_severity= $(jq -r '.HIGH // 0' $REPORT_DIR/Secrets.json)
-Secret_critical_severity= $(jq -r '.CRITICAL // 0' $REPORT_DIR/Secrets.json)
+Secret_medium_severity=$(jq -r '.MEDIUM // 0' $REPORT_DIR/Secrets.json)
+Secret_high_severity=$(jq -r '.HIGH // 0' $REPORT_DIR/Secrets.json)
+Secret_critical_severity=$(jq -r '.CRITICAL // 0' $REPORT_DIR/Secrets.json)
 
-Vulnerabilities_medium_severity= $(jq -r '.MEDIUM // 0' $REPORT_DIR/Vulnerabilities.json)
-Vulnerabilities_high_severity= $(jq -r '.HIGH // 0' $REPORT_DIR/Vulnerabilities.json)
-Vulnerabilities_critical_severity= $(jq -r '.CRITICAL // 0' $REPORT_DIR/Vulnerabilities.json)
+Vulnerabilities_medium_severity=$(jq -r '.MEDIUM // 0' $REPORT_DIR/Vulnerabilities.json)
+Vulnerabilities_high_severity=$(jq -r '.HIGH // 0' $REPORT_DIR/Vulnerabilities.json)
+Vulnerabilities_critical_severity=$(jq -r '.CRITICAL // 0' $REPORT_DIR/Vulnerabilities.json)
 
 if [ "$Secret_medium_severity" = "null" ]; then
   Secret_medium_severity=0
