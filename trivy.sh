@@ -58,23 +58,46 @@ Vulnerabilities_medium_severity= $(cat $REPORT_DIR/Vulnerabilities.json | jq -r 
 Vulnerabilities_high_severity= $(cat $REPORT_DIR/Vulnerabilities.json | jq -r '.HIGH')
 Vulnerabilities_critical_severity= $(cat $REPORT_DIR/Vulnerabilities.json | jq -r '.CRITICAL')
 
+if [ "$Secret_medium_severity" = "null" ]; then
+  Secret_medium_severity=0
+fi
+if [ "$Secret_high_severity" = "null" ]; then
+  Secret_high_severity=0
+fi
+if [ "$Secret_critical_severity" = "null" ]; then
+  Secret_critical_severity=0
+fi
+if [ "$Vulnerabilities_medium_severity" = "null" ]; then
+  Vulnerabilities_medium_severity=0
+fi
+if [ "$Vulnerabilities_high_severity" = "null" ]; then
+  Vulnerabilities_high_severity=0
+fi
+if [ "$Vulnerabilities_critical_severity" = "null" ]; then
+  Vulnerabilities_critical_severity=0
+fi
 
-Total_Medium_Severities= $Secret_medium_severity + $Vulnerabilities_medium_severity 
-Total_High_Severities= $Secret_high_severity + $Vulnerabilities_high_severity 
-Total_Critical_Severities= $Secret_critical_severity + $Vulnerabilities_critical_severity 
+# Calculs des totaux avec $((...))
+Total_Medium_Severities=$((Secret_medium_severity + Vulnerabilities_medium_severity))
+Total_High_Severities=$((Secret_high_severity + Vulnerabilities_high_severity))
+Total_Critical_Severities=$((Secret_critical_severity + Vulnerabilities_critical_severity))
 
-if [ "${Total_Medium_Severities}"  -gt 5]; then
+# Vérification pour MEDIUM
+if [ "$Total_Medium_Severities" -gt 5 ]; then
    echo -e "${RED}Nombre de gravités de type MEDIUM trop important.${NC}"
    colors "CYAN" "Veuillez consulter le rapport de vulnérabilités $lien"
    exit 1
 fi
 
-if [ "${Total_High_Severities}" -gt 3]; then
+# Vérification pour HIGH
+if [ "$Total_High_Severities" -gt 3 ]; then
    echo -e "${RED}Nombre de gravités de type HIGH trop important.${NC}"
    colors "CYAN" "Veuillez consulter le rapport de vulnérabilités $lien"
    exit 1
 fi
-if [ "${Total_Critical_Severities}" -gt 1]; then
+
+# Vérification pour CRITICAL
+if [ "$Total_Critical_Severities" -gt 1 ]; then
    echo -e "${RED}Nombre de gravités de type CRITICAL trop important.${NC}"
    colors "CYAN" "Veuillez consulter le rapport de vulnérabilités $lien"
    exit 1
