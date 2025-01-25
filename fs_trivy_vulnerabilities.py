@@ -58,7 +58,6 @@ for result in data.get("Results", []):
             "Severity": secret.get("Severity"),
             "Title": secret.get("Title"),
         })
-
 html_base = f"""
 <!DOCTYPE html>
 <html lang="fr">
@@ -66,6 +65,7 @@ html_base = f"""
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vulnerabilities & Secrets Report</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>  <!-- Inclusion de Chart.js -->
     <style>
         /* Style général */
         body {{
@@ -94,52 +94,6 @@ html_base = f"""
             font-weight: bold;
         }}
 
-        table {{
-            width: 95%;
-            margin: 20px auto;
-            border-collapse: collapse;
-            background-color: #ffffff;
-            border-radius: 10px;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }}
-
-        th, td {{
-            padding: 15px; /* Augmenter le padding pour plus d'espacement */
-            text-align: left;
-            border: 1px solid #ddd;
-            word-wrap: break-word;
-            text-align: center; /* Centrer le texte dans les cellules */
-        }}
-
-        th {{
-            background-color: #4CAF50;
-            color: white;
-            text-transform: uppercase;
-            font-size: 14px;
-        }}
-
-        tr:nth-child(even) {{
-            background-color: #f9f9f9;
-        }}
-
-        tr:hover {{
-            background-color: #f1f1f1;
-        }}
-
-        td {{
-            background-color: #f8f8f8;
-            font-size: 14px;
-        }}
-
-        a {{
-            color: #4CAF50;
-            text-decoration: none;
-        }}
-
-        a:hover {{
-            text-decoration: underline;
-        }}
-
         .container {{
             width: 100%;
             max-width: 1200px;
@@ -151,36 +105,132 @@ html_base = f"""
             margin-bottom: 40px;
         }}
 
-        .table-header {{
-            font-weight: bold;
-            text-transform: uppercase;
-            font-size: 13px;
+        /* Styles pour les graphiques */
+        .chart-container {{
+            width: 80%;
+            margin: 0 auto 40px auto;
         }}
-
-        /* Largeur homogène des colonnes */
+        
+        /* Styles pour les tableaux */
+        table {{
+            width: 95%;
+            margin: 20px auto;
+            border-collapse: collapse;
+            background-color: #ffffff;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }}
         th, td {{
-            width: 11%; /* Définir une largeur uniforme pour chaque colonne */
+            padding: 15px;
+            text-align: center;
+            border: 1px solid #ddd;
+            word-wrap: break-word;
         }}
-
-        /* Responsiveness */
-        @media (max-width: 768px) {{
-            table {{
-                width: 100%;
-                font-size: 12px;
-            }}
-
-            th, td {{
-                padding: 10px;
-            }}
+        th {{
+            background-color: #4CAF50;
+            color: white;
+            text-transform: uppercase;
+            font-size: 14px;
+        }}
+        tr:nth-child(even) {{
+            background-color: #f9f9f9;
+        }}
+        tr:hover {{
+            background-color: #f1f1f1;
+        }}
+        td {{
+            background-color: #f8f8f8;
+            font-size: 14px;
+        }}
+        a {{
+            color: #4CAF50;
+            text-decoration: none;
+        }}
+        a:hover {{
+            text-decoration: underline;
         }}
     </style>
 </head>
 <body>
     <h1>Vulnerabilities & Secrets Report for {project} project</h1>
     <div class="container">
+
 """
 
-# Générer le tableau HTML pour les vulnérabilités
+# Générer le graphique pour les vulnérabilités
+vuln_severity_counts = {"Low": 0, "Medium": 0, "High": 0, "Critical": 0}
+for vuln in vulnerabilities:
+    vuln_severity_counts[vuln['Severity']] += 1
+
+html_vuln_pie_chart = f"""
+    <div class="chart-container">
+        <h2>Vulnerability Severity Distribution</h2>
+        <canvas id="vulnChart"></canvas>
+        <script>
+            var ctx = document.getElementById('vulnChart').getContext('2d');
+            var vulnChart = new Chart(ctx, {{
+                type: 'pie',
+                data: {{
+                    labels: ['Low', 'Medium', 'High', 'Critical'],
+                    datasets: [{
+                        data: [{vuln_severity_counts['Low']}, {vuln_severity_counts['Medium']}, {vuln_severity_counts['High']}, {vuln_severity_counts['Critical']}],
+                        backgroundColor: ['#4CAF50', '#FFEB3B', '#FF9800', '#F44336'],
+                        borderColor: ['#ffffff', '#ffffff', '#ffffff', '#ffffff'],
+                        borderWidth: 2
+                    }]
+                }},
+                options: {{
+                    responsive: true,
+                    plugins: {{
+                        legend: {{
+                            position: 'top',
+                        }},
+                    }},
+                }}
+            }});
+        </script>
+    </div>
+"""
+
+# Générer le graphique pour les secrets
+secret_severity_counts = {"Low": 0, "Medium": 0, "High": 0}
+for secret in secrets:
+    secret_severity_counts[secret['Severity']] += 1
+
+html_secret_pie_chart = f"""
+    <div class="chart-container">
+        <h2>Secret Severity Distribution</h2>
+        <canvas id="secretChart"></canvas>
+        <script>
+            var ctx = document.getElementById('secretChart').getContext('2d');
+            var secretChart = new Chart(ctx, {{
+                type: 'pie',
+                data: {{
+                    labels: ['Low', 'Medium', 'High'],
+                    datasets: [{
+                        data: [{secret_severity_counts['Low']}, {secret_severity_counts['Medium']}, {secret_severity_counts['High']}],
+                        backgroundColor: ['#4CAF50', '#FFEB3B', '#FF9800'],
+                        borderColor: ['#ffffff', '#ffffff', '#ffffff'],
+                        borderWidth: 2
+                    }]
+                }},
+                options: {{
+                    responsive: true,
+                    plugins: {{
+                        legend: {{
+                            position: 'top',
+                        }},
+                    }},
+                }}
+            }});
+        </script>
+    </div>
+"""
+
+# Ajouter les graphiques au contenu HTML
+html_content = html_base + html_vuln_pie_chart + html_secret_pie_chart
+
+# Générer les tableaux (vulnérabilités et secrets)
 html_table_vulnerabilities = f"""
     <div class="table-section">
         <h2>Vulnerabilities Report</h2>
@@ -198,7 +248,6 @@ html_table_vulnerabilities = f"""
             </tr>
 """
 
-# Remplir le tableau des vulnérabilités
 for vuln in vulnerabilities:
     html_table_vulnerabilities += f"""
         <tr>
@@ -216,7 +265,6 @@ for vuln in vulnerabilities:
 
 html_table_vulnerabilities += "</table></div>"
 
-# Générer le tableau HTML pour les secrets
 html_table_secrets = f"""
     <div class="table-section">
         <h2>Secrets Report</h2>
@@ -231,7 +279,6 @@ html_table_secrets = f"""
             </tr>
 """
 
-# Remplir le tableau des secrets
 for secret in secrets:
     html_table_secrets += f"""
         <tr>
@@ -246,11 +293,12 @@ for secret in secrets:
 
 html_table_secrets += "</table></div>"
 
-# Combiner l'ossature HTML avec les tableaux
-html_content = html_base + html_table_vulnerabilities + html_table_secrets + "</div></body></html>"
+# Combiner l'ossature HTML avec les tableaux et les graphiques
+html_content += html_table_vulnerabilities + html_table_secrets + "</div></body></html>"
 
 # Enregistrer le fichier HTML final
-with open("report.html", "w") as report_file:
+with open("report_with_charts.html", "w") as report_file:
     report_file.write(html_content)
+
 
 print("Tableau généré : report.html")
