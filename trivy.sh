@@ -41,8 +41,10 @@ if [ $? -ne 0 ]; then
     echo -e "${RED}Le rapport Trivy n'a pas été généré correctement.${NC}"
     exit 0
 fi
-cp  report.html /var/www/report/
-mv report.html ../../../../../
+#usermod -aG www-data gitlab-runner
+#chmod 775 /var/www/report/
+mv report.html /var/www/report/
+
 # Filtrer le json et récupérer quantité de sévérités | mettre le resultat dans un dictionnaire exemple => ("HIGH",3)
 # trivy fs --severity MEDIUM,HIGH,CRITICAL --format json $REPORT_DIR/trivy_scan_report.json | jq -r '.Results[].Secrets[].Severity' | sort | uniq -c
 # trivy fs --severity MEDIUM,HIGH,CRITICAL --format json ./ | jq -r '.Results[].Vulnerabilities[].Severity' | sort | uniq -c
