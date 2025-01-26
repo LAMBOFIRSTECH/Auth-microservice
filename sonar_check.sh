@@ -89,14 +89,14 @@ colors "YELLOW" "Démarrage de l'analyse SonarQube pour le projet $SONAR_PROJECT
 # Vérification de la présence de dotnet-sonarscanner
 if ! command -v dotnet-sonarscanner &>/dev/null; then
     colors "CYAN" "SonarScanner pour .NET non trouvé. Installation en cours..."
-    
     # Installation de dotnet-sonarscanner
-    if ! dotnet tool install --global dotnet-sonarscanner --version 6.0.0; then
+    if dotnet tool install --global dotnet-sonarscanner --version 6.0.0; then
+        colors "GREEN" "SonarScanner pour .NET installé avec succès."
+        export PATH="$PATH:$HOME/.dotnet/tools"
+    else
         colors "RED" "Erreur : Impossible d'installer dotnet-sonarscanner."
         exit 1
     fi
-
-    colors "GREEN" "SonarScanner pour .NET installé avec succès."
 else
     colors "CYAN" "SonarScanner pour .NET déjà installé."
 fi
@@ -143,7 +143,7 @@ fi
 # 8. Message de Succès
 # --------------------
 colors "GREEN" "###################### Analyse SonarQube terminée avec succès ##########################"
-colors "CYAN"  "|  Rapport de couverture généré et envoyé à SonarQube                                  |"
-colors "CYAN"  "|  Serveur SonarQube accessible et analyse effectuée                                   |"
+colors "CYAN" "|  Rapport de couverture généré et envoyé à SonarQube                                  |"
+colors "CYAN" "|  Serveur SonarQube accessible et analyse effectuée                                   |"
 colors "GREEN" "########################################################################################"
 exit 0
