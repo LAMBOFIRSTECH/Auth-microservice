@@ -21,9 +21,9 @@ cache:
 stages:
   # - cleanup
   # - build
-  # - test
+  - test
   - scan-vulnerabilities
-#   - sonar-build
+  - sonar-build
 #   - sonarqube-analysis_report
 #   - release
 #   - deploy
@@ -57,34 +57,33 @@ stages:
 #     expire_in: 20 minutes
 
 # ######## TEST ########
-# test:
-#   stage: test
-#   script:
-#     - echo "Exécution des tests unitaires avec collecte de couverture"
-#     - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.4
-#     - export PATH="$PATH:/root/.dotnet/tools"
-#     - TEST=$(ls | grep -o '\bTest\w*')
-#     - |
-#       dotnet test $TEST/$TEST.csproj \
-#         --configuration $BUILD_CONFIGURATION \
-#         --collect:"XPlat Code Coverage" \
-#         /p:CollectCoverage=true \
-#         /p:CoverletOutput=../Couverture/ \
-#         /p:CoverletOutputFormat="opencover"
-#     - rm -rf $TEST/TestResults
-#   artifacts:
-#     when: always
-#     paths:
-#       - $COVERAGE_REPORT_PATH
-#     reports:
-#       junit: $COVERAGE_REPORT_PATH
+test:
+  stage: test
+  script:
+    - echo "Exécution des tests unitaires avec collecte de couverture"
+    - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.4
+    - export PATH="$PATH:/root/.dotnet/tools"
+    - TEST=$(ls | grep -o '\bTest\w*')
+    - |
+      dotnet test $TEST/$TEST.csproj \
+        --configuration $BUILD_CONFIGURATION \
+        --collect:"XPlat Code Coverage" \
+        /p:CollectCoverage=true \
+        /p:CoverletOutput=../Couverture/ \
+        /p:CoverletOutputFormat="opencover"
+    - rm -rf $TEST/TestResults
+  artifacts:
+    when: always
+    paths:
+      - $COVERAGE_REPORT_PATH
+    reports:
+      junit: $COVERAGE_REPORT_PATH
 
 before_script:
   - export $(cat .env | xargs)
 
-###### VULNERABILITIES #####
+###### TRIVY FS VULNERABILITIES #####
 scan-vulnerabilities:
-  #image: aquasec/trivy:v0.58.2  # Spécifier une version stable
   stage: scan-vulnerabilities
   tags:
     - gitlab-lamboft-shell-develop 
@@ -93,32 +92,32 @@ scan-vulnerabilities:
     - chmod +x trivy.sh
     - ./trivy.sh 
   allow_failure: true
-  artifacts:
-    paths:
-     - /tmp/trivy_scan_report_*.json   # Sauvegarde du fichier de rapport JSON
-    expire_in: 5 minutes
+  # artifacts:
+  #   paths:
+  #    - /tmp/trivy_scan_report_*.json   # Sauvegarde du fichier de rapport JSON A dégager
+  #   expire_in: 5 minutes
 
 
 ######## SONARQUBE ########
-# sonar-build:
-#   stage: sonar-build
-#   tags:
-#     - gitlab-lamboft-shell-develop
-#   variables:
-#     RUNNER_TAG: "development"
-#     allow_failure: true
-#   script:
-#     #- chmod -R 777 Couverture/
-#     - echo "Lancement de l'analyse SonarQube."
-#     - chmod +x sonar_check.sh; ./sonar_check.sh
-#   cache:
-#     policy: pull-push
-#     key: "sonar-cache-$CI_COMMIT_REF_SLUG"
-#     paths:
-#       - "${SONAR_USER_HOME}/cache"
-#       - sonar-scanner/
-#   dependencies:
-#     - test # Dépend des tests et de la couverture
+sonar-build:
+  stage: sonar-build
+  tags:
+    - gitlab-lamboft-shell-develop
+  variables:
+    RUNNER_TAG: "development"
+    allow_failure: true
+  script:
+    #- chmod -R 777 Couverture/
+    - echo "Lancement de l'analyse SonarQube."
+    - chmod +x sonar_check.sh; ./sonar_check.sh
+  cache:
+    policy: pull-push
+    key: "sonar-cache-$CI_COMMIT_REF_SLUG"
+    paths:
+      - "${SONAR_USER_HOME}/cache"
+      - sonar-scanner/
+  dependencies:
+    - test # Dépend des tests et de la couverture
 
 # ######## SONARQUBE REPORT ########
 # sonarqube-analysis_report:

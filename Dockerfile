@@ -24,7 +24,6 @@ COPY Authentifications/appsettings.* .
 # Copier le certificat nécessaire
 COPY TasksApi.pfx /etc/ssl/certs/TasksApi.pfx
 COPY Redis/certs/redis-client.pfx /etc/ssl/certs/redis-client.pfx
-COPY Redis/certs/redis-client.key /etc/ssl/certs/redis-client.key
 COPY Redis/certs/ca.crt /etc/ssl/certs/ca.crt
 
 # Configuration des variables d'environnement
