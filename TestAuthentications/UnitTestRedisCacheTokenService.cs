@@ -23,7 +23,7 @@ public class RedisCacheTokenService
         _logger = logger;
     }
 
-    public byte[] ComputeHashUsingByte(string email, string password)
+    public static byte[] ComputeHashUsingByte(string email, string password)
     {
         using (var sha256 = SHA256.Create())
         {
@@ -94,7 +94,7 @@ public class UnitTestRedisCacheTokenService
         string password = "password";
 
         // Act
-        var result = _service.ComputeHashUsingByte(email, password);
+        var result = RedisCacheTokenService.ComputeHashUsingByte(email, password);
 
         // Assert
         Assert.NotNull(result);
@@ -107,7 +107,7 @@ public class UnitTestRedisCacheTokenService
         // Arrange
         string email = "test@example.com";
         string password = "password123";
-        string cacheKey = $"Token-{Regex.Match(email, "^[^@]+")}_{BitConverter.ToString(_service.ComputeHashUsingByte(email, password)).Replace("-", "")}";
+        string cacheKey = $"Token-{Regex.Match(email, "^[^@]+")}_{BitConverter.ToString(RedisCacheTokenService.ComputeHashUsingByte(email, password)).Replace("-", "")}";
 
         // Simulation de la réponse null dans le cache
 
@@ -133,7 +133,7 @@ public class UnitTestRedisCacheTokenService
         // Arrange
         string email = "test@example.com";
         string password = "password";
-        string cacheKey = $"Token-test_{BitConverter.ToString(_service.ComputeHashUsingByte(email, password)).Replace("-", "")}";
+        string cacheKey = $"Token-test_{BitConverter.ToString(RedisCacheTokenService.ComputeHashUsingByte(email, password)).Replace("-", "")}";
 
         _cacheMock.Setup(x => x.GetAsync(cacheKey, It.IsAny<CancellationToken>())).ReturnsAsync((byte[])null);
 
@@ -149,7 +149,7 @@ public class UnitTestRedisCacheTokenService
         // Arrange
         string email = "test@example.com";
         string password = "password";
-        string cacheKey = $"Token-test_{BitConverter.ToString(_service.ComputeHashUsingByte(email, password)).Replace("-", "")}";
+        string cacheKey = $"Token-test_{BitConverter.ToString(RedisCacheTokenService.ComputeHashUsingByte(email, password)).Replace("-", "")}";
 
         // Mock the GetStringAsync method of IDistributedCache directly without using the extension
         var cachedData = JsonConvert.SerializeObject(new Dictionary<string, object> { { "refreshToken", "testToken" } });
@@ -172,7 +172,7 @@ public class UnitTestRedisCacheTokenService
         string email = "test@example.com";
         string password = "password";
         string refreshToken = "refreshToken";
-        string cacheKey = $"Token-test_{Convert.ToHexString(_service.ComputeHashUsingByte(email, password))}";
+        string cacheKey = $"Token-test_{Convert.ToHexString(RedisCacheTokenService.ComputeHashUsingByte(email, password))}";
 
         // Simulate that GetAsync returns null when the cache key is requested
         _cacheMock.Setup(x => x.GetAsync(cacheKey, It.IsAny<CancellationToken>())).ReturnsAsync((byte[])null);

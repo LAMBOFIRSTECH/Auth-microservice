@@ -14,7 +14,7 @@ public class RedisCacheTokenService : IRedisCacheTokenService
 		_cache = cache;
 		this.logger = logger;
 	}
-	public byte[] ComputeHashUsingByte(string email, string password)
+	public static byte[] ComputeHashUsingByte(string email, string password)
 	{
 		string salt = "RandomUniqueSalt";
 		using SHA256 sha256 = SHA256.Create();

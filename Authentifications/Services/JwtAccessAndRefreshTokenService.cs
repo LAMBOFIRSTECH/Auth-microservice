@@ -36,14 +36,14 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         return Convert.ToBase64String(randomNumber);
     }
 
-    public async Task<TokenResult> NewAccessTokenUsingRefreshTokenInRedisAsync(string refresh, string email, string password)
+    public async Task<TokenResult> NewAccessTokenUsingRefreshTokenInRedisAsync(string refreshToken, string email, string password)
     {
         var utilisateurDto = await AuthUserDetailsAsync((true, email, password));
         var refreshTokenFromRedis = await redisTokenCache.RetrieveTokenBasingOnRedisUserSessionAsync(utilisateurDto.Email!, utilisateurDto.Pass!);
         if (string.IsNullOrEmpty(refreshTokenFromRedis))
             throw new InvalidOperationException("Empty refresh token retrieve from redis");
 
-        if (!refreshTokenFromRedis.Equals(refresh))
+        if (!refreshTokenFromRedis.Equals(refreshToken))
             throw new InvalidOperationException("Not the same refresh token");
         GetToken(utilisateurDto);
         return GetToken(utilisateurDto); 
@@ -107,7 +107,7 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         catch (Exception ex) when (ex.InnerException is SocketException socket)
         {
             log.LogError(socket,"Socket's problems check if TasksManagement service is UP", socket.Message);
-            throw new Exception("The service is unavailable. Please retry soon.", ex); // Sonar n'est pas content il faille créer une exception personnalisé
+            throw new InvalidOperationException("The service is unavailable. Please retry soon.", ex); // Sonar n'est pas content il faille créer une exception personnalisé
         }
     }
 public TokenResult GenerateJwtTokenAndStatefulRefreshToken(UtilisateurDto utilisateurDto)

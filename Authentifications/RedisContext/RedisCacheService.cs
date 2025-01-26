@@ -41,7 +41,7 @@ public class RedisCacheService : IRedisCacheService
                 {
                     return true;
                 }
-                logger.LogError("SSL error detected : {sslPolicyErrors}", sslPolicyErrors);
+                logger.LogError("SSL error detected : {SslPolicyErrors}", sslPolicyErrors);
                 return false;
             };
             return new HttpClient(handler)
@@ -51,7 +51,7 @@ public class RedisCacheService : IRedisCacheService
         }
         catch (Exception ex)
         {
-            logger.LogError("Error during the HttpClient creation");
+            logger.LogError(ex,"Error during the HttpClient creation");
             throw new Exception("Error during the HttpClient creation", ex);
         }
     }
@@ -172,12 +172,12 @@ public class RedisCacheService : IRedisCacheService
         }
         catch (HttpRequestException ex) when (ex.InnerException is SocketException)
         {
-            logger.LogWarning("Impossible to valide data with external API. Unreachesable API.");
+            logger.LogWarning(ex,"Impossible to valide data with external API. Unreachesable API.");
             return null!;
         }
         catch (Exception ex)
         {
-            logger.LogError("Error :", ex.Message);
+            logger.LogError(ex,"Service Error :");
             throw;
         }
     }

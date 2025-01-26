@@ -244,4 +244,4 @@ app.UseEndpoints(endpoints =>
         await context.Response.WriteAsync("Version de l'API : v1.0");
     });
 });
-app.Run();
+await app.RunAsync();
