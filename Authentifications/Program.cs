@@ -131,7 +131,7 @@ var options = new ConfigurationOptions
     ReconnectRetryPolicy = new ExponentialRetry(5000)
 };
 
-var caCertificate = new X509Certificate2(Config["Certificate:Redis-ca"]);
+var caCertificate = new X509Certificate2(Config["Certificate:Redis-ca"]); // Sonar demande d'enlever car il sert à rien 
 options.CertificateValidation += (sender, certificate, chain, sslPolicyErrors) =>
 {
     if (sslPolicyErrors == SslPolicyErrors.None)
@@ -161,9 +161,9 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(provider =>
     catch (Exception ex)
     {
         var logger = provider.GetRequiredService<ILogger<Program>>();
-        logger.LogCritical("Error connecting to Redis: {ex.Message}", ex.Message);
+        logger.LogCritical("Error connecting to Redis:", ex.Message);
         throw;
-    };
+    }
 });
 
 builder.Services.AddHangfire((serviceProvider, config) =>

@@ -41,21 +41,21 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         var utilisateurDto = await AuthUserDetailsAsync((true, email, password));
         var refreshTokenFromRedis = await redisTokenCache.RetrieveTokenBasingOnRedisUserSessionAsync(utilisateurDto.Email!, utilisateurDto.Pass!);
         if (string.IsNullOrEmpty(refreshTokenFromRedis))
-            throw new Exception("Empty refresh token retrieve from redis");
+            throw new InvalidOperationException("Empty refresh token retrieve from redis");
 
         if (!refreshTokenFromRedis.Equals(refresh))
-            throw new Exception("Not the same refresh token");
+            throw new InvalidOperationException("Not the same refresh token");
         GetToken(utilisateurDto);
         return GetToken(utilisateurDto); 
 
     }
     public TokenResult GetToken(UtilisateurDto utilisateurDto)
     {
-        log.LogInformation("Création du token de session pour l'utilisateur : {utilisateur.Email}", utilisateurDto.Email);
+        log.LogInformation("Creating current user session's Token");
         var result = GenerateJwtTokenAndStatefulRefreshToken(utilisateurDto);
         result.Response = true;
         if (string.IsNullOrWhiteSpace(result.RefreshToken))
-            throw new Exception("Le couple token et refreshToken est vide.");
+            throw new InvalidOperationException("Empty cuple for access and refresh token.");
         redisTokenCache.StoreRefreshTokenSessionInRedis(utilisateurDto.Email!, result.RefreshToken!, utilisateurDto.Pass!);
         return result;
     }
@@ -83,21 +83,21 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         sb.AppendLine($"-----END {keyType}-----");
         return sb.ToString();
     }
-    private async void StorePublicKeyInVault(string publicKeyPem)
+    private  void StorePublicKeyInVault(string publicKeyPem)
     {
         var hashiCorpToken = configuration["HashiCorp:VaultToken"];
         var hashiCorpHttpClient = configuration["HashiCorp:HttpClient:BaseAddress"];
         var secretPath = configuration["HashiCorp:SecretsPath"];
         if (string.IsNullOrEmpty(hashiCorpToken) || string.IsNullOrEmpty(hashiCorpHttpClient) || string.IsNullOrEmpty(secretPath))
         {
-            log.LogWarning("La configuration de HashiCorp Vault est manquante ou invalide.");
-            throw new InvalidOperationException("La configuration de HashiCorp Vault est manquante ou invalide.");
+            log.LogWarning("Empty or invalid HashiCorp Vault configurations.");
+            throw new InvalidOperationException("Empty or invalid HashiCorp Vault configurations.");
         }
         var vaultClientSettings = new VaultClientSettings($"{hashiCorpHttpClient}", new TokenAuthMethodInfo(hashiCorpToken));
         var vaultClient = new VaultClient(vaultClientSettings);
         try
         {
-        await vaultClient.V1.Secrets.KeyValue.V2.WriteSecretAsync(
+        vaultClient.V1.Secrets.KeyValue.V2.WriteSecretAsync(
         secretPath, new Dictionary<string, object>
         {
             { "authenticationSignatureKey", publicKeyPem }
@@ -106,8 +106,8 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         }
         catch (Exception ex) when (ex.InnerException is SocketException socket)
         {
-            log.LogError("Socket's problems check if TasksManagement service is UP: {socket.Message}", socket.Message);
-            throw new Exception("The service is unavailable. Please retry soon.", ex);
+            log.LogError(socket,"Socket's problems check if TasksManagement service is UP", socket.Message);
+            throw new Exception("The service is unavailable. Please retry soon.", ex); // Sonar n'est pas content il faille créer une exception personnalisé
         }
     }
 public TokenResult GenerateJwtTokenAndStatefulRefreshToken(UtilisateurDto utilisateurDto)
@@ -146,7 +146,7 @@ public TokenResult GenerateJwtTokenAndStatefulRefreshToken(UtilisateurDto utilis
     {
         await Task.Delay(50);
         var Parameter = await redisCache.GetBooleanAndUserDataFromRedisUsingParamsAsync(tupleParameter.IsValid, tupleParameter.email!, tupleParameter.password!);
-        log.LogInformation("Authentication successful {Parameter.Item1}", Parameter.Item1);
+        log.LogInformation("User details have been correctly retrieved from Redis cache db");
         return Parameter.Item2;
     }
 }

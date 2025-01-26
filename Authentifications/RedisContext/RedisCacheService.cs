@@ -12,9 +12,9 @@ public class RedisCacheService : IRedisCacheService
     private readonly IDistributedCache _cache;
     private readonly ILogger<RedisCacheService> logger;
     private readonly IConfiguration configuration;
-    private readonly HttpClient httpClient = null!;
-    private readonly string baseUrl = string.Empty;
-    private readonly string cacheKey = string.Empty;
+    private readonly HttpClient httpClient;
+    private readonly string baseUrl;
+    private readonly string cacheKey;
     private static DateTime _lastExecution = DateTime.MinValue;
 
     public RedisCacheService(IConfiguration configuration, IDistributedCache cache, ILogger<RedisCacheService> logger)
@@ -41,7 +41,7 @@ public class RedisCacheService : IRedisCacheService
                 {
                     return true;
                 }
-                logger.LogError("SSL error detected : {SslErrors}", sslPolicyErrors);
+                logger.LogError("SSL error detected : {sslPolicyErrors}", sslPolicyErrors);
                 return false;
             };
             return new HttpClient(handler)
@@ -51,11 +51,11 @@ public class RedisCacheService : IRedisCacheService
         }
         catch (Exception ex)
         {
-            logger.LogError(ex, "Error during the HttpClient creation");
-            throw;
+            logger.LogError("Error during the HttpClient creation");
+            throw new Exception("Error during the HttpClient creation", ex);
         }
     }
-    public string GenerateRedisKeyForExternalDataApi()
+    public static string GenerateRedisKeyForExternalDataApi()
     {
         string salt = "RandomUniqueSalt";
         string email = "example@example.com";
@@ -111,7 +111,7 @@ public class RedisCacheService : IRedisCacheService
         }
         catch (HttpRequestException ex) when (ex.InnerException is SocketException socketEx)
         {
-            logger.LogError("Socket's problems check if TasksManagement service is UP: {socketEx.Message}", socketEx.Message);
+            logger.LogError("Socket's problems check if TasksManagement service is UP", socketEx.Message);
             throw new Exception("The service is unavailable. Please retry soon.", ex);
         }
         catch (Exception ex)
@@ -136,7 +136,7 @@ public class RedisCacheService : IRedisCacheService
             }
             catch (Exception ex)
             {
-                logger.LogError("Failed to Validate data between Redis and External API Service. Error : {Message}", ex.Message);
+                logger.LogError("Failed to Validate data between Redis and External API Service. Error", ex.Message);
                 logger.LogWarning("Using Redis cache data for requirements.");
                 return JsonConvert.DeserializeObject<HashSet<UtilisateurDto>>(cachedData)!;
             }
@@ -177,7 +177,7 @@ public class RedisCacheService : IRedisCacheService
         }
         catch (Exception ex)
         {
-            logger.LogError("Error : {Message}", ex.Message);
+            logger.LogError("Error :", ex.Message);
             throw;
         }
     }
@@ -188,6 +188,6 @@ public class RedisCacheService : IRedisCacheService
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(60)
         });
-        logger.LogInformation("Redis cache data updated for redis cache key : {CacheKey}", cacheKey);
+        logger.LogInformation("Redis cache data updated for redis cache key : {cacheKey}", cacheKey);
     }
 }

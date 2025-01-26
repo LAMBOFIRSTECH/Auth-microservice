@@ -51,10 +51,10 @@ public class TokenController : ControllerBase
 	[AllowAnonymous]
 	public async Task<ActionResult> RegenerateAccessTokenUsingRefreshToken([FromBody] string refreshToken)
 	{
-		if (string.IsNullOrWhiteSpace(refreshToken))
-			return BadRequest();
 	    var email = HttpContext.Session.GetString("email");
 	    var password = HttpContext.Session.GetString("password");
+		if (string.IsNullOrWhiteSpace(refreshToken))
+			return BadRequest();
 		if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
 			return BadRequest("Email or password is missing. Could not refresh Token");
 		var result = await jwtToken.NewAccessTokenUsingRefreshTokenInRedisAsync(refreshToken, email, password);

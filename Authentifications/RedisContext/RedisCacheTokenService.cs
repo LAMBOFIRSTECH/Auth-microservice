@@ -32,7 +32,7 @@ public class RedisCacheTokenService : IRedisCacheTokenService
 		var cachedData = await _cache.GetStringAsync(cacheKey);
 		if (cachedData is null)
 		{
-			logger.LogWarning("No session's token existing in Redis for key: {CacheKey}", cacheKey);
+			logger.LogWarning("No session's token existing in Redis for key: {cacheKey}", cacheKey);
 			return string.Empty;
 		}
 		var obj = JsonConvert.DeserializeObject<Dictionary<string, object>>(cachedData)!;
@@ -61,7 +61,7 @@ public class RedisCacheTokenService : IRedisCacheTokenService
 			{
 				AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
 			});
-			logger.LogInformation("Successfull storage refresh token connection for key: {CacheKey}", cacheKey);
+			logger.LogInformation("Successfull storage refresh token connection for key: {cacheKey}", cacheKey);
 		}
 	}
 }

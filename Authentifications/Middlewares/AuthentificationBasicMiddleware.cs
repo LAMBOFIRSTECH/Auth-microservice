@@ -36,10 +36,6 @@ public class AuthentificationBasicMiddleware : AuthenticationHandler<Authenticat
 
             var email = credentials[0];
             var password = credentials[1];
-            if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
-            {
-                throw new Exception("No credentials provided.");
-            }
             Context.Items["password"] = password;
             Context.Items["email"] = email;
             string regexMatch = "(?<alpha>\\w+)@(?<mailing>[aA-zZ]+)\\.(?<domaine>[aA-zZ]+$)";
@@ -71,12 +67,12 @@ public class AuthentificationBasicMiddleware : AuthenticationHandler<Authenticat
     }
     public async Task<bool> ValidateCredentials(string email, string password)
     {
-        var tupleResult = await redisCache.GetBooleanAndUserDataFromRedisUsingParamsAsync(true, email, password);
-        if (tupleResult.Item1 is false)
-        {
-            log.LogError("Authentication failed, email adress or password is incorrect");
-            return false;
-        }
-        return true;
+        var result = (await redisCache.GetBooleanAndUserDataFromRedisUsingParamsAsync(true, email, password)).Item1;
+        // if (tupleResult.Item1 is false)
+        // {
+        //     log.LogError("Authentication failed, email adress or password is incorrect");
+        //     return false;
+        // }
+        return result;
     }
 }
