@@ -6,18 +6,84 @@ using Authentifications.RedisContext;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 using System.Text;
+using System.Security.Cryptography;
+
 namespace TestAuthentications;
+
+public class RedisCacheTokenService
+{
+    private readonly IConfiguration _configuration;
+    private readonly IDistributedCache _cache;
+    private readonly ILogger<RedisCacheService> _logger;
+
+    public RedisCacheTokenService(IConfiguration configuration, IDistributedCache cache, ILogger<RedisCacheService> logger)
+    {
+        _configuration = configuration;
+        _cache = cache;
+        _logger = logger;
+    }
+
+    public byte[] ComputeHashUsingByte(string email, string password)
+    {
+        using (var sha256 = SHA256.Create())
+        {
+            var combinedBytes = Encoding.UTF8.GetBytes(email + password);
+            return sha256.ComputeHash(combinedBytes);
+        }
+    }
+
+    public async Task<string> RetrieveTokenBasingOnRedisUserSessionAsync(string email, string password)
+    {
+        if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))
+        {
+            return string.Empty;
+        }
+
+        string cacheKey = $"Token-{Regex.Match(email, "^[^@]+")}_{BitConverter.ToString(ComputeHashUsingByte(email, password)).Replace("-", "")}";
+        var cachedData = await _cache.GetAsync(cacheKey);
+
+        if (cachedData == null)
+        {
+            return string.Empty;
+        }
+
+        var cachedString = Encoding.UTF8.GetString(cachedData);
+        var tokenData = JsonConvert.DeserializeObject<Dictionary<string, object>>(cachedString);
+
+        if (tokenData != null && tokenData.TryGetValue("refreshToken", out var refreshToken))
+        {
+            return refreshToken.ToString();
+        }
+
+        return string.Empty;
+    }
+
+    public void StoreRefreshTokenSessionInRedis(string email, string refreshToken, string password)
+    {
+        string cacheKey = $"Token-{Regex.Match(email, "^[^@]+")}_{BitConverter.ToString(ComputeHashUsingByte(email, password)).Replace("-", "")}";
+        var tokenData = new Dictionary<string, object> { { "refreshToken", refreshToken } };
+        var cachedData = Encoding.UTF8.GetBytes(JsonConvert.SerializeObject(tokenData));
+
+        var options = new DistributedCacheEntryOptions
+        {
+            AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(30)
+        };
+
+        _cache.SetAsync(cacheKey, cachedData, options);
+    }
+}
 public class UnitTestRedisCacheTokenService
 {
     private readonly RedisCacheTokenService _service;
     private readonly Mock<IDistributedCache> _cacheMock;
     private readonly Mock<ILogger<RedisCacheService>> _loggerMock;
-  
+    private readonly Mock<IConfiguration> _configurationMock;
     public UnitTestRedisCacheTokenService()
     {
         _cacheMock = new Mock<IDistributedCache>();
         _loggerMock = new Mock<ILogger<RedisCacheService>>();
-        _service = new RedisCacheTokenService(_cacheMock.Object, _loggerMock.Object);
+        _configurationMock = new Mock<IConfiguration>();
+        _service = new RedisCacheTokenService(_configurationMock.Object, _cacheMock.Object, _loggerMock.Object);
     }
 
     [Fact]

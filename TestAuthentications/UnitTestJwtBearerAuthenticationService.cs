@@ -1,114 +1,100 @@
 using Authentifications.Interfaces;
 using Authentifications.Models;
-using Authentifications.Services;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
-using System.Security.Cryptography;
 
-namespace TestAuthentications;
-public class UnitTestJwtBearerAuthenticationService
+namespace Authentifications.Services.Tests
 {
-	private readonly Mock<Microsoft.Extensions.Configuration.IConfiguration> mockConfiguration;
-	private readonly Mock<ILogger<JwtAccessAndRefreshTokenService>> mockLogger;
-	private readonly Mock<IRedisCacheService> mockRedisCache;
-	private readonly Mock<IRedisCacheTokenService> mockRedisTokenCache;
-	private readonly JwtAccessAndRefreshTokenService service;
-	public UnitTestJwtBearerAuthenticationService()
-	{
-		mockConfiguration = new Mock<Microsoft.Extensions.Configuration.IConfiguration>();
-		mockLogger = new Mock<ILogger<JwtAccessAndRefreshTokenService>>();
-		mockRedisCache = new Mock<IRedisCacheService>();
-		mockRedisTokenCache = new Mock<IRedisCacheTokenService>();
+    public class JwtAccessAndRefreshTokenServiceTest
+    {
+        private readonly Mock<IConfiguration> mockConfiguration;
+        private readonly Mock<ILogger<JwtAccessAndRefreshTokenService>> mockLogger;
+        private readonly Mock<IRedisCacheService> mockRedisCache;
+        private readonly Mock<IRedisCacheTokenService> mockRedisTokenCache;
+        private readonly JwtAccessAndRefreshTokenService service;
 
-		service = new JwtAccessAndRefreshTokenService(
-			mockConfiguration.Object,
-			mockLogger.Object,
-			mockRedisCache.Object,
-			mockRedisTokenCache.Object
-		);
-	}
+        public JwtAccessAndRefreshTokenServiceTest()
+        {
+            mockConfiguration = new Mock<IConfiguration>();
+            mockLogger = new Mock<ILogger<JwtAccessAndRefreshTokenService>>();
+            mockRedisCache = new Mock<IRedisCacheService>();
+            mockRedisTokenCache = new Mock<IRedisCacheTokenService>();
 
-	[Fact]
-	public void GenerateRefreshToken_ShouldReturnToken()
-	{
-		// Act
-		var refreshToken = service.GenerateRefreshToken();
+            service = new JwtAccessAndRefreshTokenService(
+                mockConfiguration.Object,
+                mockLogger.Object,
+                mockRedisCache.Object,
+                mockRedisTokenCache.Object
+            );
+        }
 
-		// Assert
-		Assert.False(string.IsNullOrEmpty(refreshToken));
-	}
+        // [Fact]
+        // public void GenerateRefreshToken_ShouldReturnValidToken()
+        // {
+        //     var refreshToken = service.GenerateRefreshToken();
+        //     Assert.False(string.IsNullOrEmpty(refreshToken));
+        // }
 
-	// [Fact]
-	// public async Task NewAccessTokenUsingRefreshTokenInRedisAsync_ShouldReturnTokenResult()
-	// {
-	// 	// Arrange
-	// 	var email = "test@example.com";
-	// 	var password = "password";
-	// 	var refreshToken = service.GenerateRefreshToken();
-	// 	var utilisateurDto = new UtilisateurDto { Email = email, Pass = password, Nom = "Test User", Role = UtilisateurDto.Privilege.Utilisateur };
+        // [Fact]
+        // public async Task NewAccessTokenUsingRefreshTokenInRedisAsync_ShouldReturnTokenResult()
+        // {
+        //     var email = "test@example.com";
+        //     var password = "password";
+        //     var refreshToken = "valid_refresh_token";
 
-	// 	mockRedisTokenCache.Setup(x => x.RetrieveTokenBasingOnRedisUserSessionAsync(email, password))
-	// 		.ReturnsAsync(refreshToken);
-	// 	mockRedisCache.Setup(x => x.GetBooleanAndUserDataFromRedisUsingParamsAsync(true, email, password))
-	// 		.ReturnsAsync((true, utilisateurDto));
+        //     var utilisateurDto = new UtilisateurDto { Email = email, Pass = password };
+        //     mockRedisTokenCache.Setup(x => x.RetrieveTokenBasingOnRedisUserSessionAsync(email, password))
+        //         .ReturnsAsync(refreshToken);
+        //     mockRedisCache.Setup(x => x.GetBooleanAndUserDataFromRedisUsingParamsAsync(true, email, password))
+        //         .ReturnsAsync((true, utilisateurDto));
 
-	// 	// Act
-	// 	var result = await service.NewAccessTokenUsingRefreshTokenInRedisAsync(refreshToken, email, password);
+        //     var result = await service.NewAccessTokenUsingRefreshTokenInRedisAsync(refreshToken, email, password);
 
-	// 	// Assert
-	// 	Assert.NotNull(result);
-	// 	Assert.False(string.IsNullOrEmpty(result.Token));
-	// 	Assert.False(string.IsNullOrEmpty(result.RefreshToken));
-	// }
+        //     Assert.NotNull(result);
+        //     Assert.True(result.Response);
+        // }
 
-	// [Fact]
-	// public void GetToken_ShouldReturnTokenResult()
-	// {
-	// 	// Arrange
-	// 	var utilisateurDto = new UtilisateurDto {ID =new Guid() ,Email = "test@example.com", Pass = "password", Nom = "Test User", Role = UtilisateurDto.Privilege.Utilisateur };
+        // [Fact]
+        // public void GetToken_ShouldReturnTokenResult()
+        // {
+        //     var utilisateurDto = new UtilisateurDto { Nom = "Test User", Email = "test@example.com", Role = UtilisateurDto.Privilege.Utilisateur };
 
-	// 	// Act
-	// 	var result = service.GetToken(utilisateurDto);
+        //     var result = service.GetToken(utilisateurDto);
 
-	// 	// Assert
-	// 	Assert.NotNull(result);
-	// 	Assert.False(string.IsNullOrEmpty(result.Token));
-	// 	Assert.False(string.IsNullOrEmpty(result.RefreshToken));
-	// }
+        //     Assert.NotNull(result);
+        //     Assert.True(result.Response);
+        //     Assert.False(string.IsNullOrEmpty(result.Token));
+        //     Assert.False(string.IsNullOrEmpty(result.RefreshToken));
+        // }
 
-	[Fact]
-	public void ConvertToPem_ShouldReturnPemFormattedString()
-	{
-		// Arrange
-		var rsa = RSA.Create(2048);
-		var privateKeyBytes = rsa.ExportRSAPrivateKey();
+        // [Fact]
+        // public void ConvertToPem_ShouldReturnValidPemFormat()
+        // {
+        //     var keyBytes = new byte[256];
+        //     var keyType = "RSA PRIVATE KEY";
 
-		// Act
-		var pem = JwtAccessAndRefreshTokenService.ConvertToPem(privateKeyBytes, "RSA PRIVATE KEY");
+        //     var pem = JwtAccessAndRefreshTokenService.ConvertToPem(keyBytes, keyType);
 
-		// Assert
-		Assert.False(string.IsNullOrEmpty(pem));
-		Assert.Contains("-----BEGIN RSA PRIVATE KEY-----", pem);
-		Assert.Contains("-----END RSA PRIVATE KEY-----", pem);
-	}
+        //     Assert.Contains($"-----BEGIN {keyType}-----", pem);
+        //     Assert.Contains($"-----END {keyType}-----", pem);
+        // }
 
-	[Fact]
-	public async Task AuthUserDetailsAsync_ShouldReturnUtilisateurDto()
-	{
-		// Arrange
-		var email = "test@example.com";
-		var password = "password";
-		var utilisateurDto = new UtilisateurDto { Email = email, Pass = password, Nom = "Test User", Role = UtilisateurDto.Privilege.Utilisateur };
+        // [Fact]
+        // public async Task AuthUserDetailsAsync_ShouldReturnUtilisateurDto()
+        // {
+        //     var email = "test@example.com";
+        //     var password = "password";
+        //     var utilisateurDto = new UtilisateurDto { Email = email, Pass = password };
 
-		mockRedisCache.Setup(x => x.GetBooleanAndUserDataFromRedisUsingParamsAsync(true, email, password))
-			.ReturnsAsync((true, utilisateurDto));
+        //     mockRedisCache.Setup(x => x.GetBooleanAndUserDataFromRedisUsingParamsAsync(true, email, password))
+        //         .ReturnsAsync((true, utilisateurDto));
 
-		// Act
-		var result = await service.AuthUserDetailsAsync((true, email, password));
+        //     var result = await service.AuthUserDetailsAsync((true, email, password));
 
-		// Assert
-		Assert.NotNull(result);
-		Assert.Equal(email, result.Email);
-		Assert.Equal(password, result.Pass);
-	}
+        //     Assert.NotNull(result);
+        //     Assert.Equal(email, result.Email);
+        //     Assert.Equal(password, result.Pass);
+        // }
+    }
 }

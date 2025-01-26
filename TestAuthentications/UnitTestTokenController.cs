@@ -1,138 +1,116 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 using Moq;
-using Authentifications.Controllers;
 using Authentifications.Interfaces;
 using Authentifications.Models;
-using System.Text;
-namespace TestAuthentications;
-public class UnitTestTokenController
+using System.Security.Claims;
+
+namespace Authentifications.Controllers.Tests
 {
-    private readonly Mock<IJwtAccessAndRefreshTokenService> mockJwtTokenService;
-    private readonly TokenController controller;
-
-    public UnitTestTokenController()
+    public class TokenControllerTest
     {
-        mockJwtTokenService = new Mock<IJwtAccessAndRefreshTokenService>();
-        controller = new TokenController( mockJwtTokenService.Object);
-    }
+        private readonly Mock<IJwtAccessAndRefreshTokenService> _mockJwtService;
+        private readonly TokenController _controller;
 
-    [Fact]
-    public async Task Authentificate_ReturnsBadRequest_WhenEmailOrPasswordIsMissing()
-    {
-        // Arrange
-        controller.ControllerContext = new ControllerContext
+        public TokenControllerTest()
         {
-            HttpContext = new DefaultHttpContext()
-        };
+            _mockJwtService = new Mock<IJwtAccessAndRefreshTokenService>();
+            _controller = new TokenController(_mockJwtService.Object);
+        }
 
-        // Act
-        var result = await controller.Authentificate();
-
-        // Assert
-        var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
-        Assert.Equal("Email or password is missing.", badRequestResult.Value);
-    }
-
-    [Fact]
-    public async Task Authentificate_ReturnsUnauthorized_WhenUserIsNotAuthenticated()
-    {
-        // Arrange
-        var context = new DefaultHttpContext();
-        context.Items["email"] = "test@example.com";
-        context.Items["password"] = "password";
-        controller.ControllerContext = new ControllerContext
+        [Fact]
+        public async Task Authentificate_ReturnsBadRequest_WhenEmailOrPasswordIsMissing()
         {
-            HttpContext = context
-        };
-
-        // Act
-        var result = await controller.Authentificate();
-
-        // Assert
-        var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
-        Assert.Equal("Unauthorized access", unauthorizedResult.Value);
-    }
-
-    [Fact]
-    public async Task Authentificate_ReturnsUnauthorized_WhenTokenGenerationFails()
-    {
-        // Arrange
-        var context = new DefaultHttpContext();
-        context.Items["email"] = "test@example.com";
-        context.Items["password"] = "password";
-        context.User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity("Basic"));
-        controller.ControllerContext = new ControllerContext
-        {
-            HttpContext = context
-        };
-
-        mockJwtTokenService.Setup(service => service.AuthUserDetailsAsync(It.IsAny<(bool, string, string)>()))
-            .ReturnsAsync(new UtilisateurDto());
-        mockJwtTokenService.Setup(service => service.GetToken(It.IsAny<UtilisateurDto>()))
-            .Returns(new TokenResult
+            // Arrange
+            _controller.ControllerContext = new ControllerContext
             {
-                Response = false,
-                Message = "Token generation failed",
-                Token = null,
-                RefreshToken = null
-            });
+                HttpContext = new DefaultHttpContext()
+            };
 
-        // Act
-        var result = await controller.Authentificate();
+            // Act
+            var result = await _controller.Authentificate();
 
-        // Assert
-        var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
-        var tokenResult = Assert.IsType<TokenResult>(unauthorizedResult.Value);
-        Assert.Equal("Token generation failed", tokenResult.Message);
+            // Assert
+            var badRequestResult = Assert.IsType<BadRequestObjectResult>(result);
+            Assert.Equal("Email or password is missing.", badRequestResult.Value);
+        }
+
+        [Fact]
+        public async Task Authentificate_ReturnsUnauthorized_WhenUserIsNotAuthenticated()
+        {
+            // Arrange
+            var context = new DefaultHttpContext();
+            context.Items["email"] = "test@example.com";
+            context.Items["password"] = "password";
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = context
+            };
+
+            // Act
+            var result = await _controller.Authentificate();
+
+            // Assert
+            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
+            Assert.Equal("Unauthorized access", unauthorizedResult.Value);
+        }
+
+        [Fact]
+        public async Task Authentificate_ReturnsUnauthorized_WhenTokenGenerationFails()
+        {
+            // Arrange
+            var context = new DefaultHttpContext();
+            context.Items["email"] = "test@example.com";
+            context.Items["password"] = "password";
+            context.User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.Name, "test") }, "mock"));
+            _controller.ControllerContext = new ControllerContext
+            {
+                HttpContext = context
+            };
+
+            _mockJwtService.Setup(service => service.AuthUserDetailsAsync(It.IsAny<(bool, string, string)>()))
+                .ReturnsAsync(new UtilisateurDto());
+            _mockJwtService.Setup(service => service.GetToken(It.IsAny<UtilisateurDto>()))
+                .Returns(new TokenResult { Response = false, Message = "Token generation failed" });
+
+            // Act
+            var result = await _controller.Authentificate();
+
+            // Assert
+            var unauthorizedResult = Assert.IsType<UnauthorizedObjectResult>(result);
+            var tokenResult = Assert.IsType<TokenResult>(unauthorizedResult.Value);
+            Assert.False(tokenResult.Response);
+            Assert.Equal("Token generation failed", tokenResult.Message);
+        }
+
+        // [Fact]
+        // public async Task Authentificate_ReturnsCreatedAtAction_WhenTokenGenerationSucceeds()
+        // {
+        //     // Arrange
+        //     var context = new DefaultHttpContext();
+        //     context.Items["email"] = "test@example.com";
+        //     context.Items["password"] = "password";
+        //     context.User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.Name, "test") }, "mock"));
+        //     _controller.ControllerContext = new ControllerContext
+        //     {
+        //         HttpContext = context
+        //     };
+
+        //     _mockJwtService.Setup(service => service.AuthUserDetailsAsync(It.IsAny<(bool, string, string)>()))
+        //         .ReturnsAsync(new UtilisateurDto());
+        //     _mockJwtService.Setup(service => service.GetToken(It.IsAny<UtilisateurDto>()))
+        //         .Returns(new TokenResult { Response = true, Token = "accessToken", RefreshToken = "refreshToken" });
+
+        //     // Act
+        //     var result = await _controller.Authentificate();
+
+        //     // Assert
+        //     var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
+        //     var tokenResult = Assert.IsType<TokenResult>(createdAtActionResult.Value);
+        //     Assert.True(tokenResult.Response);
+        //     Assert.Equal("AccessToken and refreshToken have been successfully generated ", tokenResult.Message);
+        //     Assert.Equal("accessToken", tokenResult.Token);
+        //     Assert.Equal("refreshToken", tokenResult.RefreshToken);
+        // }
     }
-
-
-    // [Fact]
-    // public async Task Authentificate_ReturnsCreatedAtAction_WhenTokenGenerationSucceeds()
-    // {
-    //     // Arrange
-    //     var context = new DefaultHttpContext();
-
-    //     // Appel à la méthode SetSession pour initialiser la session
-    //     context.SetSession();
-
-    //     // Ajout des données dans context.Items (pas dans la session)
-    //     context.Items["email"] = "test@example.com";
-    //     context.Items["password"] = "password";
-    //     context.User = new System.Security.Claims.ClaimsPrincipal(new System.Security.Claims.ClaimsIdentity("Basic"));
-
-    //     // Attacher le contexte HTTP au contrôleur
-    //     controller.ControllerContext = new ControllerContext
-    //     {
-    //         HttpContext = context
-    //     };
-
-    //     // Création de l'objet TokenResult simulé
-    //     var tokenResult = new TokenResult
-    //     {
-    //         Response = true,
-    //         Token = "accessToken",
-    //         RefreshToken = "refreshToken"
-    //     };
-
-    //     // Configuration des comportements simulés
-    //     _ = mockJwtTokenService.Setup(service => service.AuthUserDetailsAsync(It.IsAny<(bool, string, string)>()))
-    //         .ReturnsAsync(new UtilisateurDto());
-    //     mockJwtTokenService.Setup(service => service.GetToken(It.IsAny<UtilisateurDto>()))
-    //         .Returns(tokenResult);
-
-    //     // Act
-    //     var result = await controller.Authentificate();
-
-    //     // Assert
-    //     var createdAtActionResult = Assert.IsType<CreatedAtActionResult>(result);
-    //     var returnedTokenResult = Assert.IsType<TokenResult>(createdAtActionResult.Value);
-    //     Assert.True(returnedTokenResult.Response);
-    //     Assert.Equal("accessToken", returnedTokenResult.Token);
-    //     Assert.Equal("refreshToken", returnedTokenResult.RefreshToken);
-    // }
 }
-
-
