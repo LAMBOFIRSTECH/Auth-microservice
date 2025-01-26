@@ -84,7 +84,6 @@ colors "YELLOW" "Démarrage de l'analyse SonarQube pour le projet $SONAR_PROJECT
 
 # Configuration du PATH pour les outils .NET
 #export PATH="$PATH:$HOME/.dotnet/tools"
-#export PATH="$PATH:/home/gitlab-runner/.dotnet/tools"
 
 # Vérification de la présence de dotnet-sonarscanner
 if ! command -v dotnet-sonarscanner &>/dev/null; then
