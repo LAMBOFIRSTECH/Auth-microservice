@@ -91,7 +91,7 @@ if ! command -v dotnet-sonarscanner &>/dev/null; then
     colors "CYAN" "SonarScanner pour .NET non trouvé. Installation en cours..."
     
     # Installation de dotnet-sonarscanner
-    if ! dotnet tool install --global dotnet-sonarscanner --version 5.11.0; then
+    if ! dotnet tool install --global dotnet-sonarscanner --version 6.0.0; then
         colors "RED" "Erreur : Impossible d'installer dotnet-sonarscanner."
         exit 1
     fi
