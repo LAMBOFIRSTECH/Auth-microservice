@@ -24,7 +24,7 @@ stages:
   - test
   - scan-vulnerabilities
   - sonar-build
-#   - sonarqube-analysis_report
+  - sonarqube-analysis_report
 #   - release
 #   - deploy
 
@@ -120,18 +120,18 @@ sonar-build:
     - test # Dépend des tests et de la couverture
 
 # ######## SONARQUBE REPORT ########
-# sonarqube-analysis_report:
-#   stage: sonarqube-analysis_report
-#   tags:
-#     - gitlab-lamboft-shell-develop
-#   variables:
-#     RUNNER_TAG: "development"
-#     allow_failure: false
-#   script:
-#     - echo "Génération du rapport SonarQube."
-#     - chmod +x sonar_report.sh; ./sonar_report.sh
-#   dependencies:
-#     - sonar-build # Dépend du build de sonar
+sonarqube-analysis_report:
+  stage: sonarqube-analysis_report
+  tags:
+    - gitlab-lamboft-shell-develop
+  variables:
+    RUNNER_TAG: "development"
+    allow_failure: false
+  script:
+    - echo "Génération du rapport SonarQube."
+    - chmod +x sonar_report.sh; ./sonar_report.sh
+  dependencies:
+    - sonar-build # Dépend du build de sonar
 
 # ######## RELEASE ########
 # release:
