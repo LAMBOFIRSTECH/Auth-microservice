@@ -147,19 +147,19 @@ sonarqube-analysis_report:
     - sonar-build # Dépend du build de sonar
 
 # ######## RELEASE ########
-release:
-  stage: release
-  tags:
-    - gitlab-lamboft-shell-develop
-  script:
-    - echo "Publication des artefacts pour le déploiement"
-    - dotnet publish $SOLUTION_PATH --configuration $BUILD_CONFIGURATION --output publish/
-  artifacts:
-    paths:
-      - publish/
-    expire_in: 1 week
-    reports:
-      dotenv: publish/.env # Optionnel : ajoutez un fichier d'environnement pour votre déploiement si nécessaire
+# release:
+#   stage: release
+#   tags:
+#     - gitlab-lamboft-shell-develop
+#   script:
+#     - echo "Publication des artefacts pour le déploiement"
+#     - dotnet publish $SOLUTION_PATH --configuration $BUILD_CONFIGURATION --output publish/
+#   artifacts:
+#     paths:
+#       - publish/
+#     expire_in: 1 week
+#     reports:
+#       dotenv: publish/.env # Optionnel : ajoutez un fichier d'environnement pour votre déploiement si nécessaire
 
 # docker-build:
 #   script:
