@@ -16,13 +16,12 @@ public class RedisCacheTokenService : IRedisCacheTokenService
 	}
 	public static byte[] ComputeHashUsingByte(string email, string password)
 	{
-		string salt = "RandomUniqueSalt";
+		const string salt = "RandomUniqueSalt";
 		using SHA256 sha256 = SHA256.Create();
 		string combined = $"{email}:{password}:{salt}";
 		byte[] bytes = Encoding.UTF8.GetBytes(combined);
 		return sha256.ComputeHash(bytes);
 	}
-	
 	public async Task<string> RetrieveTokenBasingOnRedisUserSessionAsync(string email,string password)
 	{
 		if (string.IsNullOrEmpty(email) || string.IsNullOrEmpty(password))

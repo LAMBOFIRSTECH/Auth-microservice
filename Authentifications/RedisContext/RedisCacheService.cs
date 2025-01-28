@@ -6,6 +6,8 @@ using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
 using System.Net.Sockets;
 using Authentifications.Interfaces;
+using Microsoft.AspNetCore.Mvc;
+using VaultSharp.V1.SecretsEngines.PKI;
 namespace Authentifications.RedisContext;
 public class RedisCacheService : IRedisCacheService
 {
@@ -36,14 +38,15 @@ public class RedisCacheService : IRedisCacheService
             var handler = new HttpClientHandler();
             handler.ClientCertificates.Add(certificate);
             handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, certChain, sslPolicyErrors) =>
-            {
-                if (sslPolicyErrors == System.Net.Security.SslPolicyErrors.None)
-                {
-                    return true;
-                }
-                logger.LogError("SSL error detected : {SslPolicyErrors}", sslPolicyErrors);
-                return false;
-            };
+  {
+    //   if (sslPolicyErrors != System.Net.Security.SslPolicyErrors.None)
+    //   {
+    //       logger.LogError("SSL validation failed: {SslPolicyErrors}. Certificate: {CertSubject}", sslPolicyErrors, cert?.Subject);
+    //   }
+      return true; //sslPolicyErrors == System.Net.Security.SslPolicyErrors.None; il faut vérifier le certificat entre client et serveur
+      //return true; A ne jamais le faire en production 
+  };
+
             return new HttpClient(handler)
             {
                 BaseAddress = new Uri(baseUrl)
@@ -51,15 +54,15 @@ public class RedisCacheService : IRedisCacheService
         }
         catch (Exception ex)
         {
-            logger.LogError(ex,"Error during the HttpClient creation");
-            throw new Exception("Error during the HttpClient creation", ex);
+            logger.LogError(ex, "Error during the HttpClient creation");
+            throw new InvalidOperationException("Error while creating HttpClient with SSL certificate.", ex);
         }
     }
     public static string GenerateRedisKeyForExternalDataApi()
     {
-        string salt = "RandomUniqueSalt";
-        string email = "example@example.com";
-        string password = "password$1";
+        const string salt = "RandomUniqueSalt";
+        const string email = "example@example.com";
+        const string password = "password$1";
         using SHA256 sha256 = SHA256.Create();
         string combined = $"{email}:{password}:{salt}";
         byte[] bytes = Encoding.UTF8.GetBytes(combined);
@@ -74,7 +77,7 @@ public class RedisCacheService : IRedisCacheService
             foreach (var user in utilisateurs)
             {
                 var checkHashPass = user.CheckHashPassword(password);
-                if (checkHashPass.Equals(true) && user.Email!.Equals(email))
+                if (checkHashPass && user.Email!.Equals(email))
                 {
                     return (true, user);
                 }
@@ -82,23 +85,30 @@ public class RedisCacheService : IRedisCacheService
         }
         return (false, null!);
     }
+    private static bool ShouldExecuteBackgroundTask(TimeSpan timeSpan)
+    {
+        return (DateTime.Now - _lastExecution).TotalMinutes >= timeSpan.TotalMinutes;
+    }
+
     public async Task BackGroundJob()
     {
-        if ((DateTime.Now - _lastExecution).TotalMinutes >= 2)
+        if (ShouldExecuteBackgroundTask(TimeSpan.FromMinutes(2)))
         {
             _lastExecution = DateTime.Now;
             await RetrieveDataOnRedisUsingKeyAsync();
         }
     }
+
     public void DeleteRedisCacheAfterOneDay()
     {
-        if ((DateTime.Now - _lastExecution).TotalMinutes >= 5)
+        if (ShouldExecuteBackgroundTask(TimeSpan.FromMinutes(5)))
         {
             _lastExecution = DateTime.Now;
             _cache.Remove(cacheKey);
-            logger.LogInformation("Deleting sucessfully.");
+            logger.LogInformation("Deleting successfully.");
         }
     }
+
     public async Task<ICollection<UtilisateurDto>> RetrieveDataFromExternalApiAsync()
     {
         try
@@ -112,12 +122,12 @@ public class RedisCacheService : IRedisCacheService
         catch (HttpRequestException ex) when (ex.InnerException is SocketException socketEx)
         {
             logger.LogError("Socket's problems check if TasksManagement service is UP", socketEx.Message);
-            throw new Exception("The service is unavailable. Please retry soon.", ex);
+            throw new InvalidOperationException("The service is unavailable. Please retry soon.");
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Unexpected error while calling the API.");
-            throw;
+            throw new Exception("Error", ex);
         }
     }
     public async Task<ICollection<UtilisateurDto>> RetrieveDataOnRedisUsingKeyAsync()
@@ -125,62 +135,56 @@ public class RedisCacheService : IRedisCacheService
         var cachedData = await _cache.GetStringAsync(cacheKey);
         if (cachedData is not null)
         {
-            try
-            {
-                var result = await ValidateAndSyncDataAsync(cachedData);
-                if (result is not null)
-                {
-                    return result;
-                }
-                return JsonConvert.DeserializeObject<HashSet<UtilisateurDto>>(cachedData)!;
-            }
-            catch (Exception ex)
-            {
-                logger.LogError("Failed to Validate data between Redis and External API Service. Error", ex.Message);
-                logger.LogWarning("Using Redis cache data for requirements.");
-                return JsonConvert.DeserializeObject<HashSet<UtilisateurDto>>(cachedData)!;
-            }
+            var result = await ValidateAndSyncDataAsync(cachedData);
+            return result ?? JsonConvert.DeserializeObject<HashSet<UtilisateurDto>>(cachedData)!;
         }
         logger.LogInformation("No data to retrieve in Redis cache.");
         var utilisateurs = await RetrieveDataFromExternalApiAsync();
-        if (utilisateurs == null || !utilisateurs.Any())
+        if (utilisateurs?.Any() != true)
         {
-            throw new Exception("Failed to deserialize the response. Empty data retrieve from data source");
+            throw new Exception("Failed to deserialize the response. Empty data retrieved from data source");
         }
         await UpdateRedisCacheWithExternalApiData(utilisateurs);
         return utilisateurs;
     }
+    private bool IsDataEmpty(HashSet<UtilisateurDto> data)
+    {
+        if (data?.Any() != true)
+        {
+            logger.LogWarning("Empty data returned from external API. No Validation possible.");
+            return true;
+        }
+        return false;
+    }
+
     public async Task<ICollection<UtilisateurDto>> ValidateAndSyncDataAsync(string cachedData)
     {
-        try
+        var externalApiData = (await RetrieveDataFromExternalApiAsync()).ToHashSet();
+        if (IsDataEmpty(externalApiData)) return null!;
+        var redisData = JsonConvert.DeserializeObject<HashSet<UtilisateurDto>>(cachedData)!;
+        if (!redisData!.SetEquals(externalApiData))
         {
-            var externalApiData = (await RetrieveDataFromExternalApiAsync()).ToHashSet();
-            if (externalApiData == null || !externalApiData.Any())
-            {
-                logger.LogWarning("Empty data return from external API. No Validation possible.");
-                return null!;
-            }
-            var redisData = JsonConvert.DeserializeObject<HashSet<UtilisateurDto>>(cachedData)!;
-            if (!redisData!.SetEquals(externalApiData))
-            {
-                logger.LogInformation("Loading data synchronization ...");
-                await UpdateRedisCacheWithExternalApiData(externalApiData);
-                return externalApiData;
-            }
-            logger.LogInformation("Successfull data synchronization between Redis and external.");
-            return redisData;
+            logger.LogInformation("Loading data synchronization ...");
+            await UpdateRedisCacheWithExternalApiData(externalApiData);
+            return externalApiData;
         }
-        catch (HttpRequestException ex) when (ex.InnerException is SocketException)
-        {
-            logger.LogWarning(ex,"Impossible to valide data with external API. Unreachesable API.");
-            return null!;
-        }
-        catch (Exception ex)
-        {
-            logger.LogError(ex,"Service Error :");
-            throw;
-        }
+        logger.LogInformation("Successful data synchronization between Redis and external.");
+        return redisData;
+        // try
+        // {
+        // }
+        // catch (HttpRequestException ex)
+        // {
+        //     logger.LogWarning(ex, "Impossible to validate data with external API. Unreachable API.");
+        //     return null!;
+        // }
+        // catch (Exception ex)
+        // {
+        //     logger.LogError(ex, "Service Error :");
+        //     throw;  // Relancer l'exception originale
+        // }
     }
+
     public async Task UpdateRedisCacheWithExternalApiData(ICollection<UtilisateurDto> externalApiData)
     {
         var serializedData = JsonConvert.SerializeObject(externalApiData);

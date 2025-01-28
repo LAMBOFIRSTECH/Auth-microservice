@@ -28,31 +28,31 @@ source .env
 # Détection automatique de la solution .sln
 SONAR_PROJECT_KEY=$(ls *.sln | sed -E 's/\.sln$//')
 SOLUTION_FILE=$(ls *.sln)
-# Vérification des variables essentielles
-# required_vars=("SONAR_PROJECT_KEY" "SONAR_HOST_URL" "SONAR_USER_TOKEN" "COVERAGE_REPORT_PATH" "SOLUTION_FILE" "BUILD_CONFIGURATION")
-# for var in "${required_vars[@]}"; do
-#   if [[ -z "${!var}" ]]; then
-#     colors "RED" "La variable $var n'est pas définie. Veuillez vérifier votre configuration."
-#     exit 1
-#   fi
-# done
 ROOT_DIR=$(pwd)
 COVERAGE_REPORT_PATH="$ROOT_DIR/Couverture/coverage.opencover.xml"
-if [ ! -f "$SOLUTION_FILE" ]; then
-    colors "RED" "Erreur : Fichier solution (.sln) introuvable."
-    exit 1
-fi
-
-if [ -z "$SONAR_PROJECT_KEY" ]; then
-    colors "RED" "Erreur : Clé de projet Sonar introuvable."
-    exit 1
-fi
-
 # Vérification des variables essentielles
-if [ -z "$SONAR_HOST_URL" ] || [ -z "$SONAR_USER_TOKEN" ]; then
-    colors "RED" "Erreur : Variables SONAR_HOST_URL ou SONAR_USER_TOKEN non définies dans le fichier .env."
+required_vars=("SONAR_PROJECT_KEY" "SONAR_HOST_URL" "SONAR_USER_TOKEN" "COVERAGE_REPORT_PATH" "SOLUTION_FILE" "BUILD_CONFIGURATION")
+for var in "${required_vars[@]}"; do
+  if [[ -z "${!var}" ]]; then
+    colors "RED" "La variable $var n'est pas définie. Veuillez vérifier votre configuration."
     exit 1
-fi
+  fi
+done
+
+# if [ ! -f "$SOLUTION_FILE" ]; then
+#     colors "RED" "Erreur : Fichier solution (.sln) introuvable."
+#     exit 1
+# fi
+# if [ -z "$SONAR_PROJECT_KEY" ]; then
+#     colors "RED" "Erreur : Clé de projet Sonar introuvable."
+#     exit 1
+# fi
+
+# # Vérification des variables essentielles
+# if [ -z "$SONAR_HOST_URL" ] || [ -z "$SONAR_USER_TOKEN" ]; then
+#     colors "RED" "Erreur : Variables SONAR_HOST_URL ou SONAR_USER_TOKEN non définies dans le fichier .env."
+#     exit 1
+# fi
 
 if [ ! -f "$COVERAGE_REPORT_PATH" ]; then
     colors "RED" "Erreur : Fichier de couverture ($COVERAGE_REPORT_PATH) introuvable."

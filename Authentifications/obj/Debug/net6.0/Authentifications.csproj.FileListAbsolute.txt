@@ -120,6 +120,7 @@
 /home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/Authentifications.pdb
 /home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/Authentifications.genruntimeconfig.cache
 /home/lambo-ubuntu/Authentication/Authentifications/obj/Debug/net6.0/ref/Authentifications.dll
+/home/snow/authentication/Authentifications/bin/Debug/net6.0/appsettings.Development.json
 /home/snow/authentication/Authentifications/bin/Debug/net6.0/Authentifications
 /home/snow/authentication/Authentifications/bin/Debug/net6.0/Authentifications.deps.json
 /home/snow/authentication/Authentifications/bin/Debug/net6.0/Authentifications.runtimeconfig.json
@@ -199,4 +200,3 @@
 /home/snow/authentication/Authentifications/obj/Debug/net6.0/Authentifications.xml
 /home/snow/authentication/Authentifications/obj/Debug/net6.0/Authentifications.pdb
 /home/snow/authentication/Authentifications/obj/Debug/net6.0/Authentifications.genruntimeconfig.cache
-/home/snow/authentication/Authentifications/bin/Debug/net6.0/appsettings.Development.json

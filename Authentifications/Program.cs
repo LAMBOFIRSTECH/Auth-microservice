@@ -16,7 +16,6 @@ using Microsoft.AspNetCore.Server.Kestrel.Core;
 using Microsoft.AspNetCore.Server.Kestrel.Https;
 using Authentifications.Services;
 
-
 var builder = WebApplication.CreateBuilder(args);
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 builder.Services.AddDistributedMemoryCache();
@@ -29,10 +28,7 @@ builder.Services.AddSession(options =>
     options.Cookie.IsEssential = true;
 });
 builder.Services.AddControllers();
-builder.Services.Configure<ApiBehaviorOptions>(options =>
-{
-    options.SuppressModelStateInvalidFilter = true;
-});
+builder.Services.Configure<ApiBehaviorOptions>(options => options.SuppressModelStateInvalidFilter = true);
 
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(opt =>
@@ -51,7 +47,6 @@ builder.Services.AddSwaggerGen(opt =>
 
     var xmlFilename = $"{Assembly.GetExecutingAssembly().GetName().Name}.xml";
     opt.IncludeXmlComments(Path.Combine(AppContext.BaseDirectory, xmlFilename));
-
 });
 builder.Services.AddCors(options =>
 {
@@ -92,7 +87,6 @@ builder.Services.Configure<KestrelServerOptions>(options =>
     options.ConfigureHttpsDefaults(opt =>
     {
         opt.ClientCertificateMode = ClientCertificateMode.NoCertificate; // Required Certificate dans les autres services c'est du allowCertificate
-
     });
 });
 
@@ -103,54 +97,47 @@ builder.Services.AddScoped<IRedisCacheTokenService, RedisCacheTokenService>();
 builder.Services.AddScoped<JwtAccessAndRefreshTokenService>();
 builder.Services.AddTransient<AuthentificationBasicMiddleware>();
 
-
 builder.Services.AddSingleton<IConfiguration>(builder.Configuration);
 builder.Services.AddLogging();
 
 builder.Services.AddAuthorization();
 builder.Services.AddAuthentication("BasicAuthentication")
-    .AddScheme<AuthenticationSchemeOptions, AuthentificationBasicMiddleware>("BasicAuthentication", options => { });
+    .AddScheme<AuthenticationSchemeOptions, AuthentificationBasicMiddleware>("BasicAuthentication", _ => { });
 
 var Config = builder.Configuration.GetSection("Redis");
+
 var clientCertificate = new X509Certificate2(
-    Config["Certificate:Redis-pfx"],
-    Config["Certificate:Pfx-password"],
+    Config["Certificate:Redis-pfx"], // Chemin du certificat client
+    Config["Certificate:Pfx-password"], // Mot de passe du certificat
     X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.MachineKeySet
 );
+
 var options = new ConfigurationOptions
 {
-    EndPoints = { Config["ConnectionString"] },
-    Ssl = true,
-    SslHost = "Redis-Server",
-    Password = Config["Password"],
+    EndPoints = { Config["ConnectionString"] }, // Remplacer "http://localhost:6379" par "localhost:6379"
+    Ssl = true, // Activation de TLS obligatoire
+    SslHost = "Redis-server", // Nom d'hôte à valider dans le certificat
+    Password = Config["Password"], // Mot de passe Redis
     AbortOnConnectFail = false,
-    SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
+    SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13, // Limité à TLS 1.2 et 1.3 comme sur le serveur
     AllowAdmin = true,
     ConnectTimeout = 10000,
     SyncTimeout = 10000,
     ReconnectRetryPolicy = new ExponentialRetry(5000)
 };
 
-var caCertificate = new X509Certificate2(Config["Certificate:Redis-ca"]); // Sonar demande d'enlever car il sert à rien 
+// Validation du certificat serveur
 options.CertificateValidation += (sender, certificate, chain, sslPolicyErrors) =>
 {
-    if (sslPolicyErrors == SslPolicyErrors.None)
-        return true;
-
-    if (sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors && chain!.ChainElements.Count > 1)
-    {
-        var rootCert = chain.ChainElements[^1].Certificate;
-        return rootCert.Subject == "CN=Redis-CA";
-    }
-    return false;
+    // Accepter uniquement si le certificat est valide ou s'il est signé par Redis-CA
+    return sslPolicyErrors == SslPolicyErrors.None ||
+           (sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors &&
+            chain!.ChainElements[^1].Certificate.Subject == "CN=Redis-CA");
 };
 
 options.CertificateSelection += delegate { return clientCertificate; };
-builder.Services.AddStackExchangeRedisCache(opts =>
-{
-    opts.ConfigurationOptions = options;
 
-});
+builder.Services.AddStackExchangeRedisCache(opts => opts.ConfigurationOptions = options);
 builder.Services.AddSingleton<IConnectionMultiplexer>(provider =>
 {
     try
@@ -158,7 +145,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(provider =>
         var multiplexer = ConnectionMultiplexer.Connect(options);
         return multiplexer;
     }
-    catch (Exception ex)
+    catch (RedisConnectionException  ex)
     {
         var logger = provider.GetRequiredService<ILogger<Program>>();
         logger.LogCritical("Error connecting to Redis:", ex.Message);
@@ -177,7 +164,6 @@ builder.Services.AddHangfireServer(options =>
     options.WorkerCount = 5;
     options.SchedulePollingInterval = TimeSpan.FromMinutes(3);
     options.Queues = new[] { "forcast_task" };
-
 });
 
 var app = builder.Build();
@@ -239,9 +225,6 @@ app.UseEndpoints(endpoints =>
 {
     endpoints.MapControllers();
     endpoints.MapHealthChecks("/health");
-    endpoints.MapGet("/version", async context =>
-    {
-        await context.Response.WriteAsync("Version de l'API : v1.0");
-    });
+    endpoints.MapGet("/version", async context => await context.Response.WriteAsync("Version de l'API : v1.0"));
 });
 await app.RunAsync();

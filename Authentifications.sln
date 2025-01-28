@@ -7,6 +7,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Authentifications", "Authen
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAuthentications", "TestAuthentications\TestAuthentications.csproj", "{BC447D15-2C89-4BFF-B746-18EE1304E58A}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Authentifications.Tests", "Authentifications.Tests\Authentifications.Tests.csproj", "{C97BC20D-6C71-413C-8CE9-3921E1838D82}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -21,6 +23,10 @@ Global
 		{BC447D15-2C89-4BFF-B746-18EE1304E58A}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BC447D15-2C89-4BFF-B746-18EE1304E58A}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{BC447D15-2C89-4BFF-B746-18EE1304E58A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C97BC20D-6C71-413C-8CE9-3921E1838D82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C97BC20D-6C71-413C-8CE9-3921E1838D82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C97BC20D-6C71-413C-8CE9-3921E1838D82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C97BC20D-6C71-413C-8CE9-3921E1838D82}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
