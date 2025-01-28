@@ -8,8 +8,8 @@ namespace Authentifications.RedisContext;
 public class RedisCacheTokenService : IRedisCacheTokenService
 {
 	private readonly IDistributedCache _cache;
-	private readonly ILogger<RedisCacheService> logger;
-	public RedisCacheTokenService( IDistributedCache cache, ILogger<RedisCacheService> logger)
+	private readonly ILogger<RedisCacheTokenService> logger;
+	public RedisCacheTokenService( IDistributedCache cache, ILogger<RedisCacheTokenService> logger)
 	{
 		_cache = cache;
 		this.logger = logger;
@@ -31,7 +31,7 @@ public class RedisCacheTokenService : IRedisCacheTokenService
 		var cachedData = await _cache.GetStringAsync(cacheKey);
 		if (cachedData is null)
 		{
-			logger.LogWarning("No session's token existing in Redis for key: {cacheKey}", cacheKey);
+			logger.LogWarning("No session's token existing in Redis for key: {CacheKey}", cacheKey);
 			return string.Empty;
 		}
 		var obj = JsonConvert.DeserializeObject<Dictionary<string, object>>(cachedData)!;
@@ -60,7 +60,7 @@ public class RedisCacheTokenService : IRedisCacheTokenService
 			{
 				AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
 			});
-			logger.LogInformation("Successfull storage refresh token connection for key: {cacheKey}", cacheKey);
+			logger.LogInformation("Successfull storage refresh token connection for key: {CacheKey}", cacheKey);
 		}
 	}
 }

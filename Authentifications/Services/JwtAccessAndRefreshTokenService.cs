@@ -26,7 +26,6 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         this.redisTokenCache = redisTokenCache;
         rsaSecurityKey = GetOrCreateSigningKey();
         refreshToken = GenerateRefreshToken();
-
     }
     public string GenerateRefreshToken()
     {
@@ -46,8 +45,7 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         if (!refreshTokenFromRedis.Equals(refreshToken))
             throw new InvalidOperationException("Not the same refresh token");
         GetToken(utilisateurDto);
-        return GetToken(utilisateurDto); 
-
+        return GetToken(utilisateurDto);
     }
     public TokenResult GetToken(UtilisateurDto utilisateurDto)
     {
@@ -75,10 +73,10 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         var base64Key = Convert.ToBase64String(keyBytes);
         var sb = new StringBuilder();
         sb.AppendLine($"-----BEGIN {keyType}-----");
-        int lineLength = 64;
+        const int lineLength = 64;
         for (int i = 0; i < base64Key.Length; i += lineLength)
         {
-            sb.AppendLine(base64Key.Substring(i, Math.Min(lineLength, base64Key.Length - i)));
+            sb.Append(base64Key, i, Math.Min(lineLength, base64Key.Length - i)).AppendLine();
         }
         sb.AppendLine($"-----END {keyType}-----");
         return sb.ToString();
