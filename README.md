@@ -19,3 +19,9 @@ Rajouter un container docker pour les tests unitaires avec testContainers
 
 Installation du scanner dotnet sur le dev dotnet tool install --global dotnet-sonarscanner FAIT
 
+
+
+
+
+
+

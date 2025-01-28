@@ -67,12 +67,6 @@ public class AuthentificationBasicMiddleware : AuthenticationHandler<Authenticat
     }
     public async Task<bool> ValidateCredentials(string email, string password)
     {
-        var result = (await redisCache.GetBooleanAndUserDataFromRedisUsingParamsAsync(true, email, password)).Item1;
-        // if (tupleResult.Item1 is false)
-        // {
-        //     log.LogError("Authentication failed, email adress or password is incorrect");
-        //     return false;
-        // }
-        return result;
+        return (await redisCache.GetBooleanAndUserDataFromRedisUsingParamsAsync(true, email, password)).Item1;
     }
 }
