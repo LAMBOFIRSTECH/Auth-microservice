@@ -148,7 +148,7 @@ builder.Services.AddSingleton<IConnectionMultiplexer>(provider =>
     catch (RedisConnectionException  ex)
     {
         var logger = provider.GetRequiredService<ILogger<Program>>();
-        logger.LogCritical("Error connecting to Redis:", ex.Message);
+        logger.LogCritical(ex,"Error connecting to Redis:");
         throw;
     }
 });
