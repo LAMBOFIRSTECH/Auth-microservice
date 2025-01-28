@@ -6,8 +6,8 @@ variables:
   SOLUTION_PATH: "Authentifications.sln"
   DOCKER_IMAGE_TAG: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}" # Tag de l'image Docker 
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
-  # SOLUTION_FILE: ""
-  # TEST_PROJECT: ""
+  SOLUTION_FILE: ""
+  TEST_PROJECT: ""
 
 default:
   tags:
