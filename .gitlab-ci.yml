@@ -19,7 +19,7 @@ cache:
 
 ######## STAGES ########
 stages:
-  - cleanup
+  - pre-treatment
   # - build
   - test
   - scan-vulnerabilities
@@ -27,10 +27,11 @@ stages:
   - sonarqube-analysis_report
 #   - release
 #   - deploy
+#   - cleanup
 
-# ######## CLEANUP ########
-cleanup:
-  stage: cleanup
+# ######## PRE-TREATMENT ########
+pre-treatment:
+  stage: pre-treatment
   tags:
     - gitlab-lamboft-docker-runner
   script:
@@ -249,3 +250,11 @@ sonarqube-analysis_report:
 #     paths:
 #       - .docker_tag
 #     expire_in: 1 day
+
+# ######## CLEANUP ########
+# cleanup:
+#   stage: cleanup
+#   tags:
+#     - gitlab-lamboft-shell-runner
+#   script:
+#     - echo "Nettoyage du repertoire de travail"

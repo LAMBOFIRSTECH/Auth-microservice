@@ -30,6 +30,7 @@ SONAR_PROJECT_KEY=$(ls *.sln | sed -E 's/\.sln$//')
 SOLUTION_FILE=$(ls *.sln)
 ROOT_DIR=$(pwd)
 COVERAGE_REPORT_PATH="$ROOT_DIR/Couverture/coverage.opencover.xml"
+cat $COVERAGE_REPORT_PATH
 # Vérification des variables essentielles
 required_vars=("SONAR_PROJECT_KEY" "SONAR_HOST_URL" "SONAR_USER_TOKEN" "COVERAGE_REPORT_PATH" "SOLUTION_FILE" "BUILD_CONFIGURATION")
 for var in "${required_vars[@]}"; do
