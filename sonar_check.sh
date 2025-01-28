@@ -28,8 +28,9 @@ source .env
 # Détection automatique de la solution .sln
 SONAR_PROJECT_KEY=$(ls *.sln | sed -E 's/\.sln$//')
 SOLUTION_FILE=$(ls *.sln)
-ROOT_DIR=$(pwd)
-COVERAGE_REPORT_PATH="$ROOT_DIR/Couverture/coverage.opencover.xml"
+# ROOT_DIR=$(pwd)
+# COVERAGE_REPORT_PATH="$ROOT_DIR/Couverture/coverage.opencover.xml"
+COVERAGE_REPORT_PATH="/home/gitlab-runner/builds/t3_V6czWc/0/artur437810/authentication/Couverture/coverage.opencover.xml"
 # Vérification des variables essentielles
 required_vars=("SONAR_PROJECT_KEY" "SONAR_HOST_URL" "SONAR_USER_TOKEN" "COVERAGE_REPORT_PATH" "SOLUTION_FILE" "BUILD_CONFIGURATION")
 for var in "${required_vars[@]}"; do
@@ -39,21 +40,6 @@ for var in "${required_vars[@]}"; do
   fi
 done
 
-# if [ ! -f "$SOLUTION_FILE" ]; then
-#     colors "RED" "Erreur : Fichier solution (.sln) introuvable."
-#     exit 1
-# fi
-# if [ -z "$SONAR_PROJECT_KEY" ]; then
-#     colors "RED" "Erreur : Clé de projet Sonar introuvable."
-#     exit 1
-# fi
-
-# # Vérification des variables essentielles
-# if [ -z "$SONAR_HOST_URL" ] || [ -z "$SONAR_USER_TOKEN" ]; then
-#     colors "RED" "Erreur : Variables SONAR_HOST_URL ou SONAR_USER_TOKEN non définies dans le fichier .env."
-#     exit 1
-# fi
-
 if [ ! -f "$COVERAGE_REPORT_PATH" ]; then
     colors "RED" "Erreur : Fichier de couverture ($COVERAGE_REPORT_PATH) introuvable."
     exit 1
@@ -62,7 +48,6 @@ fi
 # --------------------
 # 2. Formattage du fichier de couverture de code
 # --------------------
-# a- Modifier la version et timestamp
 
 sed -i 's/version="1.9"/version="1"/' $COVERAGE_REPORT_PATH
 
@@ -81,9 +66,6 @@ fi
 # 4. Analyse SonarQube
 # --------------------
 colors "YELLOW" "Démarrage de l'analyse SonarQube pour le projet $SONAR_PROJECT_KEY"
-
-# Configuration du PATH pour les outils .NET
-#export PATH="$PATH:$HOME/.dotnet/tools"
 
 # Vérification de la présence de dotnet-sonarscanner
 if ! command -v dotnet-sonarscanner &>/dev/null; then

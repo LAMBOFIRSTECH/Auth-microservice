@@ -1,168 +1,61 @@
+using System;
 using System.Text;
 using Authentifications.Models;
 using Authentifications.RedisContext;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
-using Moq;
+using System.Net;
+using System.Net.Http;
+using System.Net.Sockets;
+using System.Threading.Tasks;
 using Newtonsoft.Json;
+using Xunit;
+using Moq;
+using Moq.Protected;
+using System.Collections.Generic;
+using System.Threading;
+using System.Security.Cryptography;
 
 namespace Authentifications.Tests;
-
 public class UnitTestRedisCacheService
 {
-    private readonly Mock<IDistributedCache> _cacheMock;
-    private readonly Mock<ILogger<RedisCacheService>> _loggerMock;
-    private readonly Mock<IConfiguration> _configurationMock;
-    private readonly RedisCacheService _redisCacheService;
+    private readonly Mock<IDistributedCache> _mockCache;
+    private readonly Mock<ILogger<RedisCacheService>> _mockLogger;
+    private readonly Mock<IConfiguration> _mockConfiguration;
+    private readonly Mock<RedisCacheService> _mockService; // Mock RedisCacheService
 
     public UnitTestRedisCacheService()
     {
-        _cacheMock = new Mock<IDistributedCache>();
-        _loggerMock = new Mock<ILogger<RedisCacheService>>();
-        _configurationMock = new Mock<IConfiguration>();
+        _mockCache = new Mock<IDistributedCache>();
+        _mockLogger = new Mock<ILogger<RedisCacheService>>();
+        _mockConfiguration = new Mock<IConfiguration>();
+        _mockConfiguration.Setup(c => c["ApiSettings:BaseUrl"]).Returns("http://localhost");
 
-        _configurationMock.Setup(c => c["ApiSettings:BaseUrl"]).Returns("https://localhost:7082");
-        _configurationMock.Setup(c => c["Certificate:File"]).Returns("/etc/ssl/certs/TasksApi.pfx");
-        _configurationMock.Setup(c => c["Certificate:Password"]).Returns("lambo");
-
-        _redisCacheService = new RedisCacheService(_configurationMock.Object, _cacheMock.Object, _loggerMock.Object);
+        // Créez un mock de RedisCacheService pour simuler CreateHttpClient
+        _mockService = new Mock<RedisCacheService>(_mockConfiguration.Object, _mockCache.Object, _mockLogger.Object);
+        _mockService.Protected()
+                    .Setup<HttpClient>("CreateHttpClient", ItExpr.IsAny<string>())
+                    .Returns(new HttpClient()); // Retourner un HttpClient "normal", sans certificat
     }
 
     // [Fact]
-    // public void CreateHttpClient_ShouldReturnHttpClient()
-    // {
-    //     // Act
-    //     var httpClient = _redisCacheService.CreateHttpClient("https://localhost:7082");
-
-    //     // Assert
-    //     Assert.NotNull(httpClient);
-    //     Assert.Equal("https://localhost:7082", httpClient.BaseAddress.ToString());
-    // }
-
-   
-    // [Fact]
-    // public async Task GetBooleanAndUserDataFromRedisUsingParamsAsync_ReturnsTrueAndUser_WhenConditionIsTrueAndUserExists()
+    // public async Task RetrieveDataFromExternalApiAsync_ShouldReturnDataWhenSuccess()
     // {
     //     // Arrange
-    //     var email = "test@example.com";
-    //     var password = "password";
-    //     var utilisateurs = new List<UtilisateurDto>
-    //         {
-    //             new() { Email = email, Pass = "hashedPassword" }
-    //         };
-    //     _cacheMock.Setup(x => x.GetStringAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync((string key, CancellationToken token) => JsonConvert.SerializeObject(utilisateurs));
-    //     var condition = true;
-
-    //     // Act
-    //     var result = await _redisCacheService.GetBooleanAndUserDataFromRedisUsingParamsAsync(condition, email, password);
-
-    //     // Assert
-    //     Assert.True(result.Item1);
-    //     Assert.NotNull(result.Item2);
-    //     Assert.Equal(email, result.Item2.Email);
-    // }
-
-    // [Fact]
-    // public async Task GetBooleanAndUserDataFromRedisUsingParamsAsync_ReturnsFalseAndNull_WhenConditionIsFalse()
-    // {
-    //     // Arrange
-    //     var email = "test@example.com";
-    //     var password = "password";
-    //     var condition = false;
-
-    //     // Act
-    //     var result = await _redisCacheService.GetBooleanAndUserDataFromRedisUsingParamsAsync(condition, email, password);
-
-    //     // Assert
-    //     Assert.False(result.Item1);
-    //     Assert.Null(result.Item2);
-    // }
-
-    // [Fact]
-    // public async Task GetBooleanAndUserDataFromRedisUsingParamsAsync_ReturnsFalseAndNull_WhenUserDoesNotExist()
-    // {
-    //     // Arrange
-    //     var email = "test@example.com";
-    //     var password = "password";
-    //     var utilisateurs = new List<UtilisateurDto>();
-    //     _cacheMock.Setup(x => x.GetStringAsync(It.IsAny<string>())).ReturnsAsync(JsonConvert.SerializeObject(utilisateurs));
-    //     var condition = true;
-
-    //     // Act
-    //     var result = await _redisCacheService.GetBooleanAndUserDataFromRedisUsingParamsAsync(condition, email, password);
-
-    //     // Assert
-    //     Assert.False(result.Item1);
-    //     Assert.Null(result.Item2);
-    // }
-
-
-    // [Fact]
-    // public async Task RetrieveDataFromExternalApiAsync_ShouldReturnData()
-    // {
-    //     // Arrange
-    //     var mockHttpMessageHandler = new Mock<HttpMessageHandler>();
-    //     var mockResponse = new HttpResponseMessage
+    //     var utilisateurList = new HashSet<UtilisateurDto>
     //     {
-    //         StatusCode = System.Net.HttpStatusCode.OK,
-    //         Content = new StringContent("[{\"Email\":\"example@example.com\",\"Password\":\"password$1\"}]")
+    //         new UtilisateurDto { Email = "example@example.com" }
     //     };
-    //     mockHttpMessageHandler
-    //         .Protected()
-    //         .Setup<Task<HttpResponseMessage>>(
-    //             "SendAsync",
-    //             It.IsAny<HttpRequestMessage>(),
-    //             It.IsAny<CancellationToken>()
-    //         )
-    //         .ReturnsAsync(mockResponse);
 
-    //     var httpClient = new HttpClient(mockHttpMessageHandler.Object);
-
-    //     // Assuming _redisCacheService has a constructor that accepts HttpClient
-    //     var _redisCacheService = new RedisCacheService(httpClient, _cacheMock.Object);
-
+    //   _mockCache.Setup(c => c.GetStringAsync(It.Is<string>(x => x == "some_specific_key")))
+    //       .ReturnsAsync(JsonConvert.SerializeObject(utilisateurList));
     //     // Act
-    //     var result = await _redisCacheService.RetrieveDataFromExternalApiAsync();
+    //     var result = await _mockService.Object.RetrieveDataFromExternalApiAsync();
 
     //     // Assert
     //     Assert.NotNull(result);
     //     Assert.NotEmpty(result);
-    // }
-
-    // [Fact]
-    // public async Task RetrieveDataOnRedisUsingKeyAsync_ShouldReturnData()
-    // {
-    //     // Arrange
-    //     var cachedData = "[{\"Email\":\"example@example.com\",\"Password\":\"password$1\"}]";
-    //     _cacheMock.Setup(c => c.GetAsync(It.IsAny<string>(), It.IsAny<CancellationToken>())).ReturnsAsync(Encoding.UTF8.GetBytes(cachedData));
-
-    //     // Act
-    //     var result = await _redisCacheService.RetrieveDataOnRedisUsingKeyAsync();
-
-    //     // Assert
-    //     Assert.NotNull(result);
-    //     Assert.NotEmpty(result);
-    // }
-
-    // [Fact]
-    // public async Task UpdateRedisCacheWithExternalApiData_ShouldUpdateCache()
-    // {
-    //     // Arrange
-    //     var data = new List<UtilisateurDto> { new() { Email = "example@example.com", Pass = "password$1" } };
-
-    //     // Act
-    //     await _redisCacheService.UpdateRedisCacheWithExternalApiData(data);
-
-    //     // Assert
-    //     _cacheMock.Verify(c => c.SetAsync(
-    //      It.IsAny<string>(),
-    //      It.IsAny<byte[]>(),
-    //      It.IsAny<DistributedCacheEntryOptions>(),
-    //      It.IsAny<CancellationToken>()),
-    //      Times.Once);
-
+    //     Assert.Equal("example@example.com", result.First().Email);
     // }
 }
-
-

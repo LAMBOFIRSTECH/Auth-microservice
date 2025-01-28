@@ -5,8 +5,6 @@ VisualStudioVersion = 17.5.002.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Authentifications", "Authentifications\Authentifications.csproj", "{5A4850E6-DA11-434E-802E-C12B5774AD23}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestAuthentications", "TestAuthentications\TestAuthentications.csproj", "{BC447D15-2C89-4BFF-B746-18EE1304E58A}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Authentifications.Tests", "Authentifications.Tests\Authentifications.Tests.csproj", "{C97BC20D-6C71-413C-8CE9-3921E1838D82}"
 EndProject
 Global

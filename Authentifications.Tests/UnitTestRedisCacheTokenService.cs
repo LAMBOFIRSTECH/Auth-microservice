@@ -2,6 +2,7 @@ using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
+using Xunit;
 using Authentifications.RedisContext;
 using Newtonsoft.Json;
 using System.Text.RegularExpressions;
@@ -13,14 +14,13 @@ public class UnitTestRedisCacheTokenService
 {
     private readonly RedisCacheTokenService _service;
     private readonly Mock<IDistributedCache> _cacheMock;
-    private readonly Mock<ILogger<RedisCacheService>> _loggerMock;
+    private readonly Mock<ILogger<RedisCacheTokenService>> _loggerMock;
     private readonly Mock<IConfiguration> _configurationMock;
     public UnitTestRedisCacheTokenService()
     {
         _cacheMock = new Mock<IDistributedCache>();
-        _loggerMock = new Mock<ILogger<RedisCacheService>>();
-        _configurationMock = new Mock<IConfiguration>();
-        _service = new RedisCacheTokenService(_configurationMock.Object, _cacheMock.Object, _loggerMock.Object);
+        _loggerMock = new Mock<ILogger<RedisCacheTokenService>>();
+        _service = new RedisCacheTokenService(_cacheMock.Object, _loggerMock.Object);
     }
 
     [Fact]
