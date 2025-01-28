@@ -1,18 +1,20 @@
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Moq;
+using Xunit;
 using Authentifications.Interfaces;
 using Authentifications.Models;
 using System.Security.Claims;
+using Authentifications.Controllers;
 
 namespace Authentifications.Tests
 {
-    public class TokenControllerTest
+    public class UnitTestTokenController
     {
         private readonly Mock<IJwtAccessAndRefreshTokenService> _mockJwtService;
         private readonly TokenController _controller;
 
-        public TokenControllerTest()
+        public UnitTestTokenController()
         {
             _mockJwtService = new Mock<IJwtAccessAndRefreshTokenService>();
             _controller = new TokenController(_mockJwtService.Object);
