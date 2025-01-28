@@ -63,7 +63,7 @@ test:
     - echo "Exécution des tests unitaires avec collecte de couverture"
     - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.4
     - export PATH="$PATH:/root/.dotnet/tools"
-    - TEST=$(ls | grep -o '\bTest\w*')
+    - TEST=$(ls | grep -P -o '\w+\.Tests$'  | head -n 1) # Récupère le premier projet de test trouvé
     - |
       dotnet test $TEST/$TEST.csproj \
         --configuration $BUILD_CONFIGURATION \
