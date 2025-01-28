@@ -14,7 +14,7 @@ public class UnitTestRedisCacheTokenService
 {
     private readonly RedisCacheTokenService _service;
     private readonly Mock<IDistributedCache> _cacheMock;
-    private readonly Mock<ILogger<RedisCacheService>> _loggerMock;
+    private readonly Mock<ILogger<RedisCacheTokenService>> _loggerMock;
     private readonly Mock<IConfiguration> _configurationMock;
     public UnitTestRedisCacheTokenService()
     {
