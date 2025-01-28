@@ -39,10 +39,10 @@ public class RedisCacheService : IRedisCacheService
             handler.ClientCertificates.Add(certificate);
             handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, certChain, sslPolicyErrors) =>
   {
-    //   if (sslPolicyErrors != System.Net.Security.SslPolicyErrors.None)
-    //   {
-    //       logger.LogError("SSL validation failed: {SslPolicyErrors}. Certificate: {CertSubject}", sslPolicyErrors, cert?.Subject);
-    //   }
+      //   if (sslPolicyErrors != System.Net.Security.SslPolicyErrors.None)
+      //   {
+      //       logger.LogError("SSL validation failed: {SslPolicyErrors}. Certificate: {CertSubject}", sslPolicyErrors, cert?.Subject);
+      //   }
       return true; //sslPolicyErrors == System.Net.Security.SslPolicyErrors.None; il faut vérifier le certificat entre client et serveur
       //return true; A ne jamais le faire en production 
   };
@@ -121,13 +121,13 @@ public class RedisCacheService : IRedisCacheService
         }
         catch (HttpRequestException ex) when (ex.InnerException is SocketException socketEx)
         {
-            logger.LogError("Socket's problems check if TasksManagement service is UP", socketEx.Message);
+            logger.LogError(socketEx, "Socket's problems check if TasksManagement service is UP");
             throw new InvalidOperationException("The service is unavailable. Please retry soon.");
         }
         catch (Exception ex)
         {
             logger.LogError(ex, "Unexpected error while calling the API.");
-            throw new Exception("Error", ex);
+            throw new InvalidOperationException("There was an error while calling the external API.", ex);
         }
     }
     public async Task<ICollection<UtilisateurDto>> RetrieveDataOnRedisUsingKeyAsync()
@@ -138,11 +138,12 @@ public class RedisCacheService : IRedisCacheService
             var result = await ValidateAndSyncDataAsync(cachedData);
             return result ?? JsonConvert.DeserializeObject<HashSet<UtilisateurDto>>(cachedData)!;
         }
-        logger.LogInformation("No data to retrieve in Redis cache.");
+        logger.LogInformation("No data to retrieve in Redis cache server.");
         var utilisateurs = await RetrieveDataFromExternalApiAsync();
         if (utilisateurs?.Any() != true)
         {
-            throw new Exception("Failed to deserialize the response. Empty data retrieved from data source");
+            logger.LogWarning("Failed to deserialize the response. Empty data retrieved from data source");
+            return null!;
         }
         await UpdateRedisCacheWithExternalApiData(utilisateurs);
         return utilisateurs;

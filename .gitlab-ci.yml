@@ -19,7 +19,7 @@ cache:
 
 ######## STAGES ########
 stages:
-  # - cleanup
+  - cleanup
   # - build
   - test
   - scan-vulnerabilities
@@ -29,15 +29,28 @@ stages:
 #   - deploy
 
 # ######## CLEANUP ########
-# cleanup:
-#   stage: cleanup
-#   tags:
-#     - gitlab-lamboft-docker-runner
-#   script:
-#     - echo "Nettoyage des caches NuGet"
-#     - dotnet nuget locals all --clear # Nettoie les caches locaux NuGet
-#     - echo "Nettoyage des fichiers intermédiaires"
-#     - find . -name "*.dll" -o -name "*.pdb" -o -name "*.tmp" -o -name "*.md"| xargs rm -rf
+cleanup:
+  stage: cleanup
+  tags:
+    - gitlab-lamboft-docker-runner
+  script:
+    - echo "Nettoyage des caches NuGet"
+    - dotnet nuget locals all --clear # Nettoie les caches locaux NuGet
+    - echo "Nettoyage des fichiers intermédiaires"
+    - find . -name "*.dll" -o -name "*.pdb" -o -name "*.tmp" -o -name "*.md"| xargs rm -rf
+    - echo "Voici le repertoire courant ---------------------------"
+    - ls -la  
+    - echo "Nettoyage des artefacts de build"
+    - rm -rf **/bin/ **/obj/ # Nettoie les binaires et les objets
+    - echo "Nettoyage des artefacts de test"
+    - rm -rf **/TestResults/ # Nettoie les résultats de tests
+    - echo "Nettoyage des artefacts de couverture"
+    - rm -rf Couverture/ # Nettoie les résultats de couverture
+  artifacts:
+    paths:
+      - "**/bin/**" # Artéfacts de build si nécessaire
+    expire_in: 20 minutes
+
 
 
 # ######## BUILD ########
@@ -71,7 +84,6 @@ test:
         /p:CollectCoverage=true \
         /p:CoverletOutput=../Couverture/ \
         /p:CoverletOutputFormat="opencover"
-    - rm -rf $TEST/TestResults
   artifacts:
     when: always
     paths:
