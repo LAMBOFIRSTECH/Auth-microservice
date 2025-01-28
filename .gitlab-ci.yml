@@ -20,13 +20,13 @@ cache:
 ######## STAGES ########
 stages:
   - pre-treatment
-  # - build
+  - build
   - test
   - scan-vulnerabilities
   - sonar-build
   - sonarqube-analysis_report
-#   - release
-#   - deploy
+  - release
+  - deploy
 #   - cleanup
 
 # ######## PRE-TREATMENT ########
@@ -54,22 +54,22 @@ pre-treatment:
 
 
 # ######## BUILD ########
-# build:
-#   stage: build
-#   script:
-#     - SOLUTION_FILE=$(ls *.sln) 
-#     - echo "Compilation des projets à partir de $SOLUTION_FILE"
-#     - dotnet build $SOLUTION_FILE --configuration $BUILD_CONFIGURATION
-#     - PROJECT=$(ls *.sln | sed -E 's/\.sln$//')
-#     - chmod -R 750 $PROJECT/bin/  # bonne pratiques pour la securité on restreint l'accès aux binaires
-#   cache:
-#     key: "$CI_COMMIT_REF_NAME"
-#     paths:
-#       - "$NUGET_PACKAGES_DIRECTORY"
-#   artifacts:
-#     paths:
-#       - "**/bin/**" # Artéfacts de build si nécessaire
-#     expire_in: 20 minutes
+build:
+  stage: build
+  script:
+    - SOLUTION_FILE=$(ls *.sln) 
+    - echo "Compilation des projets à partir de $SOLUTION_FILE"
+    - dotnet build $SOLUTION_FILE --configuration $BUILD_CONFIGURATION
+    - PROJECT=$(ls *.sln | sed -E 's/\.sln$//')
+    - chmod -R 750 $PROJECT/bin/  # bonne pratiques pour la securité on restreint l'accès aux binaires
+  cache:
+    key: "$CI_COMMIT_REF_NAME"
+    paths:
+      - "$NUGET_PACKAGES_DIRECTORY"
+  artifacts:
+    paths:
+      - "**/bin/**" # Artéfacts de build si nécessaire
+    expire_in: 20 minutes
 
 # ######## TEST ########
 test:
@@ -147,19 +147,19 @@ sonarqube-analysis_report:
     - sonar-build # Dépend du build de sonar
 
 # ######## RELEASE ########
-# release:
-#   stage: release
-#   tags:
-#     - gitlab-lamboft-shell-develop
-#   script:
-#     - echo "Publication des artefacts pour le déploiement"
-#     - dotnet publish $SOLUTION_PATH --configuration $BUILD_CONFIGURATION --output publish/
-#   artifacts:
-#     paths:
-#       - publish/
-#     expire_in: 1 week
-#     reports:
-#       dotenv: publish/.env # Optionnel : ajoutez un fichier d'environnement pour votre déploiement si nécessaire
+release:
+  stage: release
+  tags:
+    - gitlab-lamboft-shell-develop
+  script:
+    - echo "Publication des artefacts pour le déploiement"
+    - dotnet publish $SOLUTION_PATH --configuration $BUILD_CONFIGURATION --output publish/
+  artifacts:
+    paths:
+      - publish/
+    expire_in: 1 week
+    reports:
+      dotenv: publish/.env # Optionnel : ajoutez un fichier d'environnement pour votre déploiement si nécessaire
 
 # docker-build:
 #   script:
@@ -172,47 +172,47 @@ sonarqube-analysis_report:
 #     - docker push  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
 
 # ######## DEPLOY ENV DEV ########
-# Env_dev:
-#   stage: deploy
-#   tags:
-#     - gitlab-lamboft-shell-develop
-#   rules:
-#     - if: '$CI_COMMIT_BRANCH == "develop"'
-#   variables:
-#     RUNNER_TAG: "development"
-#     allow_failure: false
-#   script:
-#     - echo "DEVELOPMENT_TAG=$DEVELOPMENT_TAG" >> build.env
-#     - |
-#       if [[ "$DEVELOPMENT_TAG" == "true" ]]; then
-#         echo "Déploiement en environnement de développement"
-#         echo "Construction de l'image Docker"
-#         dotnet nuget locals all --clear
-#         tag=$(./image_tag.sh | tr -cd '0-9.')
-#         docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-#         docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag .
-#         docker push  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
-#         echo "Déploiement de l'image Docker"
-#         PORT_NUMBER=$(grep -oP 'EXPOSE\s+\K\d+' Dockerfile)
-#         docker rm -f dev-$CI_PROJECT_NAME || true
-#         docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name dev-$CI_PROJECT_NAME  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
-#         if [ $? != 0 ]; then
-#           echo "Echec de lancement du conatiner docker."
-#           ./docker_cleanup.sh dev-$CI_PROJECT_NAME
-#           exit 1
-#         fi
-#         docker network connect redis_redis dev-$CI_PROJECT_NAME
-#       else
-#         echo "No environment tag set for this runner development"
-#         exit 1
-#       fi
+Env_dev:
+  stage: deploy
+  tags:
+    - gitlab-lamboft-shell-develop
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+  variables:
+    RUNNER_TAG: "development"
+    allow_failure: false
+  script:
+    - echo "DEVELOPMENT_TAG=$DEVELOPMENT_TAG" >> build.env
+    - |
+      if [[ "$DEVELOPMENT_TAG" == "true" ]]; then
+        echo "Déploiement en environnement de développement"
+        echo "Construction de l'image Docker"
+        dotnet nuget locals all --clear
+        tag=$(./image_tag.sh | tr -cd '0-9.')
+        docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+        docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag .
+        docker push  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
+        echo "Déploiement de l'image Docker"
+        PORT_NUMBER=$(grep -oP 'EXPOSE\s+\K\d+' Dockerfile)
+        docker rm -f dev-$CI_PROJECT_NAME || true
+        docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name dev-$CI_PROJECT_NAME  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
+        if [ $? != 0 ]; then
+          echo "Echec de lancement du conatiner docker."
+          ./docker_cleanup.sh dev-$CI_PROJECT_NAME
+          exit 1
+        fi
+        docker network connect redis_redis dev-$CI_PROJECT_NAME
+      else
+        echo "No environment tag set for this runner development"
+        exit 1
+      fi
 
-#   artifacts:
-#     reports:
-#       dotenv: build.env
-#     paths:
-#       - .docker_tag
-#     expire_in: 1 day
+  artifacts:
+    reports:
+      dotenv: build.env
+    paths:
+      - .docker_tag
+    expire_in: 1 day
 
 # ######## DEPLOY ENV STAGING #########
 # Env_staging:
