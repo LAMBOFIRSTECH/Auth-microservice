@@ -17,6 +17,7 @@ WORKDIR /app
 
 # Copier les fichiers publiés depuis la phase précédente
 COPY --from=publish /app .
+RUN ls /app
 
 # Copier les fichiers de configuration
 COPY Authentifications/appsettings.* . 
