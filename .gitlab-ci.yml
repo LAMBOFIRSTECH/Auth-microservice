@@ -118,7 +118,7 @@ sonar-build:
     - gitlab-lamboft-shell-develop
   variables:
     RUNNER_TAG: "development"
-    allow_failure: true
+    allow_failure: false
   script:
     #- chmod -R 777 Couverture/
     - echo "Lancement de l'analyse SonarQube."
@@ -187,7 +187,6 @@ Env_dev:
       if [[ "$DEVELOPMENT_TAG" == "true" ]]; then
         echo "Déploiement en environnement de développement"
         echo "Construction de l'image Docker"
-        dotnet nuget locals all --clear
         tag=$(./image_tag.sh | tr -cd '0-9.')
         echo "DOCKER_TAG=$tag" > .env.ci 
         docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
