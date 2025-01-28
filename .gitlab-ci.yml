@@ -59,9 +59,10 @@ cleanup:
 # build:
 #   stage: build
 #   script:
-#     - echo "Compilation des projets à partir de $SOLUTION_PATH"
-#     - dotnet build $SOLUTION_PATH --configuration $BUILD_CONFIGURATION
-#     - chmod -R 750 Authentifications/bin/  # bonne pratiques pour la securité on restreint l'accès aux binaires
+#     - echo "Compilation des projets à partir de $SOLUTION_FILE"
+#     - dotnet build $SOLUTION_FILE --configuration $BUILD_CONFIGURATION
+#     - PROJECT=$(ls *.sln | sed -E 's/\.sln$//')
+#     - chmod -R 750 $PROJECT/bin/  # bonne pratiques pour la securité on restreint l'accès aux binaires
 #   cache:
 #     key: "$CI_COMMIT_REF_NAME"
 #     paths:
@@ -74,6 +75,8 @@ cleanup:
 # ######## TEST ########
 test:
   stage: test
+  tags:
+    - gitlab-lamboft-docker-runner
   script:
     - echo "Exécution des tests unitaires avec collecte de couverture"
     - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.4
@@ -105,10 +108,6 @@ scan-vulnerabilities:
     - chmod +x trivy.sh
     - ./trivy.sh 
   allow_failure: true
-  # artifacts:
-  #   paths:
-  #    - /tmp/trivy_scan_report_*.json   # Sauvegarde du fichier de rapport JSON A dégager
-  #   expire_in: 5 minutes
 
 
 ######## SONARQUBE ########
