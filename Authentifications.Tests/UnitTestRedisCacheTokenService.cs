@@ -19,7 +19,7 @@ public class UnitTestRedisCacheTokenService
     public UnitTestRedisCacheTokenService()
     {
         _cacheMock = new Mock<IDistributedCache>();
-        _loggerMock = new Mock<ILogger<RedisCacheService>>();
+        _loggerMock = new Mock<ILogger<RedisCacheTokenService>>();
         _service = new RedisCacheTokenService(_cacheMock.Object, _loggerMock.Object);
     }
 

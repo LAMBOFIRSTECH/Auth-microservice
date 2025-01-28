@@ -31,7 +31,6 @@ SOLUTION_FILE=$(ls *.sln)
 # ROOT_DIR=$(pwd)
 # COVERAGE_REPORT_PATH="$ROOT_DIR/Couverture/coverage.opencover.xml"
 COVERAGE_REPORT_PATH="/home/gitlab-runner/builds/t3_V6czWc/0/artur437810/authentication/Couverture/coverage.opencover.xml"
-cat $COVERAGE_REPORT_PATH
 # Vérification des variables essentielles
 required_vars=("SONAR_PROJECT_KEY" "SONAR_HOST_URL" "SONAR_USER_TOKEN" "COVERAGE_REPORT_PATH" "SOLUTION_FILE" "BUILD_CONFIGURATION")
 for var in "${required_vars[@]}"; do
@@ -67,9 +66,6 @@ fi
 # 4. Analyse SonarQube
 # --------------------
 colors "YELLOW" "Démarrage de l'analyse SonarQube pour le projet $SONAR_PROJECT_KEY"
-
-# Configuration du PATH pour les outils .NET
-#export PATH="$PATH:$HOME/.dotnet/tools"
 
 # Vérification de la présence de dotnet-sonarscanner
 if ! command -v dotnet-sonarscanner &>/dev/null; then
