@@ -6,8 +6,8 @@ variables:
   SOLUTION_PATH: "Authentifications.sln"
   DOCKER_IMAGE_TAG: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}" # Tag de l'image Docker 
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
-  SOLUTION_FILE: ""
-  TEST_PROJECT: ""
+  # SOLUTION_FILE: ""
+  # TEST_PROJECT: ""
 
 default:
   tags:
@@ -52,6 +52,8 @@ cleanup:
   artifacts:
     paths:
       - "**/bin/**" # Artéfacts de build si nécessaire
+      - "*.sln"         # Inclut les fichiers .sln dans les artifacts
+      - "$TEST_PROJECT"
     expire_in: 20 minutes
 
 
@@ -97,6 +99,8 @@ test:
       - $COVERAGE_REPORT_PATH
     reports:
       junit: $COVERAGE_REPORT_PATH
+  dependencies:
+    - cleanup
 
 before_script:
   - export $(cat .env | xargs)
