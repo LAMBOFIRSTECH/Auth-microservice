@@ -78,7 +78,7 @@ test:
     - gitlab-lamboft-docker-runner
   script:
     - echo "Exécution des tests unitaires avec collecte de couverture"
-    - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.4
+    - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.1.21
     - export PATH="$PATH:$HOME/.dotnet/tools"
     - TEST_PROJECT=$(ls | grep -P -o '\w+\.Tests$'  | head -n 1) # Récupère le premier projet de test trouvé
     - echo "Lancement des tests unitaires"
@@ -189,19 +189,19 @@ Env_dev:
         echo "Construction de l'image Docker"
         dotnet nuget locals all --clear
         tag=$(./image_tag.sh | tr -cd '0-9.')
+        echo "DOCKER_TAG=$tag" > .env.ci 
         docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
         docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag .
         docker push  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
         echo "Déploiement de l'image Docker"
         PORT_NUMBER=$(grep -oP 'EXPOSE\s+\K\d+' Dockerfile)
         docker rm -f dev-$CI_PROJECT_NAME || true
-        docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name dev-$CI_PROJECT_NAME  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
+        docker-compose -f application-compose.yml --env-file .env.ci up -d
         if [ $? != 0 ]; then
           echo "Echec de lancement du conatiner docker."
           ./docker_cleanup.sh dev-$CI_PROJECT_NAME
           exit 1
         fi
-        docker network connect redis_redis dev-$CI_PROJECT_NAME
       else
         echo "No environment tag set for this runner development"
         exit 1
@@ -236,14 +236,15 @@ Env_dev:
 #         docker rm -f staging-$CI_PROJECT_NAME || true
 #         docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name staging-$CI_PROJECT_NAME  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
 #         if [ $? != 0 ]; then
-#           echo "Echec de lancement du conatiner docker."
-#           ./docker_cleanup.sh staging-$CI_PROJECT_NAME
-#           exit 1
-#         fi
-#       else
-#         echo "No environment tag set for this runner staging"
-#         exit 1
-#       fi
+      #     echo "Echec de lancement du conatiner docker."
+      #     ./docker_cleanup.sh dev-$CI_PROJECT_NAME
+      #     exit 1
+      #   fi
+      #   docker network connect redis_redis staging-$CI_PROJECT_NAME
+      # else
+      #   echo "No environment tag set for this runner development"
+      #   exit 1
+      # fi
 #   artifacts:
 #     reports:
 #       dotenv: build.env

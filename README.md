@@ -25,3 +25,7 @@ Installation du scanner dotnet sur le dev dotnet tool install --global dotnet-so
 
 
 
+dotnet test --collect:"XPlat Code Coverage"
+dotnet tool install -g dotnet-reportgenerator-globaltool --version 5.1.21
+export path 
+reportgenerator -reports:"TestResults/**/coverage.cobertura.xml" -targetdir:"CoverageReport" -reporttypes:Html
