@@ -40,14 +40,15 @@ cleanup:
     - dotnet nuget locals all --clear # Nettoie les caches locaux NuGet
     - echo "Nettoyage des fichiers intermédiaires"
     - find . -name "*.dll" -o -name "*.pdb" -o -name "*.tmp" -o -name "*.md"| xargs rm -rf
-    - export SOLUTION_FILE=$(ls *.sln) 
-    - export TEST_PROJECT=$(ls | grep -P -o '\w+\.Tests$'  | head -n 1) # Récupère le premier projet de test trouvé
     - echo "Nettoyage des artefacts de build"
     - rm -rf **/bin/ **/obj/ # Nettoie les binaires et les objets
     - echo "Nettoyage des artefacts de test"
     - rm -rf **/TestResults/ # Nettoie les résultats de tests
     - echo "Nettoyage des artefacts de couverture"
     - rm -rf Couverture/ # Nettoie les résultats de couverture
+    - echo "Récupération des fichiers de solution et dossier de Test"
+    - export SOLUTION_FILE=$(ls *.sln) 
+    - export TEST_PROJECT=$(ls | grep -P -o '\w+\.Tests$'  | head -n 1) # Récupère le premier projet de test trouvé
   artifacts:
     paths:
       - "**/bin/**" # Artéfacts de build si nécessaire
@@ -81,6 +82,8 @@ test:
     - echo "Exécution des tests unitaires avec collecte de couverture"
     - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.4
     - export PATH="$PATH:$HOME/.dotnet/tools"
+    - echo "voici TEST_PROJECT -> $TEST_PROJECT"
+    - echo "Lancement des tests unitaires"
     - |
       dotnet test $TEST_PROJECT/$TEST_PROJECT.csproj \
         --configuration $BUILD_CONFIGURATION \
