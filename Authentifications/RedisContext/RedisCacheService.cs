@@ -6,8 +6,6 @@ using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
 using System.Net.Sockets;
 using Authentifications.Interfaces;
-using Microsoft.AspNetCore.Mvc;
-using VaultSharp.V1.SecretsEngines.PKI;
 namespace Authentifications.RedisContext;
 public class RedisCacheService : IRedisCacheService
 {
@@ -15,7 +13,6 @@ public class RedisCacheService : IRedisCacheService
     private readonly ILogger<RedisCacheService> logger;
     private readonly IConfiguration configuration;
     private readonly HttpClient httpClient;
-    private readonly string baseUrl;
     private readonly string cacheKey;
     private static DateTime _lastExecution = DateTime.MinValue;
 
@@ -24,7 +21,7 @@ public class RedisCacheService : IRedisCacheService
         _cache = cache;
         this.configuration = configuration;
         this.logger = logger;
-        baseUrl = configuration["ApiSettings:BaseUrl"];
+        string baseUrl = configuration["ApiSettings:BaseUrl"];
         httpClient = CreateHttpClient(baseUrl);
         cacheKey = $"ExternalDataApi_{GenerateRedisKeyForExternalDataApi()}";
     }
@@ -38,7 +35,7 @@ public class RedisCacheService : IRedisCacheService
             var handler = new HttpClientHandler();
             handler.ClientCertificates.Add(certificate);
             handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, certChain, sslPolicyErrors) =>
-  {
+{
       //   if (sslPolicyErrors != System.Net.Security.SslPolicyErrors.None)
       //   {
       //       logger.LogError("SSL validation failed: {SslPolicyErrors}. Certificate: {CertSubject}", sslPolicyErrors, cert?.Subject);
@@ -171,19 +168,6 @@ public class RedisCacheService : IRedisCacheService
         }
         logger.LogInformation("Successful data synchronization between Redis and external.");
         return redisData;
-        // try
-        // {
-        // }
-        // catch (HttpRequestException ex)
-        // {
-        //     logger.LogWarning(ex, "Impossible to validate data with external API. Unreachable API.");
-        //     return null!;
-        // }
-        // catch (Exception ex)
-        // {
-        //     logger.LogError(ex, "Service Error :");
-        //     throw;  // Relancer l'exception originale
-        // }
     }
 
     public async Task UpdateRedisCacheWithExternalApiData(ICollection<UtilisateurDto> externalApiData)
@@ -193,6 +177,6 @@ public class RedisCacheService : IRedisCacheService
         {
             AbsoluteExpirationRelativeToNow = TimeSpan.FromMinutes(60)
         });
-        logger.LogInformation("Redis cache data updated for redis cache key : {cacheKey}", cacheKey);
+        logger.LogInformation("Redis cache data updated for redis cache key : {CacheKey}", cacheKey);
     }
 }

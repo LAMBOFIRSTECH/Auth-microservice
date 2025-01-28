@@ -39,21 +39,6 @@ for var in "${required_vars[@]}"; do
   fi
 done
 
-# if [ ! -f "$SOLUTION_FILE" ]; then
-#     colors "RED" "Erreur : Fichier solution (.sln) introuvable."
-#     exit 1
-# fi
-# if [ -z "$SONAR_PROJECT_KEY" ]; then
-#     colors "RED" "Erreur : Clé de projet Sonar introuvable."
-#     exit 1
-# fi
-
-# # Vérification des variables essentielles
-# if [ -z "$SONAR_HOST_URL" ] || [ -z "$SONAR_USER_TOKEN" ]; then
-#     colors "RED" "Erreur : Variables SONAR_HOST_URL ou SONAR_USER_TOKEN non définies dans le fichier .env."
-#     exit 1
-# fi
-
 if [ ! -f "$COVERAGE_REPORT_PATH" ]; then
     colors "RED" "Erreur : Fichier de couverture ($COVERAGE_REPORT_PATH) introuvable."
     exit 1
@@ -62,7 +47,6 @@ fi
 # --------------------
 # 2. Formattage du fichier de couverture de code
 # --------------------
-# a- Modifier la version et timestamp
 
 sed -i 's/version="1.9"/version="1"/' $COVERAGE_REPORT_PATH
 

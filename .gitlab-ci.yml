@@ -6,6 +6,8 @@ variables:
   SOLUTION_PATH: "Authentifications.sln"
   DOCKER_IMAGE_TAG: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}" # Tag de l'image Docker 
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+  SOLUTION_FILE: ""
+  TEST_PROJECT: ""
 
 default:
   tags:
@@ -38,8 +40,8 @@ cleanup:
     - dotnet nuget locals all --clear # Nettoie les caches locaux NuGet
     - echo "Nettoyage des fichiers intermédiaires"
     - find . -name "*.dll" -o -name "*.pdb" -o -name "*.tmp" -o -name "*.md"| xargs rm -rf
-    - echo "Voici le repertoire courant ---------------------------"
-    - ls -la  
+    - export SOLUTION_FILE=$(ls *.sln) 
+    - export TEST_PROJECT=$(ls | grep -P -o '\w+\.Tests$'  | head -n 1) # Récupère le premier projet de test trouvé
     - echo "Nettoyage des artefacts de build"
     - rm -rf **/bin/ **/obj/ # Nettoie les binaires et les objets
     - echo "Nettoyage des artefacts de test"
@@ -75,10 +77,9 @@ test:
   script:
     - echo "Exécution des tests unitaires avec collecte de couverture"
     - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.3.4
-    - export PATH="$PATH:/root/.dotnet/tools"
-    - TEST=$(ls | grep -P -o '\w+\.Tests$'  | head -n 1) # Récupère le premier projet de test trouvé
+    - export PATH="$PATH:$HOME/.dotnet/tools"
     - |
-      dotnet test $TEST/$TEST.csproj \
+      dotnet test $TEST_PROJECT/$TEST_PROJECT.csproj \
         --configuration $BUILD_CONFIGURATION \
         --collect:"XPlat Code Coverage" \
         /p:CollectCoverage=true \
