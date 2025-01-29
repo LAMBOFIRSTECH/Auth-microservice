@@ -8,11 +8,11 @@ services:
     networks:
       - net_api
     volumes:
-      - ./TasksApi.pfx:/etc/ssl/certs/TasksApi.pfx # Certificat pour le serveur en variable d'environnement
       - ./Redis/certs/redis-client.pfx:/etc/ssl/certs/redis-client.pfx # Certificat pour le client redis en variable d'environnement
       - ./Redis/certs/ca.crt:/etc/ssl/certs/ca.crt # Certificat pour le client redis en variable d'environnement
     environment:
-      - ASPNETCORE_Kestrel__Certificates__Default__Path=/etc/ssl/certs/TasksApi.pfx
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/etc/ssl/certs/localhost.pfx
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=$CERT_PASSWORD
       - ASPNETCORE_ENVIRONMENT=Development
       - ASPNETCORE_URLS=https://+:8081
 networks:

@@ -145,6 +145,7 @@ Env_dev:
         dotnet nuget locals all --clear 
         tag=$(./image_tag.sh | tr -cd '0-9.')
         echo "DOCKER_TAG=$tag" > .env.ci 
+        echo "CERT_PASSWORD=$CERT_PASSWORD" >> .env.ci
         docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
         docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag .
         docker push  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
