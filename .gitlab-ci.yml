@@ -124,7 +124,7 @@ sonar-build-and-analysis:
       - "${SONAR_USER_HOME}/cache"
       - sonar-scanner/
   dependencies:
-    - test # Dépend des tests et de la couverture
+    - test # Dépend de la phase test 
 
 # ######## DEPLOY ENV DEV ########
 Env_dev:
