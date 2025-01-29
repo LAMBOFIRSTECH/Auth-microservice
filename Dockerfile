@@ -33,4 +33,4 @@ ENV ASPNETCORE_ENVIRONMENT=Development
 ENV ASPNETCORE_URLS=https://+:8081
 
 # Point d'entrée de l'application
-ENTRYPOINT ["dotnet", "Authentifications.dll"]
+ENTRYPOINT ["dotnet", "/app/Authentifications.dll"]
