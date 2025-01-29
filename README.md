@@ -24,6 +24,11 @@ Installation du scanner dotnet sur le dev dotnet tool install --global dotnet-so
       - ./Redis/certs/redis-client.pfx:/etc/ssl/certs/redis-client.pfx # Certificat pour le client redis en variable d'environnement
       - ./Redis/certs/ca.crt:/etc/ssl/certs/ca.crt # Certificat pour le client redis en variable d'environnement
 
+      var vaultClient = new VaultClient(new VaultClientSettings("http://127.0.0.1:8200", new TokenAuthMethodInfo("my-token")));
+var secret = vaultClient.V1.Secrets.KeyValue.V2.ReadSecretAsync("my-secret-path").Result;
+string secretValue = secret.Data["my-secret-key"].ToString();
+
+
 
 
 
