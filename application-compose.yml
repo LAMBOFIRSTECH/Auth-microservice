@@ -8,7 +8,9 @@ services:
     networks:
       - net_api
     volumes:
-      - .:/app
+      - ./TasksApi.pfx:/etc/ssl/certs/TasksApi.pfx
+      - ./Redis/certs/redis-client.pfx:/etc/ssl/certs/redis-client.pfx
+      - ./Redis/certs/ca.crt:/etc/ssl/certs/ca.crt
     environment:
       - ASPNETCORE_Kestrel__Certificates__Default__Path=/etc/ssl/certs/TasksApi.pfx
       - ASPNETCORE_ENVIRONMENT=Development
