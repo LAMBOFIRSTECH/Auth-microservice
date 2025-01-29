@@ -18,5 +18,9 @@ WORKDIR /app
 COPY --from=build /app . 
 # Copier les fichiers de configuration nécessaires
 COPY Authentifications/appsettings.* . 
+# Variables d'environnement
+ENV ASPNETCORE_URLS=http://+:8081
+ENV ASPNETCORE_ENVIRONMENT=Development
+ENV ASPNETCORE_Kestrel__Certificates__Default__Path=/etc/ssl/certs/localhost.pfx
 # Point d'entrée de l'application
 ENTRYPOINT ["dotnet", "/app/Authentifications.dll"]
