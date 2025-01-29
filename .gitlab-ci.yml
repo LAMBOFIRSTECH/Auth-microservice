@@ -23,8 +23,7 @@ stages:
   - build
   - test
   - scan-vulnerabilities
-  - sonar-build
-  - sonarqube-analysis_report
+  - sonar-build-and-analysis
   - release
   - deploy
 #   - cleanup
@@ -111,9 +110,9 @@ scan-vulnerabilities:
   allow_failure: true
 
 
-######## SONARQUBE ########
-sonar-build:
-  stage: sonar-build
+######## SONARQUBE BUILD AND ANALYSIS ########
+sonar-build-and-analysis:
+  stage: sonar-build-and-analysis
   tags:
     - gitlab-lamboft-shell-develop
   variables:
@@ -123,6 +122,8 @@ sonar-build:
     #- chmod -R 777 Couverture/
     - echo "Lancement de l'analyse SonarQube."
     - chmod +x sonar_check.sh; ./sonar_check.sh
+    - echo "Génération du rapport SonarQube."
+    - chmod +x sonar_report.sh; ./sonar_report.sh
   cache:
     policy: pull-push
     key: "sonar-cache-$CI_COMMIT_REF_SLUG"
@@ -132,19 +133,6 @@ sonar-build:
   dependencies:
     - test # Dépend des tests et de la couverture
 
-# ######## SONARQUBE REPORT ########
-sonarqube-analysis_report:
-  stage: sonarqube-analysis_report
-  tags:
-    - gitlab-lamboft-shell-develop
-  variables:
-    RUNNER_TAG: "development"
-    allow_failure: false
-  script:
-    - echo "Génération du rapport SonarQube."
-    - chmod +x sonar_report.sh; ./sonar_report.sh
-  dependencies:
-    - sonar-build # Dépend du build de sonar
 
 # ######## RELEASE ########
 # release:

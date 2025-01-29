@@ -22,9 +22,7 @@ RUN ls -R /app
 RUN echo "FINISHED"
 # Copier les fichiers de configuration
 COPY Authentifications/appsettings.* . 
-RUN echo "Voici le dossier Authentifications"
-RUN ls -R /app/Authentifications
-RUN echo "FINISHED"
+
 # Copier le certificat nécessaire
 COPY TasksApi.pfx /etc/ssl/certs/TasksApi.pfx
 COPY Redis/certs/redis-client.pfx /etc/ssl/certs/redis-client.pfx
@@ -36,4 +34,4 @@ ENV ASPNETCORE_ENVIRONMENT=Development
 ENV ASPNETCORE_URLS=https://+:8081
 
 # Point d'entrée de l'application
-ENTRYPOINT ["dotnet", "/app/Authentifications/Authentifications.dll"]
+ENTRYPOINT ["dotnet", "../Authentifications.dll"]

@@ -114,7 +114,7 @@ var clientCertificate = new X509Certificate2(
 
 var options = new ConfigurationOptions
 {
-    EndPoints = { Config["ConnectionString"] }, // Remplacer "http://localhost:6379" par "localhost:6379"
+    EndPoints = { Config["ConnectionString"] }, //par "localhost:6379"
     Ssl = true, // Activation de TLS obligatoire
     SslHost = "Redis-server", // Nom d'hôte à valider dans le certificat
     Password = Config["Password"], // Mot de passe Redis
