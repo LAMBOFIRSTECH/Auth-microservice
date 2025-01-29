@@ -20,7 +20,9 @@ Rajouter un container docker pour les tests unitaires avec testContainers
 Installation du scanner dotnet sur le dev dotnet tool install --global dotnet-sonarscanner FAIT
 
 
-
+   volumes:
+      - ./Redis/certs/redis-client.pfx:/etc/ssl/certs/redis-client.pfx # Certificat pour le client redis en variable d'environnement
+      - ./Redis/certs/ca.crt:/etc/ssl/certs/ca.crt # Certificat pour le client redis en variable d'environnement
 
 
 
