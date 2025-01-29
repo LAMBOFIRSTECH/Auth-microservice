@@ -3,8 +3,6 @@ variables:
   BUILD_CONFIGURATION: "Release"
   COVERAGE_REPORT_PATH: "Couverture/coverage.opencover.xml"
   NUGET_PACKAGES_DIRECTORY: ".nuget/packages"
-  SOLUTION_PATH: "Authentifications.sln"
-  DOCKER_IMAGE_TAG: "${CI_REGISTRY_IMAGE}:${CI_COMMIT_REF_SLUG}" # Tag de l'image Docker 
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
 
 default:
@@ -49,17 +47,15 @@ pre-treatment:
       - "**/bin/**" # Artéfacts de build si nécessaire
     expire_in: 20 minutes
 
-
-
 # ######## BUILD ########
 build:
   stage: build
   script:
-    - SOLUTION_FILE=$(ls *.sln) 
+    - SOLUTION_FILE=$(ls *.sln)
     - echo "Compilation des projets à partir de $SOLUTION_FILE"
     - dotnet build $SOLUTION_FILE --configuration $BUILD_CONFIGURATION
     - PROJECT=$(ls *.sln | sed -E 's/\.sln$//')
-    - chmod -R 750 $PROJECT/bin/  # bonne pratiques pour la securité on restreint l'accès aux binaires
+    - chmod -R 750 $PROJECT/bin/ # bonne pratiques pour la securité on restreint l'accès aux binaires
   cache:
     key: "$CI_COMMIT_REF_NAME"
     paths:
@@ -78,7 +74,7 @@ test:
     - echo "Exécution des tests unitaires avec collecte de couverture"
     - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.1.21
     - export PATH="$PATH:$HOME/.dotnet/tools"
-    - TEST_PROJECT=$(ls | grep -P -o '\w+\.Tests$'  | head -n 1) # Récupère le premier projet de test trouvé
+    - TEST_PROJECT=$(ls | grep -P -o '\w+\.Tests$'  | head -n 1) # Récupère le premier dossier se terminant par .Tests
     - echo "Lancement des tests unitaires"
     - |
       dotnet test $TEST_PROJECT/$TEST_PROJECT.csproj \
@@ -101,13 +97,12 @@ before_script:
 scan-vulnerabilities:
   stage: scan-vulnerabilities
   tags:
-    - gitlab-lamboft-shell-develop 
+    - gitlab-lamboft-shell-develop
   script:
     - dotnet list package --vulnerable
     - chmod +x trivy.sh
-    - ./trivy.sh 
+    - ./trivy.sh
   allow_failure: true
-
 
 ######## SONARQUBE BUILD AND ANALYSIS ########
 sonar-build-and-analysis:
@@ -118,7 +113,6 @@ sonar-build-and-analysis:
     RUNNER_TAG: "development"
     allow_failure: false
   script:
-    #- chmod -R 777 Couverture/
     - echo "Lancement de l'analyse SonarQube."
     - chmod +x sonar_check.sh; ./sonar_check.sh
     - echo "Génération du rapport SonarQube."
@@ -131,7 +125,6 @@ sonar-build-and-analysis:
       - sonar-scanner/
   dependencies:
     - test # Dépend des tests et de la couverture
-
 
 # ######## DEPLOY ENV DEV ########
 Env_dev:
@@ -156,7 +149,6 @@ Env_dev:
         docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag .
         docker push  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
         echo "Déploiement de l'image Docker"
-        PORT_NUMBER=$(grep -oP 'EXPOSE\s+\K\d+' Dockerfile)
         docker rm -f dev-$CI_PROJECT_NAME || true
         docker-compose -f application-compose.yml --env-file .env.ci up -d
         if [ $? != 0 ]; then
@@ -177,43 +169,46 @@ Env_dev:
     expire_in: 1 day
 
 # ######## DEPLOY ENV STAGING #########
-# Env_staging:
-#   stage: deploy
-#   tags:
-#     - gitlab-lamboft-shell-runner
-#   rules:
-#     - if: '$CI_COMMIT_BRANCH == "main"'
-#   script:
-#     - |
-#       if [[ "$STAGING_TAG" == "true" ]]; then
-#         echo "Déploiement en environnement de staging"
-#         echo "Construction de l'image Docker"
-#         dotnet nuget locals all --clear
-#         tag=$(./image_tag.sh | tr -cd '0-9.')
-#         docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-#         docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag .
-#         docker push  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
-#         echo "Déploiement de l'image Docker"
-#         PORT_NUMBER=$(grep -oP 'EXPOSE\s+\K\d+' Dockerfile)
-#         docker rm -f staging-$CI_PROJECT_NAME || true
-#         docker run -d -p $PORT_NUMBER:$PORT_NUMBER --name staging-$CI_PROJECT_NAME  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
-#         if [ $? != 0 ]; then
-      #     echo "Echec de lancement du conatiner docker."
-      #     ./docker_cleanup.sh dev-$CI_PROJECT_NAME
-      #     exit 1
-      #   fi
-      #   docker network connect redis_redis staging-$CI_PROJECT_NAME
-      # else
-      #   echo "No environment tag set for this runner development"
-      #   exit 1
-      # fi
-#   artifacts:
-#     reports:
-#       dotenv: build.env
-#     paths:
-#       - .docker_tag
-#     expire_in: 1 day
-
+Env_staging:
+  stage: deploy
+  tags:
+    - gitlab-lamboft-shell-runner
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  variables:
+    RUNNER_TAG: "staging"
+    allow_failure: false
+  script:
+    - echo "STAGING_TAG=$STAGING_TAG" >> build.env
+    - |
+      if [[ "$STAGING_TAG" == "true" ]]; then
+        echo "Déploiement en environnement de staging"
+        echo "Construction de l'image Docker"
+        dotnet nuget locals all --clear
+        tag=$(./image_tag.sh | tr -cd '0-9.')
+        echo "DOCKER_TAG=$tag" > .env.ci 
+        docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+        docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag .
+        docker push  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
+        echo "Déploiement de l'image Docker"
+        docker rm -f staging-$CI_PROJECT_NAME || true
+        docker-compose -f application-compose.yml --env-file .env.ci up -d
+        if [ $? != 0 ]; then
+          echo "Echec de lancement du conatiner docker."
+          ./docker_cleanup.sh staging-$CI_PROJECT_NAME
+          exit 1
+        fi
+        docker network connect redis_redis staging-$CI_PROJECT_NAME
+      else
+        echo "No environment tag set for this runner development"
+        exit 1
+      fi
+  artifacts:
+    reports:
+      dotenv: build.env
+    paths:
+      - .docker_tag
+    expire_in: 1 day
 # ######## CLEANUP ########
 # cleanup:
 #   stage: cleanup
