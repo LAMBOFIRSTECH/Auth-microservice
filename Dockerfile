@@ -3,30 +3,30 @@ FROM mcr.microsoft.com/dotnet/aspnet:6.0 AS base
 WORKDIR /app
 EXPOSE 8081
 
-# Phase de préparation (copie des artefacts publiés)
-FROM mcr.microsoft.com/dotnet/sdk:6.0 AS publish
+# Phase de préparation (SDK) - Utiliser l'image SDK pour la publication
+FROM mcr.microsoft.com/dotnet/sdk:6.0 AS build
 WORKDIR /src
 
-# Ajouter les sources de l'application pour publication
+# Copier les sources de l'application
 COPY . . 
+
+# Restaurer les dépendances
+RUN dotnet restore
+
+# Publier l'application en mode Release et mettre les artefacts dans /app
 RUN dotnet publish Authentifications.sln --configuration Release --output /app
 
 # Phase finale (runtime)
 FROM base AS final
 WORKDIR /app
 
-# Copier les fichiers publiés depuis la phase précédente
-COPY --from=publish /app .
-RUN echo "Voici le dossier app"
-RUN ls -R /app
-RUN echo "FINISHED 1"
-RUN echo "Voici le dossier app/Authentifications"
-RUN ls -R /app/Authentifications
-RUN echo "FINISHED 2"
-# Copier les fichiers de configuration
+# Copier les fichiers publiés depuis la phase de build
+COPY --from=build /app . 
+
+# Copier les fichiers de configuration nécessaires
 COPY Authentifications/appsettings.* . 
 
-# Copier le certificat nécessaire
+# Copier les certificats nécessaires
 COPY TasksApi.pfx /etc/ssl/certs/TasksApi.pfx
 COPY Redis/certs/redis-client.pfx /etc/ssl/certs/redis-client.pfx
 COPY Redis/certs/ca.crt /etc/ssl/certs/ca.crt
