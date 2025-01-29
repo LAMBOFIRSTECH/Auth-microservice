@@ -135,29 +135,19 @@ sonar-build-and-analysis:
 
 
 # ######## RELEASE ########
-# release:
-#   stage: release
-#   tags:
-#     - gitlab-lamboft-shell-develop
-#   script:
-#     - echo "Publication des artefacts pour le déploiement"
-#     - dotnet publish $SOLUTION_PATH --configuration $BUILD_CONFIGURATION --output publish/
-#   artifacts:
-#     paths:
-#       - publish/
-#     expire_in: 1 week
-#     reports:
-#       dotenv: publish/.env # Optionnel : ajoutez un fichier d'environnement pour votre déploiement si nécessaire
-
-# docker-build:
-#   script:
-#     - echo "Construction de l'image Docker"
-#     - dotnet nuget locals all --clear
-#     - tag=$(./image_tag.sh | tr -cd '0-9.')
-#     - docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag .
-#     #- trivy scan-vulnerabilities ici
-#     - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
-#     - docker push  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
+release:
+  stage: release
+  tags:
+    - gitlab-lamboft-shell-develop
+  script:
+    - echo "Publication des artefacts pour le déploiement"
+    - dotnet publish $SOLUTION_PATH --configuration $BUILD_CONFIGURATION --output publish/
+  artifacts:
+    paths:
+      - publish/
+    expire_in: 1 week
+    reports:
+      dotenv: publish/.env # Optionnel : ajoutez un fichier d'environnement pour votre déploiement si nécessaire
 
 # ######## DEPLOY ENV DEV ########
 Env_dev:

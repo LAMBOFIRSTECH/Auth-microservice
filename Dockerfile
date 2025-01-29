@@ -19,7 +19,10 @@ WORKDIR /app
 COPY --from=publish /app .
 RUN echo "Voici le dossier app"
 RUN ls -R /app
-RUN echo "FINISHED"
+RUN echo "FINISHED 1"
+RUN echo "Voici le dossier app/Authentifications"
+RUN ls -R /app/Authentifications
+RUN echo "FINISHED 2"
 # Copier les fichiers de configuration
 COPY Authentifications/appsettings.* . 
 
@@ -34,4 +37,4 @@ ENV ASPNETCORE_ENVIRONMENT=Development
 ENV ASPNETCORE_URLS=https://+:8081
 
 # Point d'entrée de l'application
-ENTRYPOINT ["dotnet", "../Authentifications.dll"]
+ENTRYPOINT ["dotnet", "/app/Authentifications.dll"]
