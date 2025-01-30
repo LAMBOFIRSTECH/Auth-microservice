@@ -126,6 +126,7 @@ sonar-build-and-analysis:
   dependencies:
     - test # Dépend de la phase test 
 
+# ######## DOCKER BUILD AND TRIVY ANALYSIS ########
 # ######## DEPLOY ENV DEV ########
 Env_dev:
   stage: deploy

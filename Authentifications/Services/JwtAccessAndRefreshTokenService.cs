@@ -111,7 +111,7 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
 public TokenResult GenerateJwtTokenAndStatefulRefreshToken(UtilisateurDto utilisateurDto)
 {
     var tokenHandler = new JwtSecurityTokenHandler();
-    var additionalAudiences = new[] { "https://localhost:7082", "https://audience2.com", "https://localhost:9500", "https://192.168.153.131:7250", "https://audience1.com" };
+    var additionalAudiences = new[] { "https://dev-management-tasks:7082", "https://audience2.com", "https://localhost:9500", "https://audience1.com" };
     var tokenDescriptor = new SecurityTokenDescriptor
     {
         Subject = new ClaimsIdentity(new[] {

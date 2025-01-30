@@ -70,7 +70,6 @@ builder.Services.AddHttpContextAccessor();
 builder.Services.AddDataProtection();
 builder.Services.AddHealthChecks();
 builder.Logging.AddConsole();
-
 var kestrelSectionCertificate = builder.Configuration.GetSection("Kestrel:EndPoints:Https:Certificate");
 var certificateFile = kestrelSectionCertificate["File"];
 var certificatePassword = kestrelSectionCertificate["Password"];
@@ -79,7 +78,7 @@ builder.Services.Configure<KestrelServerOptions>(options =>
 {
     if (string.IsNullOrEmpty(certificateFile) || string.IsNullOrEmpty(certificatePassword))
     {
-        throw new InvalidOperationException("Certificate path or password not configured");
+        throw new InvalidOperationException("Certificate path or password not configured"); //On va dégager ceci plustard pas besoin de check si le certificat kestrel ici
     }
     options.Limits.MaxConcurrentConnections = 100;
     options.Limits.MaxRequestBodySize = 10 * 1024;
