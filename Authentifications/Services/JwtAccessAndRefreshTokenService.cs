@@ -104,7 +104,7 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         }
         catch (Exception ex) when (ex.InnerException is SocketException socket)
         {
-            log.LogError(socket,"Socket's problems check if TasksManagement service is UP", socket.Message);
+            log.LogError(socket,"Socket's problems check if Hashicorp Vault server is UP", socket.Message);
             throw new InvalidOperationException("The service is unavailable. Please retry soon.", ex); // Sonar n'est pas content il faille créer une exception personnalisé
         }
     }
