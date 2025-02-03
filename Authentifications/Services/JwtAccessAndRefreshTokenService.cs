@@ -81,6 +81,7 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         sb.AppendLine($"-----END {keyType}-----");
         return sb.ToString();
     }
+    // Methode pour s'authentifier et récupérer les role et secret id (feat/devops)
     private  void StorePublicKeyInVault(string publicKeyPem)
     {
         var hashiCorpToken = configuration["HashiCorp:VaultToken"];
