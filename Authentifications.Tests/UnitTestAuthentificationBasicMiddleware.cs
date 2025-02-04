@@ -20,7 +20,6 @@ public class UnitTestAuthentificationBasicMiddleware
     public UnitTestAuthentificationBasicMiddleware()
     {
         _mockRedisCache = new Mock<IRedisCacheService>();
-       
         _options = new AuthenticationSchemeOptions();
 
         var optionsMonitor = Mock.Of<IOptionsMonitor<AuthenticationSchemeOptions>>(o => o.CurrentValue == _options);

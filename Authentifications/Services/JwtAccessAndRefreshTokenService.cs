@@ -129,6 +129,7 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
     {
         var tokenHandler = new JwtSecurityTokenHandler();
         var additionalAudiences = new[] { "https://dev-management-tasks:7082", "https://audience2.com", "https://localhost:9500", "https://audience1.com" };
+        // il faut récupérer la liste des  audiences depuis la configuration appsettings.json
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(new[] {
