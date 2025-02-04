@@ -62,9 +62,9 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         if (rsaSecurityKey != null)
             return rsaSecurityKey;
         var rsa = RSA.Create(2048);
-        _ = ConvertToPem(rsa.ExportRSAPrivateKey(), "RSA PRIVATE KEY"); // A stocker dans les variables d'env & gérer le processus de rotation des clés
+        _ = ConvertToPem(rsa.ExportRSAPrivateKey(), "RSA PRIVATE KEY");
         var publicKey = ConvertToPem(rsa.ExportRSAPublicKey(), "RSA PUBLIC KEY");
-        StorePublicKeyInVault(publicKey);
+        StoreJwtPublicKeyInVault(publicKey);
         rsaSecurityKey = new RsaSecurityKey(rsa.ExportParameters(true));
         return rsaSecurityKey;
     }
@@ -81,34 +81,49 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         sb.AppendLine($"-----END {keyType}-----");
         return sb.ToString();
     }
-    // Methode pour s'authentifier et récupérer les role et secret id (feat/devops)
-    private  void StorePublicKeyInVault(string publicKeyPem)
+        private async Task<string> GetAppRoleTokenFromVault()
     {
-        var hashiCorpToken = configuration["HashiCorp:VaultToken"];
+        var hashiCorpRoleID = configuration["HashiCorp:AppRole:RoleID"];
+        var hashiCorpSecretID = configuration["HashiCorp:AppRole:SecretID"];
         var hashiCorpHttpClient = configuration["HashiCorp:HttpClient:BaseAddress"];
-        var secretPath = configuration["HashiCorp:SecretsPath"];
-        if (string.IsNullOrEmpty(hashiCorpToken) || string.IsNullOrEmpty(hashiCorpHttpClient) || string.IsNullOrEmpty(secretPath))
+        if (string.IsNullOrEmpty(hashiCorpRoleID) || string.IsNullOrEmpty(hashiCorpSecretID) || string.IsNullOrEmpt(hashiCorpHttpClient)
         {
             log.LogWarning("Empty or invalid HashiCorp Vault configurations.");
             throw new InvalidOperationException("Empty or invalid HashiCorp Vault configurations.");
         }
-        var vaultClientSettings = new VaultClientSettings($"{hashiCorpHttpClient}", new TokenAuthMethodInfo(hashiCorpToken));
+        var appRoleAuthMethodInfo = new AppRoleAuthMethodInfo(hashiCorpRoleID, hashiCorpSecretID);
+        var vaultClientSettings = new VaultClientSettings($"{hashiCorpHttpClient}", appRoleAuthMethodInfo);
         var vaultClient = new VaultClient(vaultClientSettings);
         try
         {
-        vaultClient.V1.Secrets.KeyValue.V2.WriteSecretAsync(
-        secretPath, new Dictionary<string, object>
-        {
-            { "authenticationSignatureKey", publicKeyPem }
-        });
-            log.LogInformation("Successfull storage public key Vault !");
+            var authResponse = await vaultClient.V1.Auth.AppRole.LoginAsync(appRoleAuthMethodInfo);
+            string token = authResponse.AuthInfo.ClientToken;
+            if (string.IsNullOrEmpty(token))
+                throw new InvalidOperationException("Empty token retrieve from HashiCorp Vault");
+            return token;
         }
         catch (Exception ex) when (ex.InnerException is SocketException socket)
         {
-            log.LogError(socket,"Socket's problems check if Hashicorp Vault server is UP", socket.Message);
-            throw new InvalidOperationException("The service is unavailable. Please retry soon.", ex); // Sonar n'est pas content il faille créer une exception personnalisé
+            log.LogError(socket, "Socket's problems check if Hashicorp Vault server is UP", socket.Message);
+            throw new InvalidOperationException("The service is unavailable. Please retry soon.", ex);
         }
     }
+    private async void StoreJwtPublicKeyInVault(string publicKeyPem)
+        {
+            string vautlAppRoleToken = await GetAppRoleTokenFromVault();
+            var secretPath = configuration["HashiCorp:SecretsPath"];
+            var hashiCorpHttpClient = configuration["HashiCorp:HttpClient:BaseAddress"];
+            if (string.IsNullOrEmpty(hashiCorpHttpClient) || string.IsNullOrEmpty(secretPath))
+            {
+                log.LogWarning("Empty or invalid HashiCorp Vault configurations.");
+                throw new InvalidOperationException("Empty or invalid HashiCorp Vault configurations.");
+            }
+            var vaultClientSettings = new VaultClientSettings($"{hashiCorpHttpClient}", new TokenAuthMethodInfo(vautlAppRoleToken));
+            var vaultClient = new VaultClient(vaultClientSettings);
+            await vaultClient.V1.Secrets.KeyValue.V2.WriteSecretAsync(
+            secretPath, new Dictionary<string, object> { { "authenticationSignatureKey", publicKeyPem } });
+            log.LogInformation("Successfull storage public key Vault !");
+        }
 public TokenResult GenerateJwtTokenAndStatefulRefreshToken(UtilisateurDto utilisateurDto)
 {
     var tokenHandler = new JwtSecurityTokenHandler();
