@@ -7,6 +7,7 @@ using Authentifications.Interfaces;
 using Authentifications.Models;
 using Microsoft.IdentityModel.Tokens;
 using VaultSharp;
+using VaultSharp.V1.AuthMethods.AppRole;
 using VaultSharp.V1.AuthMethods.Token;
 namespace Authentifications.Services;
 public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
@@ -81,12 +82,12 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         sb.AppendLine($"-----END {keyType}-----");
         return sb.ToString();
     }
-        private async Task<string> GetAppRoleTokenFromVault()
+    private async Task<string> GetAppRoleTokenFromVault()
     {
         var hashiCorpRoleID = configuration["HashiCorp:AppRole:RoleID"];
         var hashiCorpSecretID = configuration["HashiCorp:AppRole:SecretID"];
         var hashiCorpHttpClient = configuration["HashiCorp:HttpClient:BaseAddress"];
-        if (string.IsNullOrEmpty(hashiCorpRoleID) || string.IsNullOrEmpty(hashiCorpSecretID) || string.IsNullOrEmpt(hashiCorpHttpClient)
+        if (string.IsNullOrEmpty(hashiCorpRoleID) || string.IsNullOrEmpty(hashiCorpSecretID) || string.IsNullOrEmpty(hashiCorpHttpClient))
         {
             log.LogWarning("Empty or invalid HashiCorp Vault configurations.");
             throw new InvalidOperationException("Empty or invalid HashiCorp Vault configurations.");
@@ -109,53 +110,53 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         }
     }
     private async void StoreJwtPublicKeyInVault(string publicKeyPem)
-        {
-            string vautlAppRoleToken = await GetAppRoleTokenFromVault();
-            var secretPath = configuration["HashiCorp:SecretsPath"];
-            var hashiCorpHttpClient = configuration["HashiCorp:HttpClient:BaseAddress"];
-            if (string.IsNullOrEmpty(hashiCorpHttpClient) || string.IsNullOrEmpty(secretPath))
-            {
-                log.LogWarning("Empty or invalid HashiCorp Vault configurations.");
-                throw new InvalidOperationException("Empty or invalid HashiCorp Vault configurations.");
-            }
-            var vaultClientSettings = new VaultClientSettings($"{hashiCorpHttpClient}", new TokenAuthMethodInfo(vautlAppRoleToken));
-            var vaultClient = new VaultClient(vaultClientSettings);
-            await vaultClient.V1.Secrets.KeyValue.V2.WriteSecretAsync(
-            secretPath, new Dictionary<string, object> { { "authenticationSignatureKey", publicKeyPem } });
-            log.LogInformation("Successfull storage public key Vault !");
-        }
-public TokenResult GenerateJwtTokenAndStatefulRefreshToken(UtilisateurDto utilisateurDto)
-{
-    var tokenHandler = new JwtSecurityTokenHandler();
-    var additionalAudiences = new[] { "https://dev-management-tasks:7082", "https://audience2.com", "https://localhost:9500", "https://audience1.com" };
-    var tokenDescriptor = new SecurityTokenDescriptor
     {
-        Subject = new ClaimsIdentity(new[] {
+        string vautlAppRoleToken = await GetAppRoleTokenFromVault();
+        var secretPath = configuration["HashiCorp:SecretsPath"];
+        var hashiCorpHttpClient = configuration["HashiCorp:HttpClient:BaseAddress"];
+        if (string.IsNullOrEmpty(hashiCorpHttpClient) || string.IsNullOrEmpty(secretPath))
+        {
+            log.LogWarning("Empty or invalid HashiCorp Vault configurations.");
+            throw new InvalidOperationException("Empty or invalid HashiCorp Vault configurations.");
+        }
+        var vaultClientSettings = new VaultClientSettings($"{hashiCorpHttpClient}", new TokenAuthMethodInfo(vautlAppRoleToken));
+        var vaultClient = new VaultClient(vaultClientSettings);
+        await vaultClient.V1.Secrets.KeyValue.V2.WriteSecretAsync(
+        secretPath, new Dictionary<string, object> { { "authenticationSignatureKey", publicKeyPem } });
+        log.LogInformation("Successfull storage public key Vault !");
+    }
+    public TokenResult GenerateJwtTokenAndStatefulRefreshToken(UtilisateurDto utilisateurDto)
+    {
+        var tokenHandler = new JwtSecurityTokenHandler();
+        var additionalAudiences = new[] { "https://dev-management-tasks:7082", "https://audience2.com", "https://localhost:9500", "https://audience1.com" };
+        var tokenDescriptor = new SecurityTokenDescriptor
+        {
+            Subject = new ClaimsIdentity(new[] {
                 new Claim(ClaimTypes.Name, utilisateurDto.Nom),
                 new Claim(ClaimTypes.Email, utilisateurDto.Email!),
                 new Claim(ClaimTypes.Role, utilisateurDto.Role.ToString()),
                 new Claim(JwtRegisteredClaimNames.Jti, Guid.NewGuid().ToString()),
                 new Claim(JwtRegisteredClaimNames.Iat, DateTimeOffset.UtcNow.ToUnixTimeSeconds().ToString(), ClaimValueTypes.Integer64)
             }
-        ),
-        Expires = DateTime.UtcNow.AddMinutes(15),
-        SigningCredentials = new SigningCredentials(GetOrCreateSigningKey(), SecurityAlgorithms.RsaSha512),
-        Issuer = configuration.GetSection("JwtSettings")["Issuer"],
-        Audience = null,
-        Claims = new Dictionary<string, object>
+            ),
+            Expires = DateTime.UtcNow.AddMinutes(15),
+            SigningCredentials = new SigningCredentials(GetOrCreateSigningKey(), SecurityAlgorithms.RsaSha512),
+            Issuer = configuration.GetSection("JwtSettings")["Issuer"],
+            Audience = null,
+            Claims = new Dictionary<string, object>
     {
         { JwtRegisteredClaimNames.Aud, additionalAudiences }
     }
-    };
-    var tokenCreation = tokenHandler.CreateToken(tokenDescriptor);
-    var token = tokenHandler.WriteToken(tokenCreation);
-    TokenResult result = new()
-    {
-        Token = token,
-        RefreshToken = refreshToken
-    };
-    return result;
-}
+        };
+        var tokenCreation = tokenHandler.CreateToken(tokenDescriptor);
+        var token = tokenHandler.WriteToken(tokenCreation);
+        TokenResult result = new()
+        {
+            Token = token,
+            RefreshToken = refreshToken
+        };
+        return result;
+    }
     public async Task<UtilisateurDto> AuthUserDetailsAsync((bool IsValid, string email, string password) tupleParameter)
     {
         await Task.Delay(50);
