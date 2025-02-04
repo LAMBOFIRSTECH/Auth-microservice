@@ -11,6 +11,7 @@ services:
       -  /etc/ssl/certs/localhost.pfx:/etc/ssl/certs/localhost.pfx # Certificat pour le serveur en variable d'environnement
       - ./Redis/certs/redis-client.pfx:/etc/ssl/certs/redis-client.pfx # Certificat pour le client redis en variable d'environnement
       - ./Redis/certs/ca.crt:/etc/ssl/certs/ca.crt # Certificat pour le client redis en variable d'environnement
+      - ./appsettings.json:/app/appsettings.Development.json
     environment:
       - ASPNETCORE_Kestrel__Certificates__Default__Password=$CERT_PASSWORD
 networks:
