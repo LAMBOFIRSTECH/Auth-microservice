@@ -74,7 +74,7 @@ test:
     - echo "Exécution des tests unitaires avec collecte de couverture"
     - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.1.21
     - export PATH="$PATH:$HOME/.dotnet/tools"
-    - TEST_PROJECT=$(ls | grep -P -o '\w+\.Tests$'  | head -n 1) # Récupère le premier dossier se terminant par .Tests
+    - TEST_PROJECT=$(ls | grep -P -o '\w+\.Tests$'  | head -n 1) 
     - TEST_CSPROJ=$(ls | grep -P -o '\w+\.Tests.csproj$'  | head -n 1)
     - echo "Lancement des tests unitaires"
     - |
