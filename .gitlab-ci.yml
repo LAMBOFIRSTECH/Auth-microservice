@@ -87,9 +87,9 @@ test:
   artifacts:
     when: always
     paths:
-      - $COVERAGE_REPORT_PATH
+      - $CI_PROJECT_DIR/Couverture/coverage.opencover.xml
     reports:
-      junit: $COVERAGE_REPORT_PATH
+      junit: $CI_PROJECT_DIR/Couverture/coverage.opencover.xml
 
 ###### TRIVY FS VULNERABILITIES #####
 scan-vulnerabilities:
