@@ -75,11 +75,10 @@ test:
     - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.1.21
     - export PATH="$PATH:$HOME/.dotnet/tools"
     - TEST_PROJECT=$(ls | grep -P -o '\w+\.Tests$'  | head -n 1) # Récupère le premier dossier se terminant par .Tests
-    - PROJECT=$(ls *.sln)
-    # essyons le sln à la place du csproj
+    - TEST_CSPROJ=$(ls | grep -P -o '\w+\.Tests.csproj$'  | head -n 1)
     - echo "Lancement des tests unitaires"
     - |
-      dotnet test $PROJECT \ 
+      dotnet test $TEST_PROJECT/$TEST_CSPROJ \ 
         --configuration $BUILD_CONFIGURATION \
         --collect:"XPlat Code Coverage" \
         /p:CollectCoverage=true \
