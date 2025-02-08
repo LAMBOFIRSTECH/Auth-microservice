@@ -15,6 +15,11 @@
             <param name="refreshToken"></param>
              </summary>
         </member>
+        <member name="M:Authentifications.Controllers.TokenController.RetrieveMessageFromRabbitMQ(System.String)">
+             <summary>
+            <param name="message"></param>
+             </summary>
+        </member>
         <member name="T:Authentifications.Models.TokenResult">
             <summary>
             Gestion de la reponse du token JWT.

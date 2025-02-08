@@ -6,6 +6,7 @@ using System.Security.Cryptography.X509Certificates;
 using Newtonsoft.Json;
 using System.Net.Sockets;
 using Authentifications.Interfaces;
+using Hangfire;
 namespace Authentifications.RedisContext;
 public class RedisCacheService : IRedisCacheService
 {
@@ -34,16 +35,7 @@ public class RedisCacheService : IRedisCacheService
             var certificate = new X509Certificate2(certificateFile, certificatePassword);
             var handler = new HttpClientHandler();
             handler.ClientCertificates.Add(certificate);
-            handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, certChain, sslPolicyErrors) =>
-{
-      //   if (sslPolicyErrors != System.Net.Security.SslPolicyErrors.None)
-      //   {
-      //       logger.LogError("SSL validation failed: {SslPolicyErrors}. Certificate: {CertSubject}", sslPolicyErrors, cert?.Subject);
-      //   }
-      return true; //sslPolicyErrors == System.Net.Security.SslPolicyErrors.None; il faut vérifier le certificat entre client et serveur
-      //return true; A ne jamais le faire en production 
-  };
-
+            handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, certChain, sslPolicyErrors) => true;
             return new HttpClient(handler)
             {
                 BaseAddress = new Uri(baseUrl)
@@ -127,6 +119,7 @@ public class RedisCacheService : IRedisCacheService
             throw new InvalidOperationException("There was an error while calling the external API.", ex);
         }
     }
+    [Queue("store_into_redis")]
     public async Task<ICollection<UtilisateurDto>> RetrieveDataOnRedisUsingKeyAsync()
     {
         var cachedData = await _cache.GetStringAsync(cacheKey);

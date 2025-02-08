@@ -13,12 +13,14 @@ namespace Authentifications.Tests;
 public class UnitTestTokenController
 {
     private readonly Mock<IJwtAccessAndRefreshTokenService> _mockJwtService;
+    private readonly Mock<IRabbitMqService> _mockRabbit;
     private readonly TokenController _controller;
 
     public UnitTestTokenController()
     {
         _mockJwtService = new Mock<IJwtAccessAndRefreshTokenService>();
-        _controller = new TokenController(_mockJwtService.Object)
+        _mockRabbit = new Mock<IRabbitMqService>();
+        _controller = new TokenController(_mockJwtService.Object, _mockRabbit.Object)
         {
             ControllerContext = new ControllerContext
             {
@@ -71,7 +73,7 @@ public class UnitTestTokenController
         var context = new DefaultHttpContext();
         context.Items["email"] = "test@example.com";
         context.Items["password"] = "password";
-        context.User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new Claim(ClaimTypes.Name, "test") }, "mock"));
+        context.User = new ClaimsPrincipal(new ClaimsIdentity(new Claim[] { new(ClaimTypes.Name, "test") }, "mock"));
         _controller.ControllerContext = new ControllerContext
         {
             HttpContext = context
@@ -96,6 +98,20 @@ public class UnitTestTokenController
         {
             Assert.True(false, "Expected TokenResult but got null or different type.");
         }
+    }
+    [Fact]
+    public async Task RetrieveMessageFromRabbitMQ_ValidMessage_ReturnsOkResult()
+    {
+        // Arrange
+        string message = "test message";
+        _mockRabbit.Setup(r => r.RetrieveFromRabbitMq(message)).ReturnsAsync("response from rabbitmq");
+
+        // Act
+        var result = await _controller.RetrieveMessageFromRabbitMQ(message);
+
+        // Assert
+        var okResult = Assert.IsType<OkObjectResult>(result);
+        Assert.Equal("response from rabbitmq", okResult.Value);
     }
     // [Fact]
     // public async Task RegenerateAccessTokenUsingRefreshToken_ShouldReturnBadRequest_WhenRefreshTokenIsMissing()

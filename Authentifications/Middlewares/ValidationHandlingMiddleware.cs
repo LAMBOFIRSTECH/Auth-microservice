@@ -19,7 +19,6 @@ public class ValidationHandlingMiddleware
 		{
 			await HandleExceptionAsync(context, ex);
 		}
-		// Vérifier si le modèle est invalide et gérer manuellement l'erreur 400
 		if (context.Items.ContainsKey("ModelValidationErrors") && !context.Response.HasStarted)
 		{
 			var validationErrors = (List<string>)context.Items["ModelValidationErrors"]!;

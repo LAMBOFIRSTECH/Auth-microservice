@@ -8,8 +8,12 @@ namespace Authentifications.Controllers;
 public class TokenController : ControllerBase
 {
     private readonly IJwtAccessAndRefreshTokenService jwtToken;
-    public TokenController(IJwtAccessAndRefreshTokenService jwtToken)
-    { this.jwtToken = jwtToken; }
+    private readonly IRabbitMqService rabbit;
+    public TokenController(IJwtAccessAndRefreshTokenService jwtToken, IRabbitMqService rabbit)
+    {
+        this.jwtToken = jwtToken;
+        this.rabbit = rabbit;
+    }
     /// <summary>
     /// Authentifie un utilisateur et retourne les tokens (access et refresh).
     /// </summary>
@@ -64,5 +68,15 @@ public class TokenController : ControllerBase
         if (!result.Response)
             return Unauthorized(new { result.Message });
         return CreatedAtAction(nameof(RegenerateAccessTokenUsingRefreshToken), new { result.Token, result.RefreshToken });
+    }
+    /// <summary>
+    ///<param name="message"></param>
+    /// </summary>
+    [HttpGet("retrieve")]
+    public async Task<ActionResult> RetrieveMessageFromRabbitMQ([FromBody] string message)
+    {
+        if (string.IsNullOrWhiteSpace(message))
+            return BadRequest(new { Message = "Message is required." });
+        return Ok(await rabbit.RetrieveFromRabbitMq(message));
     }
 }

@@ -10,26 +10,26 @@ namespace Authentifications.Tests
 {
     public class JwtAccessAndRefreshTokenServiceTest
     {
-        private readonly Mock<IConfiguration> mockConfiguration;
-        private readonly Mock<ILogger<JwtAccessAndRefreshTokenService>> mockLogger;
-        private readonly Mock<IRedisCacheService> mockRedisCache;
-        private readonly Mock<IRedisCacheTokenService> mockRedisTokenCache;
-        private readonly JwtAccessAndRefreshTokenService service;
+        // private readonly Mock<IConfiguration> mockConfiguration;
+        // private readonly Mock<ILogger<JwtAccessAndRefreshTokenService>> mockLogger;
+        // private readonly Mock<IRedisCacheService> mockRedisCache;
+        // private readonly Mock<IRedisCacheTokenService> mockRedisTokenCache;
+        // private readonly JwtAccessAndRefreshTokenService service;
 
-        public JwtAccessAndRefreshTokenServiceTest()
-        {
-            mockConfiguration = new Mock<IConfiguration>();
-            mockLogger = new Mock<ILogger<JwtAccessAndRefreshTokenService>>();
-            mockRedisCache = new Mock<IRedisCacheService>();
-            mockRedisTokenCache = new Mock<IRedisCacheTokenService>();
+        // public JwtAccessAndRefreshTokenServiceTest()
+        // {
+        //     mockConfiguration = new Mock<IConfiguration>();
+        //     mockLogger = new Mock<ILogger<JwtAccessAndRefreshTokenService>>();
+        //     mockRedisCache = new Mock<IRedisCacheService>();
+        //     mockRedisTokenCache = new Mock<IRedisCacheTokenService>();
 
-            service = new JwtAccessAndRefreshTokenService(
-                mockConfiguration.Object,
-                mockLogger.Object,
-                mockRedisCache.Object,
-                mockRedisTokenCache.Object
-            );
-        }
+        //     service = new JwtAccessAndRefreshTokenService(
+        //         mockConfiguration.Object,
+        //         mockLogger.Object,
+        //         mockRedisCache.Object,
+        //         mockRedisTokenCache.Object
+        //     );
+        // }
 
         // [Fact]
         // public void GenerateRefreshToken_ShouldReturnValidToken()

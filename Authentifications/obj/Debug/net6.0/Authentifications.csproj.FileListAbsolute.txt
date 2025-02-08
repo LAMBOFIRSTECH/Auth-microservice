@@ -200,3 +200,5 @@
 /home/snow/authentication/Authentifications/obj/Debug/net6.0/Authentifications.xml
 /home/snow/authentication/Authentifications/obj/Debug/net6.0/Authentifications.pdb
 /home/snow/authentication/Authentifications/obj/Debug/net6.0/Authentifications.genruntimeconfig.cache
+/home/snow/authentication/Authentifications/bin/Debug/net6.0/RabbitMQ.Client.dll
+/home/snow/authentication/Authentifications/bin/Debug/net6.0/System.Threading.Channels.dll

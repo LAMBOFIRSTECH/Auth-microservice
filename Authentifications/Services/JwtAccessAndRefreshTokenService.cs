@@ -1,14 +1,10 @@
 using System.IdentityModel.Tokens.Jwt;
-using System.Net.Sockets;
 using System.Security.Claims;
 using System.Security.Cryptography;
 using System.Text;
 using Authentifications.Interfaces;
 using Authentifications.Models;
 using Microsoft.IdentityModel.Tokens;
-using VaultSharp;
-using VaultSharp.V1.AuthMethods.AppRole;
-using VaultSharp.V1.AuthMethods.Token;
 namespace Authentifications.Services;
 public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
 {
@@ -16,15 +12,17 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
     private readonly ILogger<JwtAccessAndRefreshTokenService> log;
     private readonly IRedisCacheService redisCache;
     private readonly IRedisCacheTokenService redisTokenCache;
+    private readonly IHashicorpVaultService hashicorpVaultService;
     private RsaSecurityKey rsaSecurityKey;
     private readonly string refreshToken;
-
-    public JwtAccessAndRefreshTokenService(IConfiguration configuration, ILogger<JwtAccessAndRefreshTokenService> log, IRedisCacheService redisCache, IRedisCacheTokenService redisTokenCache)
+    public JwtAccessAndRefreshTokenService(IConfiguration configuration, ILogger<JwtAccessAndRefreshTokenService> log,
+    IRedisCacheService redisCache, IRedisCacheTokenService redisTokenCache, IHashicorpVaultService hashicorpVaultService)
     {
         this.configuration = configuration;
         this.log = log;
         this.redisCache = redisCache;
         this.redisTokenCache = redisTokenCache;
+        this.hashicorpVaultService = hashicorpVaultService;
         rsaSecurityKey = GetOrCreateSigningKey();
         refreshToken = GenerateRefreshToken();
     }
@@ -65,7 +63,7 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         var rsa = RSA.Create(2048);
         _ = ConvertToPem(rsa.ExportRSAPrivateKey(), "RSA PRIVATE KEY");
         var publicKey = ConvertToPem(rsa.ExportRSAPublicKey(), "RSA PUBLIC KEY");
-        StoreJwtPublicKeyInVault(publicKey);
+        hashicorpVaultService.StoreJwtPublicKeyInVault(publicKey);
         rsaSecurityKey = new RsaSecurityKey(rsa.ExportParameters(true));
         return rsaSecurityKey;
     }
@@ -82,54 +80,10 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         sb.AppendLine($"-----END {keyType}-----");
         return sb.ToString();
     }
-    private async Task<string> GetAppRoleTokenFromVault()
-    {
-        var hashiCorpRoleID = configuration["HashiCorp:AppRole:RoleID"];
-        var hashiCorpSecretID = configuration["HashiCorp:AppRole:SecretID"];
-        var hashiCorpHttpClient = configuration["HashiCorp:HttpClient:BaseAddress"];
-        if (string.IsNullOrEmpty(hashiCorpRoleID) || string.IsNullOrEmpty(hashiCorpSecretID) || string.IsNullOrEmpty(hashiCorpHttpClient))
-        {
-            log.LogWarning("Empty or invalid HashiCorp Vault configurations.");
-            throw new InvalidOperationException("Empty or invalid HashiCorp Vault configurations.");
-        }
-        var appRoleAuthMethodInfo = new AppRoleAuthMethodInfo(hashiCorpRoleID, hashiCorpSecretID);
-        var vaultClientSettings = new VaultClientSettings($"{hashiCorpHttpClient}", appRoleAuthMethodInfo);
-        var vaultClient = new VaultClient(vaultClientSettings);
-        try
-        {
-            var authResponse = await vaultClient.V1.Auth.AppRole.LoginAsync(appRoleAuthMethodInfo);
-            string token = authResponse.AuthInfo.ClientToken;
-            if (string.IsNullOrEmpty(token))
-                throw new InvalidOperationException("Empty token retrieve from HashiCorp Vault");
-            return token;
-        }
-        catch (Exception ex) when (ex.InnerException is SocketException socket)
-        {
-            log.LogError(socket, "Socket's problems check if Hashicorp Vault server is UP", socket.Message);
-            throw new InvalidOperationException("The service is unavailable. Please retry soon.", ex);
-        }
-    }
-    private async void StoreJwtPublicKeyInVault(string publicKeyPem)
-    {
-        string vautlAppRoleToken = await GetAppRoleTokenFromVault();
-        var secretPath = configuration["HashiCorp:SecretsPath"];
-        var hashiCorpHttpClient = configuration["HashiCorp:HttpClient:BaseAddress"];
-        if (string.IsNullOrEmpty(hashiCorpHttpClient) || string.IsNullOrEmpty(secretPath))
-        {
-            log.LogWarning("Empty or invalid HashiCorp Vault configurations.");
-            throw new InvalidOperationException("Empty or invalid HashiCorp Vault configurations.");
-        }
-        var vaultClientSettings = new VaultClientSettings($"{hashiCorpHttpClient}", new TokenAuthMethodInfo(vautlAppRoleToken));
-        var vaultClient = new VaultClient(vaultClientSettings);
-        await vaultClient.V1.Secrets.KeyValue.V2.WriteSecretAsync(
-        secretPath, new Dictionary<string, object> { { "authenticationSignatureKey", publicKeyPem } });
-        log.LogInformation("Successfull storage public key Vault !");
-    }
     public TokenResult GenerateJwtTokenAndStatefulRefreshToken(UtilisateurDto utilisateurDto)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var additionalAudiences = new[] { "https://dev-management-tasks:7082", "https://audience2.com", "https://localhost:9500", "https://audience1.com" };
-        // il faut récupérer la liste des  audiences depuis la configuration appsettings.json
+        var additionalAudiences = new[] { configuration.GetSection("JwtSettings")["Audiences"] };
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(new[] {
@@ -144,10 +98,7 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
             SigningCredentials = new SigningCredentials(GetOrCreateSigningKey(), SecurityAlgorithms.RsaSha512),
             Issuer = configuration.GetSection("JwtSettings")["Issuer"],
             Audience = null,
-            Claims = new Dictionary<string, object>
-    {
-        { JwtRegisteredClaimNames.Aud, additionalAudiences }
-    }
+            Claims = new Dictionary<string, object> { { JwtRegisteredClaimNames.Aud, additionalAudiences } }
         };
         var tokenCreation = tokenHandler.CreateToken(tokenDescriptor);
         var token = tokenHandler.WriteToken(tokenCreation);
@@ -160,7 +111,6 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
     }
     public async Task<UtilisateurDto> AuthUserDetailsAsync((bool IsValid, string email, string password) tupleParameter)
     {
-        await Task.Delay(50);
         var Parameter = await redisCache.GetBooleanAndUserDataFromRedisUsingParamsAsync(tupleParameter.IsValid, tupleParameter.email!, tupleParameter.password!);
         log.LogInformation("User details have been correctly retrieved from Redis cache db");
         return Parameter.Item2;

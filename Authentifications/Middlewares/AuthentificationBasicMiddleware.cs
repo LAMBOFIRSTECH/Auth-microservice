@@ -38,7 +38,7 @@ public class AuthentificationBasicMiddleware : AuthenticationHandler<Authenticat
             var password = credentials[1];
             Context.Items["password"] = password;
             Context.Items["email"] = email;
-            string regexMatch = "(?<alpha>\\w+)@(?<mailing>[aA-zZ]+)\\.(?<domaine>[aA-zZ]+$)";
+            const string regexMatch = "(?<alpha>\\w+)@(?<mailing>[aA-zZ]+)\\.(?<domaine>[aA-zZ]+$)";
             Match check = Regex.Match(email, regexMatch);
             if (!check.Success)
                 return AuthenticateResult.Fail($"The following email address is invalid => {email}");

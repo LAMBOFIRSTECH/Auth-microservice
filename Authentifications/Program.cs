@@ -78,15 +78,12 @@ builder.Services.Configure<KestrelServerOptions>(options =>
 {
     if (string.IsNullOrEmpty(certificateFile) || string.IsNullOrEmpty(certificatePassword))
     {
-        throw new InvalidOperationException("Certificate path or password not configured"); //On va dégager ceci plustard pas besoin de check si le certificat kestrel ici
+        throw new InvalidOperationException("Certificate path or password not configured");
     }
     options.Limits.MaxConcurrentConnections = 100;
     options.Limits.MaxRequestBodySize = 10 * 1024;
     options.Limits.KeepAliveTimeout = TimeSpan.FromMinutes(2);
-    options.ConfigureHttpsDefaults(opt =>
-    {
-        opt.ClientCertificateMode = ClientCertificateMode.NoCertificate; // Required Certificate dans les autres services c'est du allowCertificate
-    });
+    options.ConfigureHttpsDefaults(opt => opt.ClientCertificateMode = ClientCertificateMode.NoCertificate);
 });
 
 builder.Services.AddScoped<IJwtAccessAndRefreshTokenService, JwtAccessAndRefreshTokenService>();
@@ -106,29 +103,27 @@ builder.Services.AddAuthentication("BasicAuthentication")
 var Config = builder.Configuration.GetSection("Redis");
 
 var clientCertificate = new X509Certificate2(
-    Config["Certificate:Redis-pfx"], // Chemin du certificat client
-    Config["Certificate:Pfx-password"], // Mot de passe du certificat
+    Config["Certificate:Redis-pfx"],
+    Config["Certificate:Pfx-password"],
     X509KeyStorageFlags.PersistKeySet | X509KeyStorageFlags.MachineKeySet
 );
 
 var options = new ConfigurationOptions
 {
-    EndPoints = { Config["ConnectionString"] }, //par "localhost:6379"
-    Ssl = true, // Activation de TLS obligatoire
-    SslHost = "Redis-server", // Nom d'hôte à valider dans le certificat
-    Password = Config["Password"], // Mot de passe Redis
+    EndPoints = { Config["ConnectionString"] },
+    Ssl = true,
+    SslHost = "Redis-server",
+    Password = Config["Password"],
     AbortOnConnectFail = false,
-    SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13, // Limité à TLS 1.2 et 1.3 comme sur le serveur
+    SslProtocols = SslProtocols.Tls12 | SslProtocols.Tls13,
     AllowAdmin = true,
     ConnectTimeout = 10000,
     SyncTimeout = 10000,
     ReconnectRetryPolicy = new ExponentialRetry(5000)
 };
 
-// Validation du certificat serveur
 options.CertificateValidation += (sender, certificate, chain, sslPolicyErrors) =>
 {
-    // Accepter uniquement si le certificat est valide ou s'il est signé par Redis-CA
     return sslPolicyErrors == SslPolicyErrors.None ||
            (sslPolicyErrors == SslPolicyErrors.RemoteCertificateChainErrors &&
             chain!.ChainElements[^1].Certificate.Subject == "CN=Redis-CA");
@@ -161,8 +156,7 @@ builder.Services.AddHangfire((serviceProvider, config) =>
 builder.Services.AddHangfireServer(options =>
 {
     options.WorkerCount = 5;
-    options.SchedulePollingInterval = TimeSpan.FromMinutes(3);
-    options.Queues = new[] { "forcast_task" };
+    options.Queues = new[] { "default","store_into_redis" };
 });
 
 var app = builder.Build();
@@ -187,19 +181,6 @@ app.UseHangfireDashboard("/lambo-authentication-manager/hangfire", new Dashboard
     }
 });
 
-app.Lifetime.ApplicationStarted.Register(() =>
-{
-    BackgroundJob.Schedule<RedisCacheService>( //Producer
-        "call_api",
-        service => service.BackGroundJob(),
-        TimeSpan.Zero  // On initie immédiatement la tâche
-    );
-    // BackgroundJob.Schedule<RedisCacheService>(
-    // 	"delete_cache", // Identifiant unique de la tâche
-    // 	service => service.DeleteRedisCacheAfterOneDay(),
-    // 	TimeSpan.Zero 
-    // );
-});
 app.UseMiddleware<ContextPathMiddleware>("/lambo-authentication-manager");
 if (app.Environment.IsProduction())
 {
