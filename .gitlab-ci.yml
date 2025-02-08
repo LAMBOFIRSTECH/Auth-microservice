@@ -85,12 +85,12 @@ test:
         /p:CoverletOutput=../Couverture/ \
         /p:CoverletOutputFormat="opencover"
     - ls -al ../
-  artifacts:
-    when: always
-    paths:
-      - $COVERAGE_REPORT_PATH
-    reports:
-      junit: $COVERAGE_REPORT_PATH
+  # artifacts:
+  #   when: always
+  #   paths:
+  #     - $COVERAGE_REPORT_PATH
+  #   reports:
+  #     junit: $COVERAGE_REPORT_PATH
 
 before_script:
   - export $(cat .env | xargs)
