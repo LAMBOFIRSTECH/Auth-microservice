@@ -1,7 +1,7 @@
 ######## VARIABLES ########
 variables:
   BUILD_CONFIGURATION: "Release"
-  COVERAGE_REPORT_PATH: "Couverture/coverage.opencover.xml"
+  COVERAGE_REPORT_PATH: "/home/gitlab-runner/builds/t3_V6czWc/0/artur437810/authentication/Couverture/coverage.opencover.xml"
   NUGET_PACKAGES_DIRECTORY: ".nuget/packages"
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
 
@@ -72,8 +72,8 @@ test:
     - gitlab-lamboft-docker-runner
   script:
     - echo "Exécution des tests unitaires avec collecte de couverture"
-    #- dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.1.21
-    #- export PATH="$PATH:$HOME/.dotnet/tools"
+    - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.1.21
+    - export PATH="$PATH:$HOME/.dotnet/tools"
     - TEST_PROJECT=$(ls | grep -P -o '\w+\.Tests$'  | head -n 1) # Récupère le premier dossier se terminant par .Tests
     - TEST_CSPROJ=$(ls | grep -P -o '\w+\.Tests.csproj$'  | head -n 1)
     - echo "Lancement des tests unitaires"
@@ -84,16 +84,12 @@ test:
         /p:CollectCoverage=true \
         /p:CoverletOutput=../Couverture/ \
         /p:CoverletOutputFormat="opencover"
-    - ls -al ../
-  # artifacts:
-  #   when: always
-  #   paths:
-  #     - $COVERAGE_REPORT_PATH
-  #   reports:
-  #     junit: $COVERAGE_REPORT_PATH
-
-before_script:
-  - export $(cat .env | xargs)
+  artifacts:
+    when: always
+    paths:
+      - $COVERAGE_REPORT_PATH
+    reports:
+      junit: $COVERAGE_REPORT_PATH
 
 ###### TRIVY FS VULNERABILITIES #####
 scan-vulnerabilities:
