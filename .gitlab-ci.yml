@@ -82,14 +82,14 @@ test:
         --configuration $BUILD_CONFIGURATION \
         --collect:"XPlat Code Coverage" \
         /p:CollectCoverage=true \
-        /p:CoverletOutput=./Couverture/ \
+        /p:CoverletOutput=../Couverture/ \
         /p:CoverletOutputFormat="opencover"
   artifacts:
     when: always
     paths:
-      - $COVERAGE_REPORT_PATH
-    reports:
-      junit: $COVERAGE_REPORT_PATH
+      - "$CI_PROJECT_DIR/Couverture/coverage.opencover.xml"
+    # reports:
+    #   junit: $COVERAGE_REPORT_PATH
 
 ###### TRIVY FS VULNERABILITIES #####
 scan-vulnerabilities:
