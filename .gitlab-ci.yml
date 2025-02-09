@@ -78,7 +78,7 @@ test:
     - export PATH="$PATH:$HOME/.dotnet/tools"
     - ls -la
     - TEST_PROJECT=$(ls | grep -P -o '\w+\.Tests$'  | head -n 1) 
-    - echo "$TEST_PROJECT"
+    - echo "$TEST_PROJECT.csproj"
     - echo "Lancement des tests unitaires"
     - |
       dotnet test "$TEST_PROJECT/$TEST_PROJECT.csproj" \ 
