@@ -35,6 +35,8 @@ pre-treatment:
     - dotnet nuget locals all --clear # Nettoie les caches locaux NuGet
     - echo "Nettoyage des fichiers intermédiaires"
     - find . -name "*.dll" -o -name "*.pdb" -o -name "*.tmp" -o -name "*.md"| xargs rm -rf
+    - echo "Nettoyage des artefacts"
+    - rm -rf $CI_PROJECT_DIR/*
     - echo "Nettoyage des artefacts de build"
     - rm -rf **/bin/ **/obj/ # Nettoie les binaires et les objets
     - echo "Nettoyage des artefacts de test"
@@ -57,7 +59,7 @@ build:
     - PROJECT=$(ls *.sln | sed -E 's/\.sln$//')
     - chmod -R 750 $PROJECT/bin/ # bonne pratiques pour la securité on restreint l'accès aux binaires
   cache:
-    key: "$CI_COMMIT_REF_NAME"
+    key: "$CI_COMMIT_SHA"
     paths:
       - "$NUGET_PACKAGES_DIRECTORY"
   artifacts:
@@ -72,10 +74,9 @@ test:
     - gitlab-lamboft-docker-runner
   script:
     - echo "Exécution des tests unitaires avec collecte de couverture"
-    - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.1.21
-    - export PATH="$PATH:$HOME/.dotnet/tools"
+    #- dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.1.21
+    #- export PATH="$PATH:$HOME/.dotnet/tools"
     - TEST_PROJECT=$(ls | grep -P -o '\w+\.Tests$'  | head -n 1) 
-    - TEST_CSPROJ=$(ls | grep -P -o '\w+\.Tests.csproj$'  | head -n 1)
     - echo "Lancement des tests unitaires"
     - |
       dotnet test $TEST_PROJECT/$TEST_PROJECT.csproj \ 
@@ -87,9 +88,9 @@ test:
   artifacts:
     when: always
     paths:
-      - "$CI_PROJECT_DIR/Couverture/coverage.opencover.xml"
-    # reports:
-    #   junit: $COVERAGE_REPORT_PATH
+      - $COVERAGE_REPORT_PATH
+    reports:
+      junit: $COVERAGE_REPORT_PATH
 
 ###### TRIVY FS VULNERABILITIES #####
 scan-vulnerabilities:
@@ -117,7 +118,7 @@ sonar-build-and-analysis:
     - chmod +x sonar_report.sh; ./sonar_report.sh
   cache:
     policy: pull-push
-    key: "sonar-cache-$CI_COMMIT_REF_SLUG"
+    key: "$CI_COMMIT_SHA"
     paths:
       - "${SONAR_USER_HOME}/cache"
       - sonar-scanner/
