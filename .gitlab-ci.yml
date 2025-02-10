@@ -80,8 +80,7 @@ test:
     - echo "$TEST_PROJECT.csproj"
     - echo "Lancement des tests unitaires"
     - |
-      cd $TEST_PROJECT
-      dotnet test $TEST_PROJECT.csproj \ 
+      dotnet test Authentifications.sln \ 
         --configuration $BUILD_CONFIGURATION \
         --collect:"XPlat Code Coverage" \
         /p:CollectCoverage=true \
