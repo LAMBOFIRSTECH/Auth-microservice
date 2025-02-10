@@ -64,7 +64,7 @@ build:
       - "$NUGET_PACKAGES_DIRECTORY"
   artifacts:
     paths:
-      - "**/bin/**" # Artéfacts de build si nécessaire
+      - "**/bin/**"
     expire_in: 20 minutes
 
 # ######## TEST ########
@@ -80,7 +80,8 @@ test:
     - echo "$TEST_PROJECT.csproj"
     - echo "Lancement des tests unitaires"
     - |
-      dotnet test $TEST_PROJECT/$TEST_PROJECT.csproj \ 
+      cd $TEST_PROJECT
+      dotnet test $TEST_PROJECT.csproj \ 
         --configuration $BUILD_CONFIGURATION \
         --collect:"XPlat Code Coverage" \
         /p:CollectCoverage=true \
@@ -165,7 +166,6 @@ Env_dev:
         echo "No environment tag set for this runner development"
         exit 1
       fi
-
   artifacts:
     reports:
       dotenv: build.env
