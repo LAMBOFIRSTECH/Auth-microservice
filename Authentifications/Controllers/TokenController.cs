@@ -8,11 +8,9 @@ namespace Authentifications.Controllers;
 public class TokenController : ControllerBase
 {
     private readonly IJwtAccessAndRefreshTokenService jwtToken;
-    private readonly IRabbitMqService rabbit;
-    public TokenController(IJwtAccessAndRefreshTokenService jwtToken, IRabbitMqService rabbit)
+    public TokenController(IJwtAccessAndRefreshTokenService jwtToken)
     {
         this.jwtToken = jwtToken;
-        this.rabbit = rabbit;
     }
     /// <summary>
     /// Authentifie un utilisateur et retourne les tokens (access et refresh).
@@ -27,27 +25,19 @@ public class TokenController : ControllerBase
         if (!User.Identity!.IsAuthenticated)
             return Unauthorized("Unauthorized access");
         var user = await jwtToken.AuthUserDetailsAsync((User.Identity!.IsAuthenticated, email, password));
-        var result = jwtToken.GetToken(user);
-        if (!result.Response)
+        var tokenResult = jwtToken.GetToken(user);
+        if (!tokenResult.Response)
         {
             return Unauthorized(new TokenResult
             {
-                Response = result.Response,
-                Message = result.Message,
-                Token = null,
-                RefreshToken = null
+                Response = tokenResult.Response,
+                Message = tokenResult.Message,
+                Token = tokenResult.Token,
+                RefreshToken = tokenResult.RefreshToken
             });
         }
-
         HttpContext.Session.SetString("email", email);
         HttpContext.Session.SetString("password", password);
-        var tokenResult = new TokenResult()
-        {
-            Response = result.Response,
-            Message = "AccessToken and refreshToken have been successfully generated ",
-            Token = result.Token,
-            RefreshToken = result.RefreshToken
-        };
         return CreatedAtAction(nameof(Authentificate), new { tokenResult });
     }
     /// <summary>
@@ -64,19 +54,17 @@ public class TokenController : ControllerBase
             return BadRequest(new { Message = "Refresh token is required." });
         if (string.IsNullOrWhiteSpace(email) || string.IsNullOrWhiteSpace(password))
             return BadRequest(new { Message = "Email or password is missing. Could not refresh token." });
-        var result = await jwtToken.NewAccessTokenUsingRefreshTokenInRedisAsync(refreshToken, email, password);
-        if (!result.Response)
-            return Unauthorized(new { result.Message });
-        return CreatedAtAction(nameof(RegenerateAccessTokenUsingRefreshToken), new { result.Token, result.RefreshToken });
-    }
-    /// <summary>
-    ///<param name="message"></param>
-    /// </summary>
-    [HttpGet("retrieve")]
-    public async Task<ActionResult> RetrieveMessageFromRabbitMQ([FromBody] string message)
-    {
-        if (string.IsNullOrWhiteSpace(message))
-            return BadRequest(new { Message = "Message is required." });
-        return Ok(await rabbit.RetrieveFromRabbitMq(message));
+        var tokenResult = await jwtToken.NewAccessTokenUsingRefreshTokenInRedisAsync(refreshToken, email, password);
+        if (!tokenResult.Response)
+        {
+            return Unauthorized(new TokenResult
+            {
+                Response = tokenResult.Response,
+                Message = tokenResult.Message,
+                Token = tokenResult.Token,
+                RefreshToken = tokenResult.RefreshToken
+            });
+        }
+        return CreatedAtAction(nameof(RegenerateAccessTokenUsingRefreshToken), new { tokenResult });
     }
 }
