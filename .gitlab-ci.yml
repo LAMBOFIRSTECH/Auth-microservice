@@ -2,8 +2,9 @@
 variables:
   BUILD_CONFIGURATION: "Release"
   COVERAGE_REPORT_PATH: "Couverture/coverage.opencover.xml"
-  NUGET_PACKAGES_DIRECTORY: ".nuget/packages"
+  NUGET_PACKAGES_DIRECTORY: "$CI_PROJECT_DIR/.nuget/packages"
   SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+  GIT_CLEAN_FLAGS: "-ffdx" # Nettoyage automatique du repo
 
 default:
   tags:
@@ -11,9 +12,10 @@ default:
 
 ######## CACHE ########
 cache:
-  key: "$CI_JOB_STAGE-$CI_COMMIT_REF_SLUG"
+  key: "$CI_COMMIT_REF_SLUG"
   paths:
     - "$NUGET_PACKAGES_DIRECTORY"
+    - "bin/"
 
 ######## STAGES ########
 stages:
@@ -23,109 +25,76 @@ stages:
   - scan-vulnerabilities
   - sonar-build-and-analysis
   - deploy
-#   - cleanup
+  - cleanup # Ajout d'une étape de nettoyage finale
 
-# ######## PRE-TREATMENT ########
+######## PRE-TREATMENT ########
 pre-treatment:
   stage: pre-treatment
-  tags:
-    - gitlab-lamboft-docker-runner
   script:
+    - echo "Nettoyage initial..."
+    - git reset --hard
+    - git clean -fdx
     - echo "Nettoyage des caches NuGet"
-    - dotnet nuget locals all --clear # Nettoie les caches locaux NuGet
-    - echo "Nettoyage des fichiers intermédiaires"
-    - find . -name "*.dll" -o -name "*.pdb" -o -name "*.tmp" -o -name "*.md"| xargs rm -rf
+    - dotnet nuget locals all --clear
     - echo "Nettoyage des artefacts"
-    - rm -rf $CI_PROJECT_DIR/*
-    - echo "Nettoyage des artefacts de build"
-    - rm -rf **/bin/ **/obj/ # Nettoie les binaires et les objets
-    - echo "Nettoyage des artefacts de test"
-    - rm -rf **/TestResults/ # Nettoie les résultats de tests
-    - echo "Nettoyage des artefacts de couverture"
-    - rm -rf Couverture/ # Nettoie les résultats de couverture
-    - echo "Récupération des fichiers de solution et dossier de Test"
+    - rm -rf **/bin/ **/obj/ **/TestResults/ **/.vscode/ Couverture/
   artifacts:
-    paths:
-      - "**/bin/**" # Artéfacts de build si nécessaire
     expire_in: 20 minutes
 
-# ######## BUILD ########
+######## BUILD ########
 build:
   stage: build
   script:
     - SOLUTION_FILE=$(ls *.sln)
     - echo "Compilation des projets à partir de $SOLUTION_FILE"
     - dotnet build $SOLUTION_FILE --configuration $BUILD_CONFIGURATION
-    - PROJECT=$(ls *.sln | sed -E 's/\.sln$//')
-    - chmod -R 750 $PROJECT/bin/ # bonne pratiques pour la securité on restreint l'accès aux binaires
   cache:
-    key: "$CI_COMMIT_SHA"
+    key: "$CI_COMMIT_REF_SLUG"
     paths:
       - "$NUGET_PACKAGES_DIRECTORY"
+      - "bin/"
   artifacts:
-    paths:
-      - "**/bin/**"
-    expire_in: 20 minutes
+    expire_in: 10 minutes
 
-# ######## TEST ########
+######## TEST ########
 test:
   stage: test
-  tags:
-    - gitlab-lamboft-docker-runner
   script:
-    - echo "Exécution des tests unitaires avec collecte de couverture"
-    - dotnet tool install --global dotnet-reportgenerator-globaltool --version 5.1.21
-    - export PATH="$PATH:$HOME/.dotnet/tools"
-    - TEST_PROJECT=$(ls | grep -P -o '\w+\.Tests$'  | head -n 1) 
-    - echo "$TEST_PROJECT.csproj"
-    - echo "Lancement des tests unitaires"
-    - |
-      dotnet test Authentifications.sln \ 
-        --configuration $BUILD_CONFIGURATION \
-        --collect:"XPlat Code Coverage" \
-        /p:CollectCoverage=true \
-        /p:CoverletOutput=../Couverture/ \
-        /p:CoverletOutputFormat="opencover"
-  artifacts:
-    when: always
+    - echo "Exécution des tests unitaires"
+    - TEST_PROJECT=$(find . -name "*.Tests.csproj" | head -n 1)
+    - dotnet test $TEST_PROJECT
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
     paths:
-      - $COVERAGE_REPORT_PATH
-    reports:
-      junit: $COVERAGE_REPORT_PATH
+      - "$NUGET_PACKAGES_DIRECTORY"
+      - "bin/"
 
-###### TRIVY FS VULNERABILITIES #####
+######## SCAN DES VULNÉRABILITÉS ########
 scan-vulnerabilities:
   stage: scan-vulnerabilities
-  tags:
-    - gitlab-lamboft-shell-develop
   script:
     - dotnet list package --vulnerable
     - chmod +x trivy.sh
     - ./trivy.sh
   allow_failure: true
 
-######## SONARQUBE BUILD AND ANALYSIS ########
+######## SONARQUBE BUILD & ANALYSIS ########
 sonar-build-and-analysis:
   stage: sonar-build-and-analysis
-  tags:
-    - gitlab-lamboft-shell-develop
-  variables:
-    RUNNER_TAG: "development"
-    allow_failure: false
   script:
-    - echo "Lancement de l'analyse SonarQube."
-    - chmod +x sonar_check.sh; ./sonar_check.sh
-    - echo "Génération du rapport SonarQube."
-    - chmod +x sonar_report.sh; ./sonar_report.sh
+    - echo "Lancement de l'analyse SonarQube"
+    - chmod +x sonar_check.sh && ./sonar_check.sh
+    - chmod +x sonar_report.sh && ./sonar_report.sh
   cache:
     policy: pull-push
-    key: "$CI_COMMIT_SHA"
+    key: "$CI_COMMIT_REF_SLUG"
     paths:
       - "${SONAR_USER_HOME}/cache"
       - sonar-scanner/
+      - "$NUGET_PACKAGES_DIRECTORY"
+      - "bin/"
   dependencies:
-    - test # Dépend de la phase test 
-
+    - test
 # ######## DOCKER BUILD AND TRIVY ANALYSIS ########
 # ######## DEPLOY ENV DEV ########
 Env_dev:
@@ -155,8 +124,10 @@ Env_dev:
         docker push  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
         echo "Déploiement de l'image Docker"
         docker rm -f dev-$CI_PROJECT_NAME || true
+        echo "Récupération et substitution des crédentials appRole Vault dans le fichier de configuration"
+        chmod +x vault_app_auth.sh; ./vault_app_auth.sh
         docker-compose -f application-compose.yml --env-file .env.ci up -d
-        if [ $? != 0 ]; then
+        if [ $? != 0 ]; then 
           echo "Echec de lancement du conatiner docker."
           ./docker_cleanup.sh dev-$CI_PROJECT_NAME
           exit 1
@@ -170,8 +141,9 @@ Env_dev:
       dotenv: build.env
     paths:
       - .docker_tag
-    expire_in: 1 day
-
+    expire_in: 10 minutes
+  # sleep 30
+  #       docker ps --format 'table {{.Names}}\t{{.Status}}' | grep 'dev-$CI_PROJECT_NAME' | grep 'Up'
 # ######## DEPLOY ENV STAGING #########
 Env_staging:
   stage: deploy
@@ -198,6 +170,8 @@ Env_staging:
         echo "Déploiement de l'image Docker"
         docker rm -f staging-$CI_PROJECT_NAME || true
         docker-compose -f application-compose.yml --env-file .env.ci up -d
+        sleep 15
+        docker ps --format 'table {{.Names}}\t{{.Status}}' | grep 'dev-$CI_PROJECT_NAME' | grep 'Up'
         if [ $? != 0 ]; then
           echo "Echec de lancement du conatiner docker."
           ./docker_cleanup.sh staging-$CI_PROJECT_NAME
@@ -213,11 +187,12 @@ Env_staging:
       dotenv: build.env
     paths:
       - .docker_tag
-    expire_in: 1 day
+    expire_in: 10 minutes
 # ######## CLEANUP ########
-# cleanup:
-#   stage: cleanup
-#   tags:
-#     - gitlab-lamboft-shell-runner
-#   script:
-#     - echo "Nettoyage du repertoire de travail"
+cleanup:
+  stage: cleanup
+  script:
+    - echo "Nettoyage final du runner"
+    - rm -rf *
+    - git clean -fdx
+  when: always
