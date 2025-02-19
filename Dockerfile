@@ -22,7 +22,5 @@ COPY Authentifications/appsettings.* .
 ENV ASPNETCORE_URLS=http://+:8081
 ENV ASPNETCORE_ENVIRONMENT=Development
 ENV ASPNETCORE_Kestrel__Certificates__Default__Path=/etc/ssl/certs/localhost.pfx
-# Mot de passe du certificat SSL a faire autrement
-ENV ASPNETCORE_Kestrel__Certificates__Default__Password=lambo 
 # Point d'entrée de l'application
 ENTRYPOINT ["dotnet", "/app/Authentifications.dll"]
