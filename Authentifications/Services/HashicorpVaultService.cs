@@ -1,5 +1,7 @@
 using System.Net.Sockets;
+using Authentifications.Exceptions;
 using Authentifications.Interfaces;
+using Authentifications.Models;
 using VaultSharp;
 using VaultSharp.V1.AuthMethods.AppRole;
 using VaultSharp.V1.AuthMethods.Token;
@@ -21,7 +23,7 @@ public class HashicorpVaultService : IHashicorpVaultService
         if (string.IsNullOrEmpty(hashiCorpRoleID) || string.IsNullOrEmpty(hashiCorpSecretID) || string.IsNullOrEmpty(hashiCorpHttpClient))
         {
             log.LogWarning("Empty or invalid HashiCorp Vault configurations.");
-            throw new InvalidOperationException("Empty or invalid HashiCorp Vault configurations.");
+            throw new VaultConfigurationException(500, "Warning", "Empty or invalid HashiCorp Vault configurations.");
         }
         var appRoleAuthMethodInfo = new AppRoleAuthMethodInfo(hashiCorpRoleID, hashiCorpSecretID);
         var vaultClientSettings = new VaultClientSettings($"{hashiCorpHttpClient}", appRoleAuthMethodInfo);
@@ -36,7 +38,7 @@ public class HashicorpVaultService : IHashicorpVaultService
         }
         catch (Exception ex) when (ex.InnerException is SocketException socket)
         {
-            log.LogError(socket, "Socket's problems check if Hashicorp Vault server is UP", socket.Message);
+            log.LogError(socket, "Socket's problems check if Hashicorp Vault server is UP");
             throw new InvalidOperationException("The service is unavailable. Please retry soon.", ex);
         }
     }
@@ -48,7 +50,7 @@ public class HashicorpVaultService : IHashicorpVaultService
         if (string.IsNullOrEmpty(hashiCorpHttpClient) || string.IsNullOrEmpty(secretPath))
         {
             log.LogWarning("Empty or invalid HashiCorp Vault configurations.");
-            throw new InvalidOperationException("Empty or invalid HashiCorp Vault configurations.");
+            throw new VaultConfigurationException(500, "Warning", "Empty or invalid HashiCorp Vault configurations.");
         }
         var vaultClientSettings = new VaultClientSettings($"{hashiCorpHttpClient}", new TokenAuthMethodInfo(vautlAppRoleToken));
         var vaultClient = new VaultClient(vaultClientSettings);
@@ -56,17 +58,17 @@ public class HashicorpVaultService : IHashicorpVaultService
         if (secret == null)
         {
             log.LogError("Le secret Vault est introuvable pour la chaine de connection rabbitMQ.");
-            throw new InvalidOperationException("Le secret Vault est introuvable.");
+            throw new VaultConfigurationException(404, "Error", "Le secret Vault est introuvable.");
         }
         var secretData = secret.Data.Data;
         if (!secretData.ContainsKey("rabbitMqConnectionString"))
         {
             log.LogError("La clé 'rabbitMqConnectionString' est manquante dans le secret Vault.");
-            throw new InvalidOperationException("La clé 'rabbitMqConnectionString' est introuvable.");
+            throw new VaultConfigurationException(404, "Error", "Key 'rabbitMqConnectionString' not found.");
         }
         return secretData["rabbitMqConnectionString"].ToString()!;
     }
-    public async void StoreJwtPublicKeyInVault(string publicKeyPem)
+    public async Task<Message> StoreJwtPublicKeyInVault(string publicKeyPem)
     {
         string vautlAppRoleToken = await GetAppRoleTokenFromVault();
         var secretPath = configuration["HashiCorp:JwtPublicKeyPath"];
@@ -74,12 +76,18 @@ public class HashicorpVaultService : IHashicorpVaultService
         if (string.IsNullOrEmpty(hashiCorpHttpClient) || string.IsNullOrEmpty(secretPath))
         {
             log.LogWarning("Empty or invalid HashiCorp Vault configurations.");
-            throw new InvalidOperationException("Empty or invalid HashiCorp Vault configurations.");
+            throw new VaultConfigurationException(500, "Warning", "Empty or invalid HashiCorp Vault configurations.");
         }
         var vaultClientSettings = new VaultClientSettings($"{hashiCorpHttpClient}", new TokenAuthMethodInfo(vautlAppRoleToken));
         var vaultClient = new VaultClient(vaultClientSettings);
         await vaultClient.V1.Secrets.KeyValue.V2.WriteSecretAsync(
         secretPath, new Dictionary<string, object> { { "authenticationSignatureKey", publicKeyPem } });
-        log.LogInformation("Successfull storage public key Vault !");
+        return new Message
+        {
+            Title = "Hashicorp Vault configuration",
+            Type = "Succes",
+            Detail = "Successfull storage public key Vault !",
+            Status = 200,
+        };
     }
 }
