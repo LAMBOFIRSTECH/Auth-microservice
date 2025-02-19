@@ -13,7 +13,7 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
     private readonly IRedisCacheService redisCache;
     private readonly IRedisCacheTokenService redisTokenCache;
     private readonly IHashicorpVaultService hashicorpVaultService;
-    private RsaSecurityKey rsaSecurityKey;
+    private RsaSecurityKey? rsaSecurityKey;
     private readonly string refreshToken;
     public JwtAccessAndRefreshTokenService(IConfiguration configuration, ILogger<JwtAccessAndRefreshTokenService> log,
     IRedisCacheService redisCache, IRedisCacheTokenService redisTokenCache, IHashicorpVaultService hashicorpVaultService)
@@ -23,7 +23,6 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         this.redisCache = redisCache;
         this.redisTokenCache = redisTokenCache;
         this.hashicorpVaultService = hashicorpVaultService;
-        rsaSecurityKey = GetOrCreateSigningKey();
         refreshToken = GenerateRefreshToken();
     }
     public string GenerateRefreshToken()
@@ -39,24 +38,45 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         var utilisateurDto = await AuthUserDetailsAsync((true, email, password));
         var refreshTokenFromRedis = await redisTokenCache.RetrieveTokenBasingOnRedisUserSessionAsync(utilisateurDto.Email!, utilisateurDto.Pass!);
         if (string.IsNullOrEmpty(refreshTokenFromRedis))
-            throw new InvalidOperationException("Empty refresh token retrieve from redis");
-
+        {
+            return new TokenResult
+            {
+                Response = false,
+                Message = "Empty refresh token retrieving from Redis cache",
+                Token = null,
+                RefreshToken = "The current refresh token has expired. Please create a new token"
+            };
+        }
         if (!refreshTokenFromRedis.Equals(refreshToken))
-            throw new InvalidOperationException("Not the same refresh token");
-        GetToken(utilisateurDto);
+        {
+            return new TokenResult
+            {
+                Response = false,
+                Message = "The sharing refresh token is not found inside Redis cache database. Please use this generated refresh token",
+                Token = null,
+                RefreshToken = await redisTokenCache.RetrieveTokenBasingOnRedisUserSessionAsync(utilisateurDto.Email!, utilisateurDto.Pass!)
+            };
+        }
         return GetToken(utilisateurDto);
     }
     public TokenResult GetToken(UtilisateurDto utilisateurDto)
     {
+        var tokenResult = GenerateJwtTokenAndStatefulRefreshToken(utilisateurDto);
+        if (!tokenResult.Response)
+        {
+            return new()
+            {
+                Response = tokenResult.Response,
+                Message = tokenResult.Message,
+                Token = tokenResult.Token,
+                RefreshToken = tokenResult.RefreshToken
+            };
+        }
         log.LogInformation("Creating current user session's Token");
-        var result = GenerateJwtTokenAndStatefulRefreshToken(utilisateurDto);
-        result.Response = true;
-        if (string.IsNullOrWhiteSpace(result.RefreshToken))
-            throw new InvalidOperationException("Empty cuple for access and refresh token.");
-        redisTokenCache.StoreRefreshTokenSessionInRedis(utilisateurDto.Email!, result.RefreshToken!, utilisateurDto.Pass!);
-        return result;
+        redisTokenCache.StoreRefreshTokenSessionInRedis(utilisateurDto.Email!, tokenResult.RefreshToken!, utilisateurDto.Pass!);
+        return tokenResult;
     }
-    private RsaSecurityKey GetOrCreateSigningKey()
+    private RsaSecurityKey CreateRSAPublicKeyToSignJwtToken()
     {
         if (rsaSecurityKey != null)
             return rsaSecurityKey;
@@ -64,6 +84,7 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
         _ = ConvertToPem(rsa.ExportRSAPrivateKey(), "RSA PRIVATE KEY");
         var publicKey = ConvertToPem(rsa.ExportRSAPublicKey(), "RSA PUBLIC KEY");
         hashicorpVaultService.StoreJwtPublicKeyInVault(publicKey);
+        log.LogInformation("The signing jwt publicKey has been successfull store in HashiCorp Vault !");
         rsaSecurityKey = new RsaSecurityKey(rsa.ExportParameters(true));
         return rsaSecurityKey;
     }
@@ -83,7 +104,20 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
     public TokenResult GenerateJwtTokenAndStatefulRefreshToken(UtilisateurDto utilisateurDto)
     {
         var tokenHandler = new JwtSecurityTokenHandler();
-        var additionalAudiences = new[] { configuration.GetSection("JwtSettings")["Audiences"] };
+        var audiencesSection = configuration.GetSection("JwtSettings:Audiences");
+        var issuerSection = configuration.GetSection("JwtSettings:Issuer");
+        var additionalAudiences = audiencesSection.Exists() ? audiencesSection.Get<string[]>()?.ToList() : new List<string>();
+        var issuer = issuerSection.Exists() ? issuerSection.Get<string>()?.ToString() : string.Empty;
+        if (additionalAudiences == null || additionalAudiences.Count == 0 || string.IsNullOrEmpty(issuer))
+        {
+            return new()
+            {
+                Response = false,
+                Message = "JwtSettings are missing or incorrect. Let's check the configuration file",
+                Token = null,
+                RefreshToken = null
+            };
+        }
         var tokenDescriptor = new SecurityTokenDescriptor
         {
             Subject = new ClaimsIdentity(new[] {
@@ -95,19 +129,19 @@ public class JwtAccessAndRefreshTokenService : IJwtAccessAndRefreshTokenService
             }
             ),
             Expires = DateTime.UtcNow.AddMinutes(15),
-            SigningCredentials = new SigningCredentials(GetOrCreateSigningKey(), SecurityAlgorithms.RsaSha512),
-            Issuer = configuration.GetSection("JwtSettings")["Issuer"],
-            Audience = null,
+            SigningCredentials = new SigningCredentials(CreateRSAPublicKeyToSignJwtToken(), SecurityAlgorithms.RsaSha512),
+            Issuer = issuer,
             Claims = new Dictionary<string, object> { { JwtRegisteredClaimNames.Aud, additionalAudiences } }
         };
         var tokenCreation = tokenHandler.CreateToken(tokenDescriptor);
         var token = tokenHandler.WriteToken(tokenCreation);
-        TokenResult result = new()
+        return new()
         {
+            Response = true,
+            Message = "AccessToken and refreshToken have been successfully generated",
             Token = token,
             RefreshToken = refreshToken
         };
-        return result;
     }
     public async Task<UtilisateurDto> AuthUserDetailsAsync((bool IsValid, string email, string password) tupleParameter)
     {
