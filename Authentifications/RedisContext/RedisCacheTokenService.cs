@@ -58,7 +58,7 @@ public class RedisCacheTokenService : IRedisCacheTokenService
 			var serializedData = JsonConvert.SerializeObject(jsonObject, Formatting.Indented);
 			_cache.SetStringAsync(cacheKey, serializedData, new DistributedCacheEntryOptions
 			{
-				AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(1)
+				AbsoluteExpirationRelativeToNow = TimeSpan.FromDays(7)
 			});
 			logger.LogInformation("Successfull storage refresh token connection for key: {CacheKey}", cacheKey);
 		}
