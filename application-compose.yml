@@ -1,0 +1,20 @@
+version: "3.3"
+services:
+  authentication:
+    image: $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$DOCKER_TAG
+    container_name: dev-$CI_PROJECT_NAME
+    ports:
+      - "8081:8081"
+    networks:
+      net_api:
+        ipv4_address: 172.28.0.4
+    volumes:
+      - ./appsettings.json:/app/Infrastructure/Configurations/appsettings.Development.json
+    environment:
+      - ASPNETCORE_Kestrel__Certificates__Default__Password=$CERT_PASSWORD  
+      - ASPNETCORE_Kestrel__Certificates__Default__Path=/etc/ssl/certs/localhost.pfx
+      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_URLS=http://+:8081
+networks:
+  net_api:
+    external: true

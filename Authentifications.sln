@@ -1,0 +1,35 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.5.002.0
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Authentifications", "Authentifications\Authentifications.csproj", "{5A4850E6-DA11-434E-802E-C12B5774AD23}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Authentifications.Tests", "Authentifications.Tests\Authentifications.Tests.csproj", "{C97BC20D-6C71-413C-8CE9-3921E1838D82}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{5A4850E6-DA11-434E-802E-C12B5774AD23}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5A4850E6-DA11-434E-802E-C12B5774AD23}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5A4850E6-DA11-434E-802E-C12B5774AD23}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5A4850E6-DA11-434E-802E-C12B5774AD23}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BC447D15-2C89-4BFF-B746-18EE1304E58A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BC447D15-2C89-4BFF-B746-18EE1304E58A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BC447D15-2C89-4BFF-B746-18EE1304E58A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BC447D15-2C89-4BFF-B746-18EE1304E58A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C97BC20D-6C71-413C-8CE9-3921E1838D82}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C97BC20D-6C71-413C-8CE9-3921E1838D82}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C97BC20D-6C71-413C-8CE9-3921E1838D82}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C97BC20D-6C71-413C-8CE9-3921E1838D82}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {4EA39B76-77BC-4B2E-9433-06F64F51F5D0}
+	EndGlobalSection
+EndGlobal

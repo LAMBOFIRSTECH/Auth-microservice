@@ -1,0 +1,37 @@
+openapi: 3.0.1
+info:
+  title: Authentification service | Api
+  description: An ASP.NET Core Web API for managing Users authentification
+  contact:
+    name: Artur Lambo
+    email: lamboartur94@gmail.com
+  version: v1.0
+paths:
+  /auth/login:
+    post:
+      tags:
+        - Token
+      summary: Authentifie un utilisateur et retourne les tokens (access et refresh).
+      responses:
+        '200':
+          description: Success
+  /auth/refresh-token:
+    put:
+      tags:
+        - Token
+      summary: " Rafraîchit le token en utilisant un refresh token valide.\r\n<param name=\"refreshToken\"></param>"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: string
+          text/json:
+            schema:
+              type: string
+          application/*+json:
+            schema:
+              type: string
+      responses:
+        '200':
+          description: Success
+components: { }
