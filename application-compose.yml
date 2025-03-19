@@ -1,8 +1,9 @@
-version: "3.3"
+version: "3.8"
 services:
   authentication:
     image: $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$DOCKER_TAG
     container_name: dev-$CI_PROJECT_NAME
+    user: "gitlab-runner"
     ports:
       - "8081:8081"
     networks:

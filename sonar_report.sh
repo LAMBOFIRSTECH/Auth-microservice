@@ -6,7 +6,7 @@ colors() {
     CYAN="\033[1;36m"
 
     NC="\033[0m"
-    printf "${!1}${2} ${NC}\n" # <-- bash
+    printf "${!1}${2} ${NC}\n"
 }
 if [ ! -f .env ]; then
     colors "RED" "Erreur : fichier .env non trouvé"
@@ -33,4 +33,4 @@ if (($(echo "$coverage_value > 0.0" | bc -l))); then
     colors "YELLOW" "L'image docker ne sera pas construite"
     exit 1
 fi
-exit 0 # Code de retour pour ce script on va le récupérer dans le script docker_image.sh
+exit 0

@@ -18,9 +18,13 @@ WORKDIR /app
 COPY --from=build /app . 
 # Copier les fichiers de configuration nécessaires
 COPY Authentifications/appsettings.* . 
+# On lancer le conteneur avec le user gitlab-runner
+#RUN chown -R gitlab-runner:gitlab-runner /app
+
+USER gitlab-runner
 # Variables d'environnement
 ENV ASPNETCORE_URLS=$ASPNETCORE_URLS
-ENV ASPNETCORE_ENVIRONMENT=$ASPNETCORE_ENVIRONMENT 
-ENV ASPNETCORE_Kestrel__Certificates__Default__Path=$ASPNETCORE_Kestrel__Certificates__Default__Path
+ENV ASPNETCORE_ENVIRONMENT=Development
+ENV ASPNETCORE_Kestrel__Certificates__Default__Path=/etc/ssl/certs/localhost.pfx
 # Point d'entrée de l'application
 ENTRYPOINT ["dotnet", "/app/Authentifications.dll"]

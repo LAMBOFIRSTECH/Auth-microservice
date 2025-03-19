@@ -1,6 +1,6 @@
 #!/bin/bash
 # =========================
-# Script SonarQube Analysis avec XPlat Code Coverage
+# Script SonarQube avec Couverture de Code et Rapport Cobertura
 # =========================
 
 # Fonction pour gérer les couleurs dans l'affichage
@@ -13,9 +13,16 @@ colors() {
     printf "${!1}${2}${NC}\n"
 }
 
+# Affichage du répertoire courant pour vérification
+pwd
+
 # --------------------
 # 1. Vérification des Pré-requis
 # --------------------
+if [ ! -f appsettings.json ]; then
+    colors "RED" "Erreur : Fichier appsettings.json non trouvé."
+    exit 1
+fi
 if [ ! -f .env ]; then
     colors "RED" "Erreur : Fichier .env non trouvé. Veuillez configurer les variables nécessaires."
     exit 1
@@ -24,10 +31,11 @@ source .env
 
 # Détection automatique de la solution .sln
 SONAR_PROJECT_KEY=$(ls *.sln | sed -E 's/\.sln$//')
+SONAR_PROJECT_VERSION=$(jq -r .'Kestrel.ApiVersion' appsettings.json)
 SOLUTION_FILE=$(ls *.sln)
 
 # Vérification des variables essentielles
-required_vars=("SONAR_PROJECT_KEY" "SONAR_HOST_URL" "SONAR_USER_TOKEN" "BUILD_CONFIGURATION")
+required_vars=("SONAR_PROJECT_KEY" "SONAR_HOST_URL" "SONAR_USER_TOKEN" "BUILD_CONFIGURATION" "SONAR_PROJECT_VERSION")
 for var in "${required_vars[@]}"; do
     if [[ -z "${!var}" ]]; then
         colors "RED" "La variable $var n'est pas définie. Veuillez vérifier votre configuration."
@@ -53,7 +61,10 @@ colors "YELLOW" "Vérification de dotnet-sonarscanner et reportgenerator..."
 # Installation de SonarScanner
 if ! command -v dotnet-sonarscanner &>/dev/null; then
     colors "CYAN" "Installation de dotnet-sonarscanner..."
-    dotnet tool install --global dotnet-sonarscanner || { colors "RED" "Échec de l'installation de SonarScanner."; exit 1; }
+    dotnet tool install --global dotnet-sonarscanner --version 6.0.0 || {
+        colors "RED" "Échec de l'installation de SonarScanner."
+        exit 1
+    }
     export PATH="$PATH:$HOME/.dotnet/tools"
 else
     colors "CYAN" "SonarScanner déjà installé."
@@ -62,23 +73,46 @@ fi
 # Installation de ReportGenerator
 if ! command -v reportgenerator &>/dev/null; then
     colors "CYAN" "Installation de ReportGenerator..."
-    dotnet tool install --global dotnet-reportgenerator-globaltool --version 4.8.6 || { colors "RED" "Échec de l'installation de ReportGenerator."; exit 1; }
+    dotnet tool install --global dotnet-reportgenerator-globaltool --version 4.8.6 || {
+        colors "RED" "Échec de l'installation de ReportGenerator."
+        exit 1
+    }
 else
     colors "CYAN" "ReportGenerator déjà installé."
 fi
 
 # --------------------
-# 4. Démarrage de l'analyse SonarQube
+# 4. Création du fichier de configuration SonarQube
+# --------------------
+colors "YELLOW" "Création du fichier de configuration SonarQube"
+mkdir -p .sonarqube/conf
+cat > SonarQubeAnalysisConfig.xml <<EOL
+<?xml version="1.0" encoding="utf-8" ?>
+<SonarQubeAnalysisProperties xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://www.sonarsource.com/msbuild/integration/2015/1">
+   <Property Name="sonar.host.url">${SONAR_HOST_URL}</Property>
+   <Property Name="sonar.token">${SONAR_USER_TOKEN}</Property>
+   <Property Name="sonar.projectKey">$SONAR_PROJECT_KEY</Property>
+   <Property Name="sonar.projectName">Microservice $SONAR_PROJECT_KEY</Property>
+   <Property Name="sonar.projectVersion">$SONAR_PROJECT_VERSION</Property>
+</SonarQubeAnalysisProperties>
+EOL
+
+# Vérification de la création du fichier
+colors "CYAN" "Contenu du dossier .sonarqube/conf :"
+chmod -R 777 .sonarqube/
+cp SonarQubeAnalysisConfig.xml .sonarqube/conf/SonarQubeAnalysisConfig.xml
+# --------------------
+# 5. Démarrage de l'analyse SonarQube
 # --------------------
 colors "YELLOW" "Démarrage de l'analyse SonarQube pour le projet $SONAR_PROJECT_KEY"
 dotnet sonarscanner begin \
     /k:"$SONAR_PROJECT_KEY" \
     /d:sonar.host.url="$SONAR_HOST_URL" \
     /d:sonar.token="$SONAR_USER_TOKEN" \
-    /d:sonar.cs.lcov.reportPaths="TestResults/coverage/lcov.info"
+    /d:sonar.cs.opencover.reportsPaths="TestResults/coverage/Cobertura.xml"
 
 # --------------------
-# 5. Restauration et Compilation du Projet
+# 6. Restauration et Compilation du Projet
 # --------------------
 colors "YELLOW" "Restauration et compilation du projet $SOLUTION_FILE"
 dotnet restore "$SOLUTION_FILE"
@@ -89,7 +123,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # --------------------
-# 6. Exécution des tests avec XPlat Code Coverage
+# 7. Exécution des tests avec XPlat Code Coverage
 # --------------------
 colors "YELLOW" "Exécution des tests et collecte de la couverture de code avec XPlat Code Coverage"
 dotnet test --collect:"XPlat Code Coverage" --results-directory TestResults
@@ -99,7 +133,7 @@ if [[ $? -ne 0 ]]; then
 fi
 
 # --------------------
-# 7. Vérification du fichier de couverture
+# 8. Vérification du fichier de couverture
 # --------------------
 COVERAGE_FILE=$(find TestResults -name "coverage.cobertura.xml" | head -n 1)
 if [[ -z "$COVERAGE_FILE" ]]; then
@@ -109,29 +143,29 @@ fi
 colors "GREEN" "Fichier de couverture trouvé : $COVERAGE_FILE"
 
 # --------------------
-# 8. Génération du rapport lcov avec ReportGenerator
+# 9. Génération du rapport Cobertura avec ReportGenerator
 # --------------------
-colors "YELLOW" "Génération du rapport de couverture en format lcov"
-reportgenerator -reports:"$COVERAGE_FILE" -targetdir:"TestResults/coverage" -reporttypes:lcov
+colors "YELLOW" "Génération du rapport de couverture en format Cobertura"
+reportgenerator -reports:"$COVERAGE_FILE" -targetdir:"TestResults/coverage" -reporttypes:cobertura
 if [[ $? -ne 0 ]]; then
-    colors "RED" "Erreur : Échec de la génération du rapport lcov."
+    colors "RED" "Erreur : Échec de la génération du rapport Cobertura."
     exit 1
 fi
 
 # --------------------
-# 9. Vérification du fichier lcov.info
+# 10. Vérification du fichier Cobertura
 # --------------------
-if [ ! -f "TestResults/coverage/lcov.info" ]; then
-    colors "RED" "Erreur : Le fichier lcov.info n'a pas été généré."
+if [ ! -f "TestResults/coverage/Cobertura.xml" ]; then
+    colors "RED" "Erreur : Le fichier Cobertura.xml n'a pas été généré."
     exit 1
 fi
-colors "GREEN" "Le fichier lcov.info a été généré avec succès."
-
+colors "GREEN" "Le fichier Cobertura.xml a été généré avec succès."
 
 # --------------------
-# 10. Finalisation de l'analyse SonarQube
+# 11. Finalisation de l'analyse SonarQube
 # --------------------
 colors "YELLOW" "Finalisation de l'analyse SonarQube..."
+ls -l .sonarqube/conf/
 dotnet sonarscanner end /d:sonar.token="$SONAR_USER_TOKEN"
 if [[ $? -ne 0 ]]; then
     colors "RED" "Échec de la finalisation de l'analyse SonarQube."
@@ -143,8 +177,8 @@ colors "GREEN" "Analyse SonarQube terminée avec succès."
 # 12. Résumé du Processus
 # --------------------
 colors "GREEN" "####################### Analyse SonarQube Terminée avec Succès ##########################"
-colors "CYAN"  "|  Rapport de couverture généré en lcov et envoyé à SonarQube                           |"
-colors "CYAN"  "|  Serveur SonarQube accessible et analyse effectuée                                    |"
+colors "CYAN" "|  Rapport de couverture généré en Cobertura et envoyé à SonarQube                      |"
+colors "CYAN" "|  Serveur SonarQube accessible et analyse effectuée                                    |"
 colors "GREEN" "#########################################################################################"
 
 exit 0
