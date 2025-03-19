@@ -1,1 +1,1 @@
-![Schéma auth](chemin/vers/ton/image.jpg)
+![Schéma auth](./Microservice-authentication.png)
