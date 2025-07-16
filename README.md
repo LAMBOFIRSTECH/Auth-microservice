@@ -5,89 +5,108 @@
 [![Trivy](https://img.shields.io/badge/trivy-passed-success)](#)
 [![Sonar](https://img.shields.io/badge/sonarqube-clean-orange)](#)
 
-**NB** : Vous trouverez ci-bas un schéma récapitulatif du projet
+> **Note**: A diagram summarizing the project is available below.
 
-🧰 Contexte du projet
-Dans le cadre du projet de gestion des ressources humaines développé pour notre portfolio, ce microservice joue le rôle de solution de secours (fallback) à Keycloak, notre fournisseur d’identité principal.
+---
 
-⚙️ Fonctionnalités principales
-Il prend en charge :
+## 🧰 Project Context
 
-✅ Authentification des utilisateurs présents dans un annuaire LDAP
+As part of our portfolio **Human Resources Management** project, this microservice acts as a **fallback authentication provider**, serving as a backup to **Keycloak**, our primary identity provider.
 
-🔑 Génération de tokens JWT (access et refresh)
+---
 
-🔁 Redis pour la gestion du cache des tokens (stockage temporaire performant)
+## ⚙️ Key Features
 
-📬 RabbitMQ pour la communication asynchrone entre OpenLDAP et l’application (ex. notification de mise à jour des comptes)
+This service handles:
 
-🔐 HashiCorp Vault pour la gestion sécurisée des secrets (tokens, clés, credentials)
+📅 **User authentication** using an **OpenLDAP** directory
+🔑 **JWT token generation** (access & refresh)
+🪀 **Redis** for high-performance token caching
+📬 **RabbitMQ** for asynchronous messaging between OpenLDAP and the app (e.g., account updates)
+🔐 **HashiCorp Vault** for secure secrets management (tokens, keys, credentials)
+📦 **Modular and containerized deployment** with Docker
 
-📦 Déploiement conteneurisé et modulaire via Docker
+💡 This component integrates seamlessly into a **microservices architecture** while ensuring:
 
-💡 Ce composant s’intègre facilement dans une architecture microservices, tout en assurant :
+* 🔒 Enhanced security with Vault
+* 📊 Auditability with Trivy & SonarQube
+* ♻️ High reliability when Keycloak is unavailable
+* ⚙️ Compatibility with standard identity services
 
-🔒 Sécurité renforcée grâce à Vault
+---
 
-📊 Auditabilité via Trivy & SonarQube
+## 🧽 Table of Contents
 
-♻️ Fiabilité en cas d’indisponibilité de la solution principale
-
-⚙️ Interopérabilité avec les services d’identité standards
-
-
-## 🧭 Table des matières
-
-- [📦 Installation](#-installation)
-- [🚀 Démarrage](#-démarrage)
-- [🧩 Architecture](#-architecture)
-- [🧪 Tests](#-tests)
-- [⚙️ CI/CD & Qualité](#-cicd--qualité)
-- [🤝 Contribuer](#-contribuer)
-- [📄 Licence](#-licence)
+* [📦 Installation](#-installation)
+* [🚀 Getting Started](#-getting-started)
+* [🧹 Architecture](#-architecture)
+* [🧪 Tests](#-tests)
+* [⚙️ CI/CD & Quality](#-cicd--quality)
+* [🤝 Contributing](#-contributing)
+* [📄 License](#-license)
 
 ---
 
 ## 📦 Installation
 
-### Prérequis
+### Prerequisites
 
-- [.NET SDK](https://dotnet.microsoft.com/)
-- Docker / Docker Compose
-- Git
+* [.NET SDK](https://dotnet.microsoft.com/)
+* Docker / Docker Compose
+* Git
 
 ```bash
 git clone https://github.com/LAMBOFIRSTECH/Auth-microservice.git
-cd Auth-microservice  
+cd Auth-microservice
 ```
 
-## 🚀 Démarrage
-Tout d'abord on a besoin d'un certains nombres de services actifs avant de pouvoir tester l'application
+---
 
-1. Installer redis (docker) pour le cache token et refresh token
-2. Installer openldap(docker) comme source de stockage de compte utilisateur
-3. Installer rabbitMQ (docker) serveur de messagerie permettant la notification entre openldap et l'applicatif
-4. `cd Authentifications`
-5. `dotnet run Authentifications`
-6. `dotnet test Authentifications.Tests`
+## 🚀 Getting Started
 
-## 🧩  Architecture
-![Schéma](./Microservice-authentication.png)
+Several services must be running before you can test the application locally:
 
-## ⚙️ CI/CD & Qualité
-| Stage                         | Description                                                                                                                                                                        |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| ⚙️ `pre-treatment`            | Nettoyage de l’environnement CI : suppression des dossiers temporaires (`bin/`, `obj/`, `TestResults/`), nettoyage des paquets NuGet locaux et réinitialisation du repo.           |
-| 🛠️ `build`                   | Restaure les dépendances (`dotnet restore`) et compile le projet en mode `Release`.                                                                                                |
-| ✅ `test`                      | Exécute les **tests unitaires** via `dotnet test`.                                                                                                                                 |
-| 🔍 `scan-vulnerabilities`     | Construit l’image Docker, puis lance un **scan de vulnérabilités** avec [Trivy](https://github.com/aquasecurity/trivy) (scan de l'image + système de fichiers + dépendances .NET). |
-| 📊 `sonar-build-and-analysis` | Lance l’analyse de code avec **SonarQube** pour évaluer la **qualité du code**, détecter les **bugs**, **code smells**, **dupliqués**, etc.                                        |
-| 🚀 `deploy` (Dev & Staging)   | Déploie l’image Docker en **environnement de développement** (`develop`) ou **staging** (`main`) via `docker-compose`, avec configuration sécurisée.                               |
-| 🩺 `health_check`             | Vérifie que l’application est bien démarrée et **accessible via l’endpoint de santé** (`$HEALTH_ENDPOINT`). Déclenche un rollback si nécessaire.                                   |
-| 🔁 `rollback_staging`         | Permet un **retour arrière manuel ou automatique** vers la dernière image fonctionnelle si le déploiement échoue.                                                                  |
+1. Run **Redis** (via Docker) to handle token and refresh token caching
+2. Run **OpenLDAP** (via Docker) as the user account storage
+3. Run **RabbitMQ** (via Docker) to enable message-based communication between OpenLDAP and the app
+4. Navigate to the authentication service directory:
 
+   ```bash
+   cd Authentifications
+   dotnet run Authentifications
+   dotnet test Authentifications.Tests
+   ```
 
-    💡 Ce pipeline permet une vérification complète de l’application avant mise en production : de la compilation jusqu’à l’analyse qualité, avec des mécanismes de sécurité, rollback automatique, et déploiement contrôlé.
+---
 
-## 🤝 Contribuer
-Fork → Branche → PR…
+## 🧹 Architecture
+
+![Diagram](./Microservice-authentication.png)
+
+---
+
+## ⚙️ CI/CD & Quality Assurance
+
+The project leverages a **GitLab CI/CD pipeline** composed of multiple stages:
+
+| Stage                         | Description                                                                                                                                                   |
+| ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ⚙️ `pre-treatment`            | Cleans the CI environment: removes temporary folders (`bin/`, `obj/`, `TestResults/`), clears local NuGet packages, resets the repo.                          |
+| 🛠️ `build`                   | Restores dependencies with `dotnet restore` and compiles the project in `Release` mode.                                                                       |
+| ✅ `test`                      | Executes **unit tests** using `dotnet test`.                                                                                                                  |
+| 🔍 `scan-vulnerabilities`     | Builds the Docker image and performs a **vulnerability scan** with [Trivy](https://github.com/aquasecurity/trivy) (image, filesystem, and .NET dependencies). |
+| 📊 `sonar-build-and-analysis` | Analyzes code quality with **SonarQube**: detects bugs, code smells, duplication, etc.                                                                        |
+| 🚀 `deploy` (Dev & Staging)   | Deploys the Docker image to the **development** (`develop`) or **staging** (`main`) environment via `docker-compose` with secure config.                      |
+| 🩺 `health_check`             | Verifies that the application is running and accessible via the **health endpoint** (`$HEALTH_ENDPOINT`). Triggers rollback if needed.                        |
+| ⟳ `rollback_staging`          | Allows **manual or automatic rollback** to the last working image if deployment fails.                                                                        |
+
+> 💡 This pipeline ensures **end-to-end validation** before production: from compilation to quality scanning, with built-in **security**, **automatic rollback**, and **controlled deployment**.
+
+---
+
+## 🤝 Contributing
+
+Fork → Branch → Pull Request…
+We welcome contributions! Feel free to improve documentation, suggest features, or fix issues.
+
+---
