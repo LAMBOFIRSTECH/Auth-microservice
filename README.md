@@ -4,7 +4,6 @@
 [![Coverage](https://img.shields.io/badge/coverage-90%25-blue)](#)  
 [![Trivy](https://img.shields.io/badge/trivy-passed-success)](#)
 [![Sonar](https://img.shields.io/badge/sonarqube-clean-orange)](#)
-[![codecov](https://codecov.io/gh/<OWNER>/<REPO>/branch/main/graph/badge.svg?token=<TOKEN>)](https://codecov.io/gh/<OWNER>/<REPO>)
 
 **NB** : Vous trouverez ci-bas un schéma récapitulatif du projet
 
@@ -76,9 +75,19 @@ Tout d'abord on a besoin d'un certains nombres de services actifs avant de pouvo
 ![Schéma](./Microservice-authentication.png)
 
 ## ⚙️ CI/CD & Qualité
-- Trivy pour l'mage docker : `./trivy.sh`
-- SonarQube : `./sonar_check.sh`, `./sonar_report.sh`
-- Scan des vulnérabilités fichier système : `fs_trivy_vulnerabilities.py`
+| Stage                         | Description                                                                                                                                                                        |
+| ----------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| ⚙️ `pre-treatment`            | Nettoyage de l’environnement CI : suppression des dossiers temporaires (`bin/`, `obj/`, `TestResults/`), nettoyage des paquets NuGet locaux et réinitialisation du repo.           |
+| 🛠️ `build`                   | Restaure les dépendances (`dotnet restore`) et compile le projet en mode `Release`.                                                                                                |
+| ✅ `test`                      | Exécute les **tests unitaires** via `dotnet test`.                                                                                                                                 |
+| 🔍 `scan-vulnerabilities`     | Construit l’image Docker, puis lance un **scan de vulnérabilités** avec [Trivy](https://github.com/aquasecurity/trivy) (scan de l'image + système de fichiers + dépendances .NET). |
+| 📊 `sonar-build-and-analysis` | Lance l’analyse de code avec **SonarQube** pour évaluer la **qualité du code**, détecter les **bugs**, **code smells**, **dupliqués**, etc.                                        |
+| 🚀 `deploy` (Dev & Staging)   | Déploie l’image Docker en **environnement de développement** (`develop`) ou **staging** (`main`) via `docker-compose`, avec configuration sécurisée.                               |
+| 🩺 `health_check`             | Vérifie que l’application est bien démarrée et **accessible via l’endpoint de santé** (`$HEALTH_ENDPOINT`). Déclenche un rollback si nécessaire.                                   |
+| 🔁 `rollback_staging`         | Permet un **retour arrière manuel ou automatique** vers la dernière image fonctionnelle si le déploiement échoue.                                                                  |
+
+
+    💡 Ce pipeline permet une vérification complète de l’application avant mise en production : de la compilation jusqu’à l’analyse qualité, avec des mécanismes de sécurité, rollback automatique, et déploiement contrôlé.
 
 ## 🤝 Contribuer
 Fork → Branche → PR…
