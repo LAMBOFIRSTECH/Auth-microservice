@@ -1,0 +1,55 @@
+# .NET build results
+/bin/
+/obj/
+*.env
+
+# User-specific files
+.vs/
+.idea/
+.vscode/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Windows Installer log files
+*.log
+
+# User-specific files (for Visual Studio for Mac)
+.vscode/
+
+# ASP.NET Scaffolding
+ScaffoldingReadMe.txt
+
+# .NET Core files
+project.lock.json
+project.fragment.lock.json
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp
+
+# Microsoft Azure Web Apps
+publish/
+
+# JetBrains Rider
+.idea/
+
+# VS for Mac
+.vscode/
+
+# User-specific files for JetBrains Rider
+.idea/
+
+# User-specific file for Visual Studio Code
+.vscode/
+
+# Windows Installer files
+*.cab
+*.msi
+*.msm
+*.msp

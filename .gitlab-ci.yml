@@ -1,0 +1,210 @@
+######## VARIABLES ########
+variables:
+  BUILD_CONFIGURATION: "Release"
+  NUGET_PACKAGES_DIRECTORY: "$CI_PROJECT_DIR/.nuget/packages"
+  SONAR_USER_HOME: "${CI_PROJECT_DIR}/.sonar"
+  SONARQUBE_CONF_DIR: "${CI_PROJECT_DIR}/.sonarqube/conf"
+
+default:
+  tags:
+    - gitlab-lamboft-docker-runner
+
+######## CACHE ########
+cache:
+  key: "$CI_COMMIT_REF_SLUG"
+  paths:
+    - "$NUGET_PACKAGES_DIRECTORY"
+    - "bin/"
+    - ".sonarqube/"
+
+######## STAGES ########
+stages:
+  - pre-treatment
+  - build
+  - test
+  - scan-vulnerabilities
+  - sonar-build-and-analysis
+  - deploy
+
+######## PRE-TREATMENT ########
+pre-treatment:
+  stage: pre-treatment
+  script:
+    - echo "Nettoyage initial..."
+    - git reset --hard
+    - git clean -fdx
+    - echo "Nettoyage des caches NuGet"
+    - dotnet nuget locals all --clear
+    - echo "Nettoyage des artefacts"
+    - rm -rf **/bin/ **/obj/ **/TestResults/ **/.vscode/ Couverture/
+  artifacts:
+    expire_in: 20 minutes
+
+######## BUILD ########
+build:
+  stage: build
+  script:
+    - SOLUTION_FILE=$(ls *.sln)
+    - echo "Compilation des projets à partir de $SOLUTION_FILE"
+    - dotnet restore "$SOLUTION_FILE"
+    - dotnet build $SOLUTION_FILE --configuration $BUILD_CONFIGURATION
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - "$NUGET_PACKAGES_DIRECTORY"
+      - "bin/"
+  artifacts:
+    expire_in: 10 minutes
+
+######## TEST ########
+test:
+  stage: test
+  script:
+    - echo "Exécution des tests unitaires"
+    - TEST_PROJECT=$(find . -name "*.Tests.csproj" | head -n 1)
+    - dotnet test $TEST_PROJECT
+  cache:
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - "$NUGET_PACKAGES_DIRECTORY"
+      - "bin/"
+
+#########  TRIVY SCAN ANALYSIS AND DOCKER BUILD  ########
+scan-vulnerabilities:
+  stage: scan-vulnerabilities
+  image: aquasec/trivy:latest
+  tags:
+    - gitlab-lamboft-shell-develop
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+  variables:
+   RUNNER_TAG: "development"
+  allow_failure: false
+  script:
+    - echo "Déploiement en environnement de développement"
+    - echo "Construction de l'image Docker"
+    - tag=$(./image_tag.sh | tr -cd '0-9.')
+    - echo "DOCKER_TAG=$tag" > $CI_PROJECT_DIR/.env.ci
+    - CERT_PASSWORD="lambo"
+    - echo "CERT_PASSWORD=$CERT_PASSWORD" >> $CI_PROJECT_DIR/.env.ci
+    - docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+    - docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag .
+    - echo "Scan FS et Docker image avec Trivy"
+    - mkdir -p TRIVY_DIR
+    - dotnet list package --vulnerable
+    - trivy image --exit-code 0 --severity HIGH,CRITICAL $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag --format json --output "TRIVY_DIR/trivy_docker_image.json"
+    - trivy fs ./ --format json --output "TRIVY_DIR/trivy_scan_report.json"
+    - chmod +x trivy.sh && ./trivy.sh
+    - echo "Scan de l'image Docker terminé"
+    - docker push  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
+  dependencies:
+    - test
+  artifacts:
+    paths:
+      - $CI_PROJECT_DIR/.env.ci
+    expire_in: 10 minutes
+
+######## SONARQUBE BUILD & ANALYSIS ########
+sonar-build-and-analysis:
+  stage: sonar-build-and-analysis
+  tags:
+    - gitlab-lamboft-shell-develop
+  script:
+    - echo "Lancement de l'analyse SonarQube"
+    - chmod +x sonar_check.sh && ./sonar_check.sh
+    - chmod +x sonar_report.sh && ./sonar_report.sh
+  dependencies:
+    - scan-vulnerabilities
+  cache:
+    policy: pull-push
+    key: "$CI_COMMIT_REF_SLUG"
+    paths:
+      - "${SONAR_USER_HOME}/cache"
+      - sonar-scanner/
+      - "$NUGET_PACKAGES_DIRECTORY"
+      - "bin/"
+      - ".sonarqube/"
+  artifacts:
+    paths:
+      - ".sonarqube/"
+    expire_in: 10 minutes
+
+# ######## DEPLOY ENV DEV ########
+Env_dev:
+  stage: deploy
+  tags:
+    - gitlab-lamboft-shell-develop
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "develop"'
+  variables:
+    RUNNER_TAG: "development"
+    allow_failure: false
+  script:
+    - source $CI_PROJECT_DIR/.env.ci
+    - echo "DEVELOPMENT_TAG=$DEVELOPMENT_TAG" >> build.env
+    - |
+      if [[ "$DEVELOPMENT_TAG" == "true" ]]; then
+        echo "Déploiement de l'image Docker"
+        docker rm -f dev-$CI_PROJECT_NAME || true
+        echo "Récupération et substitution des crédentials appRole Vault dans le fichier de configuration"
+        chmod +x vault_app_auth.sh; ./vault_app_auth.sh
+        docker-compose -f application-compose.yml --env-file .env.ci up -d
+        if [ $? != 0 ]; then 
+          echo "Echec de lancement du conatiner docker."
+          ./docker_cleanup.sh dev-$CI_PROJECT_NAME
+          exit 1
+        fi
+      else
+        echo "No environment tag set for this runner development"
+        exit 1
+      fi
+  artifacts:
+    reports:
+      dotenv: build.env
+    paths:
+      - .docker_tag
+    expire_in: 10 minutes
+# ######## DEPLOY ENV STAGING #########
+Env_staging:
+  stage: deploy
+  tags:
+    - gitlab-lamboft-shell-runner
+  rules:
+    - if: '$CI_COMMIT_BRANCH == "main"'
+  variables:
+    RUNNER_TAG: "staging"
+    allow_failure: false
+  script:
+    - echo "STAGING_TAG=$STAGING_TAG" >> build.env
+    - |
+      if [[ "$STAGING_TAG" == "true" ]]; then
+        echo "Déploiement en environnement de staging"
+        echo "Construction de l'image Docker"
+        dotnet nuget locals all --clear
+        tag=$(./image_tag.sh | tr -cd '0-9.')
+        echo "DOCKER_TAG=$tag" > .env.ci 
+        echo "CERT_PASSWORD=$CERT_PASSWORD" >> .env.ci
+        docker login -u "$CI_REGISTRY_USER" -p "$CI_REGISTRY_PASSWORD" "$CI_REGISTRY"
+        docker build -t $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag .
+        docker push  $CI_REGISTRY/$CI_PROJECT_NAMESPACE/$CI_PROJECT_NAME:$tag
+        echo "Déploiement de l'image Docker"
+        docker rm -f staging-$CI_PROJECT_NAME || true
+        docker-compose -f application-compose.yml --env-file .env.ci up -d
+        sleep 15
+        docker ps --format 'table {{.Names}}\t{{.Status}}' | grep 'dev-$CI_PROJECT_NAME' | grep 'Up'
+        if [ $? != 0 ]; then
+          echo "Echec de lancement du conatiner docker."
+          ./docker_cleanup.sh staging-$CI_PROJECT_NAME
+          exit 1
+        fi
+        docker network connect redis_redis staging-$CI_PROJECT_NAME
+      else
+        echo "No environment tag set for this runner development"
+        exit 1
+      fi
+  artifacts:
+    reports:
+      dotenv: build.env
+    paths:
+      - .docker_tag
+    expire_in: 10 minutes
